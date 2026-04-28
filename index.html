@@ -3827,56 +3827,44 @@
   }
 
   .book-wall {
-    column-count: 3;
-    column-gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
     padding: 24px 24px 0;
-    column-fill: balance;
-    /* prevent column-break inside individual cards */
+    grid-auto-rows: 10px; /* base row unit — each card spans multiple */
+    grid-auto-flow: dense; /* fill gaps when possible */
   }
   @media (max-width: 600px) {
-    .book-wall { column-count: 2; column-gap: 8px; padding: 18px 18px 0; }
+    .book-wall { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 18px 18px 0; }
   }
   @media (min-width: 900px) {
-    .book-wall { column-count: 4; column-gap: 14px; padding: 24px 0 0; }
+    .book-wall { grid-template-columns: repeat(4, 1fr); gap: 14px; padding: 24px 0 0; }
   }
   @media (min-width: 1200px) {
-    .book-wall { column-count: 5; column-gap: 14px; }
+    .book-wall { grid-template-columns: repeat(5, 1fr); gap: 14px; }
   }
 
-  /* Skeleton placeholder card — shown while real books are loading */
+  /* Skeleton placeholder card — shown while real books are loading.
+     Each spans a number of grid rows based on its --rows custom property. */
   .wall-skeleton {
-    break-inside: avoid;
-    -webkit-column-break-inside: avoid;
-    page-break-inside: avoid;
-    display: inline-block;
-    width: 100%;
-    margin: 0 0 10px;
+    grid-row: span 22;
     background: linear-gradient(135deg, var(--surface-soft) 0%, var(--surface) 50%, var(--surface-soft) 100%);
     background-size: 200% 100%;
     animation: skeletonShimmer 1.4s ease-in-out infinite;
     border-radius: 6px;
-  }
-  @media (min-width: 900px) {
-    .wall-skeleton { margin-bottom: 14px; }
+    width: 100%;
   }
   @keyframes skeletonShimmer {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
   }
 
-  /* The flip card lives as one column item */
+  /* The flip card sits in the grid; --rows is set inline based on aspect ratio */
   .wall-card {
-    break-inside: avoid;
-    -webkit-column-break-inside: avoid;
-    page-break-inside: avoid;
-    display: inline-block;
-    width: 100%;
-    margin: 0 0 10px;
     perspective: 1000px;
     cursor: pointer;
-  }
-  @media (min-width: 900px) {
-    .wall-card { margin-bottom: 14px; }
+    width: 100%;
+    /* grid-row span set via inline style based on aspect ratio */
   }
 
   .wall-card-inner {
@@ -7621,14 +7609,31 @@
 
   // Render skeletons while books are loading — gives the wall a real shape from the start
   function renderSkeletons(wallEl, count = 18) {
-    // Vary skeleton heights subtly to mirror real cover variance
-    const heights = [200, 240, 220, 260, 200, 280, 220, 240, 260, 200, 230, 250];
+    // Each skeleton spans a different number of grid rows for variety
+    const spans = [22, 26, 24, 28, 22, 30, 24, 26, 28, 22, 25, 27];
     const html = [];
     for (let i = 0; i < count; i++) {
-      const h = heights[i % heights.length];
-      html.push(`<div class="wall-skeleton" style="height: ${h}px;"></div>`);
+      const span = spans[i % spans.length];
+      html.push(`<div class="wall-skeleton" style="grid-row: span ${span};"></div>`);
     }
     wallEl.innerHTML = html.join('');
+  }
+
+  // Set each card's grid-row span based on its actual rendered height.
+  // Called after a batch of cards is added to the DOM.
+  function setCardSpans(wallEl) {
+    const ROW_HEIGHT = 10; // matches grid-auto-rows: 10px
+    const GAP = parseFloat(getComputedStyle(wallEl).rowGap) || 10;
+    wallEl.querySelectorAll('.wall-card').forEach(card => {
+      const inner = card.querySelector('.wall-card-inner');
+      if (!inner) return;
+      // Get the rendered height of the inner (which has the aspect ratio padding)
+      const h = inner.getBoundingClientRect().height;
+      if (h > 0) {
+        const span = Math.ceil((h + GAP) / (ROW_HEIGHT + GAP));
+        card.style.gridRow = `span ${span}`;
+      }
+    });
   }
 
   // Build a single card's HTML for the wall (extracted so we can append progressively)
@@ -7831,6 +7836,8 @@
       return buildWallCardHtml(b, i, isSaved);
     }).join('');
     wallEl.querySelectorAll('.wall-card').forEach(card => wireWallCard(card, display, wallEl));
+    // Compute grid spans now (cards have their aspect-ratio padding applied immediately)
+    requestAnimationFrame(() => setCardSpans(wallEl));
   }
 
   // Append new books to the wall without re-rendering existing cards
@@ -7856,6 +7863,7 @@
         wallEl.appendChild(card);
         wireWallCard(card, fullDisplayList, wallEl);
       });
+      requestAnimationFrame(() => setCardSpans(wallEl));
     }
   }
 
@@ -7867,6 +7875,18 @@
       renderBookWall();
     }
   }, 200);
+
+  // Recompute card spans on viewport resize (column count changes between breakpoints)
+  let _resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(_resizeTimer);
+    _resizeTimer = setTimeout(() => {
+      const wallEl = document.getElementById('book-wall');
+      if (wallEl && wallEl.querySelector('.wall-card')) {
+        setCardSpans(wallEl);
+      }
+    }, 150);
+  });
 
   // When navigating to Discover after the first render, do nothing —
   // the wall stays put. This is a deliberate choice to avoid the slow
