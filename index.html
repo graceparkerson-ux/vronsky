@@ -177,6 +177,12 @@
     line-height: 1;
   }
   .page-head .actions { display: flex; gap: 8px; }
+
+  /* When there's no title (just actions), align them to the right */
+  .page-head.no-title {
+    justify-content: flex-end;
+    padding: 16px 24px 12px;
+  }
   .head-btn {
     width: 36px;
     height: 36px;
@@ -3824,6 +3830,7 @@
     column-count: 3;
     column-gap: 10px;
     padding: 24px 24px 0;
+    column-fill: balance;
     /* prevent column-break inside individual cards */
   }
   @media (max-width: 600px) {
@@ -3839,12 +3846,15 @@
   /* Skeleton placeholder card — shown while real books are loading */
   .wall-skeleton {
     break-inside: avoid;
-    margin-bottom: 10px;
+    -webkit-column-break-inside: avoid;
+    page-break-inside: avoid;
+    display: inline-block;
+    width: 100%;
+    margin: 0 0 10px;
     background: linear-gradient(135deg, var(--surface-soft) 0%, var(--surface) 50%, var(--surface-soft) 100%);
     background-size: 200% 100%;
     animation: skeletonShimmer 1.4s ease-in-out infinite;
     border-radius: 6px;
-    width: 100%;
   }
   @media (min-width: 900px) {
     .wall-skeleton { margin-bottom: 14px; }
@@ -3857,10 +3867,13 @@
   /* The flip card lives as one column item */
   .wall-card {
     break-inside: avoid;
-    margin-bottom: 10px;
+    -webkit-column-break-inside: avoid;
+    page-break-inside: avoid;
+    display: inline-block;
+    width: 100%;
+    margin: 0 0 10px;
     perspective: 1000px;
     cursor: pointer;
-    /* Vary card heights subtly to create Pinterest rhythm */
   }
   @media (min-width: 900px) {
     .wall-card { margin-bottom: 14px; }
@@ -5274,10 +5287,6 @@
       <!-- HOME sub-view (the feed itself) -->
       <div class="discover-view active" id="dv-home">
 
-        <div class="page-head">
-          <h1>Feed</h1>
-        </div>
-
         <!-- Search bar -->
         <div class="feed-search-wrap">
           <svg class="feed-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
@@ -5371,8 +5380,7 @@
       <!-- HOME sub-view -->
       <div class="club-view active" id="cv-home">
 
-        <div class="page-head">
-          <h1>Clubs</h1>
+        <div class="page-head no-title">
           <div class="actions">
             <div class="head-btn" title="search clubs">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
@@ -5440,8 +5448,7 @@
     <!-- ============ DESK ============ -->
     <section class="screen" data-screen="desk">
 
-      <div class="page-head">
-        <h1>Your Desk</h1>
+      <div class="page-head no-title">
         <div class="actions">
           <button class="new-btn" id="desk-add-book-btn" title="Add a book">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -5516,10 +5523,6 @@
 
     <!-- ============ TRAIL ============ -->
     <section class="screen" data-screen="trail">
-
-      <div class="page-head">
-        <h1>Trail</h1>
-      </div>
 
       <!-- Empty state when no finished books -->
       <div class="trail-empty" id="trail-empty" style="display:none;">
