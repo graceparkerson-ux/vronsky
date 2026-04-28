@@ -7,7 +7,7 @@
 
 <!-- SEO -->
 <meta name="description" content="A reading app for people who want their reading life to feel like a conversation, not a database. Track books, write reviews, join threads about your favorite authors and genres." />
-<meta name="theme-color" content="#c8102e" />
+<meta name="theme-color" content="#7a1a2b" />
 
 <!-- Social preview (Open Graph) — shown when someone shares the URL -->
 <meta property="og:title" content="Vronsky" />
@@ -21,28 +21,28 @@
 <meta name="twitter:description" content="A reading app for people who want their reading life to feel like a conversation, not a database." />
 
 <!-- Favicon — inline SVG, a crimson V on cream -->
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f6f4ee'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='Georgia,serif' font-weight='700' font-size='20' fill='%23c8102e'%3EV%3C/text%3E%3C/svg%3E" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23ffffff'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='Georgia,serif' font-weight='700' font-size='20' fill='%237a1a2b'%3EV%3C/text%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f6f4ee;
-    --bg-deep: #ece8db;
+    --bg: #ffffff;
+    --bg-deep: #f5f3f4;
     --surface: #ffffff;
-    --surface-warm: #fbf8f0;
-    --surface-soft: #faf6ec;
-    --border: #e7e2d4;
-    --border-soft: #f0ebdc;
-    --border-strong: #d6cfbd;
-    --text: #1a1714;
-    --text-2: #6e685c;
-    --text-3: #a8a094;
-    --text-faint: #c4bdaf;
-    --accent: #c8102e;
-    --accent-deep: #8b0a1f;
-    --accent-soft: #fce8ec;
-    --accent-tint: #f9d9de;
+    --surface-warm: #fdfcfc;
+    --surface-soft: #faf8f9;
+    --border: #e8e4e6;
+    --border-soft: #f0ecee;
+    --border-strong: #d4cdd0;
+    --text: #1a1418;
+    --text-2: #6b6266;
+    --text-3: #a39a9e;
+    --text-faint: #c8c0c4;
+    --accent: #7a1a2b;
+    --accent-deep: #5a1320;
+    --accent-soft: #f5e8eb;
+    --accent-tint: #ead7dc;
     --success: #2a9d4f;
   }
 
@@ -60,8 +60,8 @@
     display: grid;
     place-items: center;
     background-image:
-      radial-gradient(ellipse 800px 600px at 30% 20%, rgba(200, 16, 46, 0.05), transparent),
-      radial-gradient(ellipse 600px 500px at 80% 80%, rgba(110, 104, 92, 0.03), transparent);
+      radial-gradient(ellipse 800px 600px at 30% 20%, rgba(122, 26, 43, 0.04), transparent),
+      radial-gradient(ellipse 600px 500px at 80% 80%, rgba(122, 26, 43, 0.025), transparent);
   }
   body::before {
     content: "";
@@ -87,7 +87,7 @@
     position: relative;
     overflow: hidden;
     box-shadow:
-      0 40px 80px -20px rgba(60, 40, 20, 0.25),
+      0 40px 80px -20px rgba(20, 14, 18, 0.12),
       0 0 0 1px var(--border-strong);
     border-radius: 28px;
     z-index: 1;
@@ -110,7 +110,7 @@
     height: 6px;
     border-radius: 50%;
     background: var(--accent);
-    box-shadow: 0 0 8px rgba(200, 16, 46, 0.5);
+    box-shadow: 0 0 8px rgba(122, 26, 43, 0.5);
     animation: pulse 2.4s infinite;
   }
   @keyframes pulse {
@@ -279,7 +279,7 @@
   }
   .feed-entry:hover {
     border-color: var(--border);
-    box-shadow: 0 6px 20px -8px rgba(60,40,20,0.08);
+    box-shadow: 0 6px 20px -8px rgba(20, 14, 18, 0.06);
   }
   .feed-entry.is-review::before {
     content: "";
@@ -807,7 +807,7 @@
   }
   .rec-card:hover {
     border-color: var(--border);
-    box-shadow: 0 6px 18px -8px rgba(60,40,20,0.08);
+    box-shadow: 0 6px 18px -8px rgba(20, 14, 18, 0.06);
   }
   .rec-card .body {
     display: grid;
@@ -908,6 +908,18 @@
     border: 1px dashed var(--border-strong);
     border-radius: 14px;
     background: var(--surface);
+  }
+
+  /* Ambient quiet state (used on Home — minimal, poetic) */
+  .home-quiet {
+    text-align: center;
+    padding: 80px 24px;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-size: 16px;
+    color: var(--accent);
+    opacity: 0.6;
+    letter-spacing: 0.01em;
   }
   .rec-empty .em-mark {
     font-family: 'JetBrains Mono', monospace;
@@ -1011,7 +1023,7 @@
   }
   .club-card:hover {
     border-color: var(--border);
-    box-shadow: 0 6px 20px -8px rgba(60,40,20,0.08);
+    box-shadow: 0 6px 20px -8px rgba(20, 14, 18, 0.06);
     transform: translateY(-1px);
   }
   .club-card .ch {
@@ -1425,7 +1437,7 @@
   }
   .reading-card:hover {
     border-color: var(--border);
-    box-shadow: 0 6px 20px -8px rgba(60,40,20,0.08);
+    box-shadow: 0 6px 20px -8px rgba(20, 14, 18, 0.06);
     transform: translateY(-1px);
   }
   .reading-card .cv {
@@ -1918,9 +1930,9 @@
     background: var(--bg-deep);
     border-radius: 1.5px;
   }
-  .hd.r1 { background: rgba(200, 16, 46, 0.22); }
-  .hd.r2 { background: rgba(200, 16, 46, 0.45); }
-  .hd.r3 { background: rgba(200, 16, 46, 0.7); }
+  .hd.r1 { background: rgba(122, 26, 43, 0.22); }
+  .hd.r2 { background: rgba(122, 26, 43, 0.45); }
+  .hd.r3 { background: rgba(122, 26, 43, 0.7); }
   .hd.r4 { background: var(--accent); }
   .heatmap-months {
     margin-top: 10px;
@@ -2011,7 +2023,7 @@
   }
   .replay-cta:hover {
     transform: translateY(-2px);
-    box-shadow: 0 14px 30px -10px rgba(200, 16, 46, 0.4);
+    box-shadow: 0 14px 30px -10px rgba(122, 26, 43, 0.4);
   }
   .replay-cta::before {
     content: "▶";
@@ -2052,7 +2064,9 @@
     z-index: 100;
     display: flex;
     flex-direction: column;
-    padding: 56px 32px 40px;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
     overflow-y: auto;
     transition: opacity 0.35s ease;
   }
@@ -2060,29 +2074,56 @@
     opacity: 0;
     pointer-events: none;
   }
+
+  /* Inner column — narrow, magazine-like */
+  .auth-screen > * {
+    width: 100%;
+    max-width: 380px;
+  }
+
+  /* Editorial epigraph above the wordmark */
+  .auth-epigraph {
+    text-align: center;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-size: 13px;
+    color: var(--accent);
+    margin-bottom: 18px;
+    letter-spacing: 0.02em;
+    opacity: 0.85;
+    transition: opacity 0.6s ease;
+    min-height: 36px; /* prevent layout shift between short/long quotes */
+    line-height: 1.4;
+  }
+  .auth-epigraph.fading {
+    opacity: 0;
+  }
+  .auth-epigraph .attr {
+    display: block;
+    margin-top: 4px;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-style: normal;
+    color: var(--text-3);
+    font-variation-settings: "opsz" 14, "wght" 600;
+    opacity: 0.85;
+  }
+
   .auth-brand {
     text-align: center;
-    margin-bottom: 36px;
-  }
-  .auth-brand .mark-large {
-    display: inline-flex;
-    align-items: center;
-    margin-bottom: 16px;
-  }
-  .auth-brand .mark-large .bar {
-    width: 18px;
-    height: 22px;
-    background: var(--accent);
-    border-radius: 2px 5px 5px 2px;
-    box-shadow: -5px 0 0 var(--text), -10px 0 0 var(--accent);
-    margin-left: 10px;
+    margin-bottom: 44px;
   }
   .auth-brand .wordmark {
-    font-variation-settings: "opsz" 96, "wght" 700;
-    font-size: 36px;
-    letter-spacing: -0.025em;
+    font-variation-settings: "opsz" 96, "wght" 600;
+    font-size: 52px;
+    letter-spacing: -0.04em;
     line-height: 1;
+    color: var(--text);
   }
+
+  /* Subtitle removed — wordmark stands alone */
+
   .auth-tagline {
     text-align: center;
     font-size: 16px;
@@ -2090,36 +2131,73 @@
     font-style: italic;
     margin-bottom: 36px;
   }
+
+  /* Mode toggle: minimal, underline-only */
+  .auth-mode-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    padding: 0;
+    margin: 0 0 32px;
+    border-radius: 0;
+  }
+  .auth-mode-btn {
+    background: none;
+    border: none;
+    color: var(--text-3);
+    font-family: inherit;
+    font-size: 13px;
+    font-variation-settings: "opsz" 14, "wght" 500;
+    cursor: pointer;
+    padding: 12px 20px;
+    border-radius: 0;
+    transition: all 0.18s;
+    position: relative;
+    margin-bottom: -1px;
+    letter-spacing: 0.02em;
+  }
+  .auth-mode-btn:hover { color: var(--text-2); }
+  .auth-mode-btn.active {
+    background: none;
+    color: var(--accent);
+    font-variation-settings: "opsz" 14, "wght" 600;
+    border-bottom: 2px solid var(--accent);
+  }
+
   .auth-form {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 20px;
   }
   .auth-field {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
   }
   .auth-field label {
     font-size: 10px;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--text-3);
+    color: var(--text-2);
     font-variation-settings: "opsz" 14, "wght" 600;
   }
   .auth-field input {
-    padding: 12px 14px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
+    padding: 12px 0;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border-strong);
+    border-radius: 0;
     font-family: inherit;
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text);
     outline: none;
     transition: border-color 0.18s;
   }
   .auth-field input:focus {
-    border-color: var(--accent);
+    border-bottom-color: var(--accent);
   }
   .auth-field input::placeholder { color: var(--text-faint); }
 
@@ -2127,54 +2205,61 @@
   .auth-handle-wrap {
     display: flex;
     align-items: center;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border-strong);
+    border-radius: 0;
     transition: border-color 0.18s;
     overflow: hidden;
   }
   .auth-handle-wrap:focus-within {
-    border-color: var(--accent);
+    border-bottom-color: var(--accent);
   }
   .auth-handle-wrap .handle-prefix {
-    padding: 0 2px 0 14px;
+    padding: 0 4px 0 0;
     color: var(--text-3);
     font-family: 'JetBrains Mono', monospace;
-    font-size: 15px;
+    font-size: 16px;
     user-select: none;
   }
   .auth-handle-wrap input {
     flex: 1;
     border: none;
     background: transparent;
-    padding: 12px 14px 12px 4px;
+    padding: 12px 0 12px 0;
     font-family: 'JetBrains Mono', monospace;
     font-size: 15px;
     color: var(--text);
     outline: none;
     width: 100%;
+    border-bottom: none;
   }
   .auth-handle-wrap input::placeholder { color: var(--text-faint); }
+
   .auth-submit {
-    margin-top: 14px;
-    padding: 14px 18px;
+    margin-top: 18px;
+    padding: 16px 18px;
     background: var(--accent);
     color: white;
     border: none;
-    border-radius: 12px;
+    border-radius: 4px;
     font-family: inherit;
-    font-size: 14px;
+    font-size: 13px;
     font-variation-settings: "opsz" 14, "wght" 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    transition: background 0.18s, transform 0.18s;
+    transition: background 0.18s, transform 0.18s, box-shadow 0.18s;
+    box-shadow: 0 2px 8px rgba(122, 26, 43, 0.15);
   }
   .auth-submit:hover {
     background: var(--accent-deep);
     transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(122, 26, 43, 0.25);
   }
   .auth-note {
     margin-top: 28px;
@@ -2271,7 +2356,7 @@
     padding: 8px;
     z-index: 90;
     min-width: 220px;
-    box-shadow: 0 16px 32px -10px rgba(60,40,20,0.22);
+    box-shadow: 0 16px 32px -10px rgba(20, 14, 18, 0.12);
     opacity: 0;
     pointer-events: none;
     transform: translateY(-6px) scale(0.98);
@@ -3743,6 +3828,265 @@
   }
   .trail-empty .add-btn { font-size: 13px; padding: 9px 16px; }
 
+  /* === DISCOVER TOP TABS (Books | Threads) === */
+  .discover-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+    margin: 0 24px 18px;
+  }
+  .discover-tab {
+    background: none;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 9px;
+    font-family: inherit;
+    font-size: 13px;
+    font-variation-settings: "opsz" 14, "wght" 500;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .discover-tab svg { width: 14px; height: 14px; }
+  .discover-tab:hover { color: var(--text); }
+  .discover-tab.active {
+    background: var(--text);
+    color: var(--bg);
+    font-variation-settings: "opsz" 14, "wght" 600;
+  }
+
+  /* === DISCOVER PANELS === */
+  .discover-panel { display: none; }
+  .discover-panel.active { display: block; }
+
+  /* === BOOK WALL (Pinterest-style masonry) === */
+  .book-wall-status {
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--text-3);
+    font-size: 13px;
+  }
+  .book-wall-status.error {
+    color: #b6493a;
+  }
+
+  .book-wall {
+    column-count: 3;
+    column-gap: 10px;
+    padding: 0 24px;
+    /* prevent column-break inside individual cards */
+  }
+  @media (max-width: 600px) {
+    .book-wall { column-count: 2; column-gap: 8px; padding: 0 18px; }
+  }
+  @media (min-width: 900px) {
+    .book-wall { column-count: 4; column-gap: 14px; padding: 0; }
+  }
+  @media (min-width: 1200px) {
+    .book-wall { column-count: 5; column-gap: 14px; }
+  }
+
+  /* The flip card lives as one column item */
+  .wall-card {
+    break-inside: avoid;
+    margin-bottom: 10px;
+    perspective: 1000px;
+    cursor: pointer;
+    /* Vary card heights subtly to create Pinterest rhythm */
+  }
+  @media (min-width: 900px) {
+    .wall-card { margin-bottom: 14px; }
+  }
+
+  .wall-card-inner {
+    position: relative;
+    width: 100%;
+    transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transform-style: preserve-3d;
+    border-radius: 6px;
+    /* aspect ratio set per-card based on actual cover dimensions */
+  }
+  .wall-card.flipped .wall-card-inner {
+    transform: rotateY(180deg);
+  }
+
+  .wall-card-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  /* Front face — the cover */
+  .wall-card-front {
+    background: var(--surface-2);
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    transition: box-shadow 0.2s;
+  }
+  .wall-card:hover .wall-card-front {
+    box-shadow: 0 8px 22px rgba(0,0,0,0.18);
+  }
+  /* Fallback for books without a cover image */
+  .wall-card-front.cv-fallback {
+    padding: 14px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: inset -3px 0 0 rgba(0,0,0,0.18), 0 4px 14px rgba(0,0,0,0.12);
+  }
+  .wall-card-front.cv-fallback .ct {
+    font-variation-settings: "opsz" 24, "wght" 600;
+    font-size: 14px;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+  .wall-card-front.cv-fallback .ca {
+    opacity: 0.75;
+    font-size: 11px;
+    line-height: 1.25;
+    margin-top: 6px;
+  }
+
+  /* Back face — title, author, summary */
+  .wall-card-back {
+    transform: rotateY(180deg);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .wall-card-back .b-title {
+    font-variation-settings: "opsz" 24, "wght" 600;
+    font-size: 15px;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .wall-card-back .b-author {
+    font-size: 12px;
+    color: var(--text-2);
+    margin-bottom: 10px;
+  }
+  .wall-card-back .b-author .b-year {
+    color: var(--text-3);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    margin-left: 4px;
+  }
+  .wall-card-back .b-summary {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-2);
+    flex: 1;
+    overflow: hidden;
+    /* fade out at the bottom if summary overflows */
+  }
+  .wall-card-back .b-summary.loading {
+    color: var(--text-3);
+    font-style: italic;
+  }
+  .wall-card-back .b-flip-back {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-soft);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    font-variation-settings: "opsz" 14, "wght" 600;
+    text-align: center;
+  }
+
+  /* Save button on flipped book cards */
+  .wall-card-back .b-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .b-save-btn {
+    flex: 1;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: 11px;
+    font-variation-settings: "opsz" 14, "wght" 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+  }
+  .b-save-btn:hover { background: var(--accent-deep); }
+  .b-save-btn.saved {
+    background: var(--surface-soft);
+    color: var(--text-3);
+    cursor: default;
+  }
+  .b-save-btn.saved:hover { background: var(--surface-soft); }
+
+  /* === FEED SEARCH BAR === */
+  .feed-search-wrap {
+    position: relative;
+    margin: 0 24px 16px;
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transition: border-color 0.18s, box-shadow 0.18s;
+  }
+  .feed-search-wrap:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(122, 26, 43, 0.08);
+  }
+  .feed-search-icon {
+    width: 16px;
+    height: 16px;
+    margin-left: 14px;
+    color: var(--text-3);
+    flex-shrink: 0;
+  }
+  #feed-search {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 12px 12px 12px 10px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    min-width: 0;
+  }
+  #feed-search::placeholder { color: var(--text-faint); }
+  .feed-search-clear {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 14px 8px 4px;
+    color: var(--text-3);
+    display: flex;
+    align-items: center;
+  }
+  .feed-search-clear:hover { color: var(--text); }
+  .feed-search-clear svg { width: 14px; height: 14px; }
+
   /* === CLUB CREATION === */
 
   /* Inline owner actions (edit / delete) — small subtle buttons */
@@ -4153,7 +4497,7 @@
     flex: 0 0 auto;
     height: 78px;
     padding: 8px 8px 18px;
-    background: rgba(246, 244, 238, 0.92);
+    background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(20px);
     border-top: 1px solid var(--border);
     display: grid;
@@ -4312,7 +4656,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      background: rgba(246, 244, 238, 0.92);
+      background: rgba(255, 255, 255, 0.92);
       backdrop-filter: blur(12px);
       border-top: none;
       border-bottom: 1px solid var(--border);
@@ -4550,6 +4894,7 @@
 
   <!-- Sign-up overlay (shown when no account exists) -->
   <div class="auth-screen" id="auth-screen">
+    <div class="auth-epigraph" id="auth-epigraph">"It is a truth universally acknowledged…"</div>
     <div class="auth-brand">
       <div class="wordmark">Vronsky</div>
     </div>
@@ -4965,82 +5310,59 @@
   <div class="screens">
 
     <!-- ============ HOME ============ -->
-    <section class="screen active" data-screen="home">
+    <section class="screen" data-screen="home">
 
-      <div class="page-head">
-        <h1>Home</h1>
-      </div>
-
-      <div class="filter-bar">
-        <div class="chip active" data-filter="all">All</div>
-        <div class="chip" data-filter="following">Following</div>
-      </div>
-
-      <!-- From threads you follow (rendered by JS, hidden if no follows) -->
-      <div class="home-threads-section" id="home-threads-section" style="display:none;">
-        <div class="label-row">
-          <span class="label">From your threads</span>
-          <span class="see-all" data-go-discover>See all →</span>
-        </div>
-        <div id="home-threads-list"></div>
-      </div>
-
-      <!-- Empty state when "Following" is selected but user follows nothing -->
-      <div class="following-empty" id="following-empty" style="display:none;">
-        <div class="em-mark">— Nothing here yet —</div>
-        <h3>You're not following any threads</h3>
-        <p>Follow communities in Discover to see their posts here.</p>
-        <button class="browse-btn" data-go-discover>Browse threads →</button>
-      </div>
-
-      <div class="feed-list" data-active="all">
-
-        <!-- Empty home feed -->
-        <div class="rec-empty" id="home-feed-empty">
-          <div class="em-mark">— Your feed is quiet —</div>
-          <h3>Nothing here yet.</h3>
-          <p>When you follow people or threads, their posts and reading activity show up here.</p>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ============ DISCOVER ============ -->
-    <section class="screen" data-screen="discover">
-
-      <div class="page-head">
-        <h1>Discover</h1>
-        <div class="actions">
-          <div class="head-btn" title="taste profile">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
-          </div>
-          <div class="head-btn" title="search">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
-          </div>
-        </div>
-      </div>
-
-      <!-- HOME sub-view -->
+      <!-- HOME sub-view (the feed itself) -->
       <div class="discover-view active" id="dv-home">
 
-      <div class="filter-bar">
-        <div class="chip active" data-disc="for-you">For you</div>
-        <div class="chip" data-disc="fiction">Fiction</div>
-        <div class="chip" data-disc="nonfiction">Nonfiction</div>
-        <div class="chip" data-disc="poetry">Poetry</div>
-        <div class="chip" data-disc="audio">Audiobooks</div>
-      </div>
-
-      <!-- Discover home — for now, only the threads section since real recommendations need real reading data -->
-
-      <!-- Threads — communities to browse -->
-      <div class="threads-preview">
-        <div class="label-row">
-          <span class="label">Threads · communities</span>
-          <span class="see-all">See all →</span>
+        <div class="page-head">
+          <h1>Feed</h1>
         </div>
-        <div id="threads-list"></div>
-      </div>
+
+        <!-- Search bar -->
+        <div class="feed-search-wrap">
+          <svg class="feed-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+          <input id="feed-search" type="text" placeholder="Search posts, threads, people…" autocomplete="off" />
+          <button class="feed-search-clear" id="feed-search-clear" style="display:none;" title="Clear">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <!-- All / Following toggle -->
+        <div class="filter-bar">
+          <div class="chip active" data-filter="all">All</div>
+          <div class="chip" data-filter="following">Following</div>
+        </div>
+
+        <!-- COMMUNITIES section: visible to all, lets you find threads to follow -->
+        <div class="threads-preview" id="feed-communities-section">
+          <div class="label-row">
+            <span class="label">Communities</span>
+          </div>
+          <div id="threads-list"></div>
+        </div>
+
+        <!-- From threads you follow (rendered by JS, hidden if no follows) -->
+        <div class="home-threads-section" id="home-threads-section" style="display:none;">
+          <div class="label-row">
+            <span class="label">From your threads</span>
+          </div>
+          <div id="home-threads-list"></div>
+        </div>
+
+        <!-- Empty state when "Following" is selected but user follows nothing -->
+        <div class="following-empty" id="following-empty" style="display:none;">
+          <div class="em-mark">— Nothing here yet —</div>
+          <h3>You're not following any threads</h3>
+          <p>Follow communities above to see their posts here.</p>
+        </div>
+
+        <div class="feed-list" data-active="all">
+          <!-- Quiet ambient empty state -->
+          <div class="home-quiet" id="home-feed-empty">
+            Quiet for now.
+          </div>
+        </div>
 
       </div> <!-- /dv-home -->
 
@@ -5049,7 +5371,7 @@
         <div style="padding: 0 24px 14px;">
           <button class="back-btn" data-back-to="home">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-            Back to Discover
+            Back to Feed
           </button>
         </div>
         <div id="community-detail"></div>
@@ -5065,6 +5387,24 @@
         </div>
         <div id="post-detail"></div>
       </div>
+
+    </section>
+
+    <!-- ============ DISCOVER ============ -->
+    <section class="screen active" data-screen="discover">
+
+      <div class="page-head">
+        <h1>Discover</h1>
+        <div class="actions">
+          <div class="head-btn" title="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOOK WALL — the entire Discover page now -->
+      <div id="book-wall-status" class="book-wall-status">Loading books…</div>
+      <div class="book-wall" id="book-wall"></div>
 
       <!-- toast notification -->
       <div class="toast" id="discover-toast">
@@ -5317,20 +5657,18 @@
   </div>
 
   <nav class="tabbar">
-    <button class="tab active" data-target="home">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 11 12 4l9 7"/>
-        <path d="M5 10v10h14V10"/>
-        <path d="M10 20v-6h4v6"/>
-      </svg>
-      <span class="tlabel">Home</span>
-    </button>
-    <button class="tab" data-target="discover">
+    <button class="tab active" data-target="discover">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
         <circle cx="12" cy="12" r="9"/>
         <path d="m15 9-2 6-6 2 2-6 6-2Z" fill="currentColor" stroke="none"/>
       </svg>
       <span class="tlabel">Discover</span>
+    </button>
+    <button class="tab" data-target="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <span class="tlabel">Feed</span>
     </button>
     <button class="tab" data-target="clubs">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -5625,6 +5963,78 @@
     }
     // Otherwise the auth screen is shown by default
   })();
+
+  // === ROTATING LITERARY EPIGRAPHS (auth screen) ===
+  // Famous opening lines and iconic quotes from beloved books.
+  // Cycles every 15 seconds with a soft fade.
+  const LITERARY_QUOTES = [
+    { quote: "It is a truth universally acknowledged…", source: "Pride and Prejudice — Jane Austen" },
+    { quote: "Happy families are all alike; every unhappy family is unhappy in its own way.", source: "Anna Karenina — Leo Tolstoy" },
+    { quote: "Call me Ishmael.", source: "Moby-Dick — Herman Melville" },
+    { quote: "Many years later, as he faced the firing squad, Colonel Aureliano Buendía was to remember that distant afternoon when his father took him to discover ice.", source: "One Hundred Years of Solitude — Gabriel García Márquez" },
+    { quote: "It was the best of times, it was the worst of times.", source: "A Tale of Two Cities — Charles Dickens" },
+    { quote: "All this happened, more or less.", source: "Slaughterhouse-Five — Kurt Vonnegut" },
+    { quote: "124 was spiteful. Full of a baby's venom.", source: "Beloved — Toni Morrison" },
+    { quote: "Mother died today. Or, maybe, yesterday; I can't be sure.", source: "The Stranger — Albert Camus" },
+    { quote: "Whether I shall turn out to be the hero of my own life, or whether that station will be held by anybody else, these pages must show.", source: "David Copperfield — Charles Dickens" },
+    { quote: "It was a bright cold day in April, and the clocks were striking thirteen.", source: "1984 — George Orwell" },
+    { quote: "All happy families are alike, but each unhappy family is unhappy in its own way.", source: "Anna Karenina — Leo Tolstoy" },
+    { quote: "I am an invisible man.", source: "Invisible Man — Ralph Ellison" },
+    { quote: "Lolita, light of my life, fire of my loins.", source: "Lolita — Vladimir Nabokov" },
+    { quote: "You don't know about me without you have read a book by the name of The Adventures of Tom Sawyer; but that ain't no matter.", source: "The Adventures of Huckleberry Finn — Mark Twain" },
+    { quote: "Someone must have slandered Josef K., for one morning, without having done anything wrong, he was arrested.", source: "The Trial — Franz Kafka" },
+    { quote: "The past is a foreign country; they do things differently there.", source: "The Go-Between — L. P. Hartley" },
+    { quote: "It was a pleasure to burn.", source: "Fahrenheit 451 — Ray Bradbury" },
+    { quote: "Tell me, Muse, of the man of many ways, who was driven far journeys.", source: "The Odyssey — Homer" },
+    { quote: "Stately, plump Buck Mulligan came from the stairhead, bearing a bowl of lather on which a mirror and a razor lay crossed.", source: "Ulysses — James Joyce" }
+  ];
+
+  let _quoteIdx = -1;
+  let _quoteInterval = null;
+
+  function pickNextQuote() {
+    if (LITERARY_QUOTES.length <= 1) return 0;
+    let next;
+    do { next = Math.floor(Math.random() * LITERARY_QUOTES.length); }
+    while (next === _quoteIdx);
+    return next;
+  }
+
+  function rotateQuote() {
+    const el = document.getElementById('auth-epigraph');
+    if (!el) return;
+    el.classList.add('fading');
+    setTimeout(() => {
+      _quoteIdx = pickNextQuote();
+      const q = LITERARY_QUOTES[_quoteIdx];
+      el.innerHTML = `"${escapeHtml(q.quote)}"<span class="attr">${escapeHtml(q.source)}</span>`;
+      el.classList.remove('fading');
+    }, 600); // matches the CSS transition
+  }
+
+  function startQuoteRotation() {
+    // Initial set (no fade) — pick a random first quote
+    const el = document.getElementById('auth-epigraph');
+    if (!el) return;
+    _quoteIdx = Math.floor(Math.random() * LITERARY_QUOTES.length);
+    const q = LITERARY_QUOTES[_quoteIdx];
+    el.innerHTML = `"${escapeHtml(q.quote)}"<span class="attr">${escapeHtml(q.source)}</span>`;
+
+    if (_quoteInterval) clearInterval(_quoteInterval);
+    _quoteInterval = setInterval(rotateQuote, 15000);
+  }
+
+  function stopQuoteRotation() {
+    if (_quoteInterval) {
+      clearInterval(_quoteInterval);
+      _quoteInterval = null;
+    }
+  }
+
+  // Start rotation if the auth screen is visible on load
+  if (!authScreen.classList.contains('hidden')) {
+    startQuoteRotation();
+  }
 
   // Avatar click → toggle the menu
   const avatarBtn = document.getElementById('user-avatar');
@@ -7198,6 +7608,311 @@
     });
   }
 
+  // === DISCOVER BOOK WALL (Pinterest-style cover masonry, personalized) ===
+  //
+  // Recommendation strategy, in priority order:
+  //   1. If the user has finished books: search Open Library by their authors,
+  //      mixing results (so finishing 2 Ishiguro and 1 Morrison gives a wall
+  //      with 2/3 Ishiguro books, 1/3 Morrison).
+  //   2. If they only have books in "Want to read", use those authors.
+  //   3. If their library is completely empty: fall back to a literary mix
+  //      across fiction, poetry, classics — so they always see something.
+  //
+  // Books they've already added to their library are filtered out so the
+  // wall always shows discoveries.
+
+  // Cache fetched results by query so repeat searches are instant
+  const bookWallCache = {};
+  // Cache fetched book summaries (per work key)
+  const bookSummaryCache = {};
+
+  // Fetch books from a specific Open Library subject
+  async function fetchSubjectBooks(subject) {
+    const cacheKey = 'subj:' + subject;
+    if (bookWallCache[cacheKey]) return bookWallCache[cacheKey];
+    try {
+      const res = await fetch(`https://openlibrary.org/subjects/${encodeURIComponent(subject)}.json?limit=40`);
+      if (!res.ok) throw new Error('subject ' + res.status);
+      const data = await res.json();
+      const works = (data.works || []).map(w => ({
+        workKey: w.key,
+        title: w.title,
+        author: (w.authors && w.authors[0] && w.authors[0].name) || '',
+        year: w.first_publish_year || null,
+        coverId: w.cover_id || null
+      }));
+      bookWallCache[cacheKey] = works;
+      return works;
+    } catch (err) {
+      console.error('subject fetch failed', err);
+      return [];
+    }
+  }
+
+  // Fetch books by an author name (uses Open Library's general search)
+  async function fetchBooksByAuthor(author) {
+    const cacheKey = 'auth:' + author.toLowerCase();
+    if (bookWallCache[cacheKey]) return bookWallCache[cacheKey];
+    try {
+      const res = await fetch(`https://openlibrary.org/search.json?author=${encodeURIComponent(author)}&limit=20`);
+      if (!res.ok) throw new Error('search ' + res.status);
+      const data = await res.json();
+      const works = (data.docs || []).map(d => ({
+        workKey: d.key, // /works/OL...W
+        title: d.title,
+        author: (d.author_name && d.author_name[0]) || author,
+        year: d.first_publish_year || null,
+        coverId: d.cover_i || null
+      })).filter(w => w.coverId); // Prefer books with covers
+      bookWallCache[cacheKey] = works;
+      return works;
+    } catch (err) {
+      console.error('author fetch failed', err);
+      return [];
+    }
+  }
+
+  // Fetch the summary/description for a single work
+  async function fetchWorkSummary(workKey) {
+    if (bookSummaryCache[workKey]) return bookSummaryCache[workKey];
+    try {
+      const res = await fetch(`https://openlibrary.org${workKey}.json`);
+      if (!res.ok) throw new Error('work fetch failed');
+      const data = await res.json();
+      let desc = '';
+      if (typeof data.description === 'string') desc = data.description;
+      else if (data.description && data.description.value) desc = data.description.value;
+      desc = desc.replace(/\[\d+\]:.*$/gm, '').replace(/\(\[[^\]]+\]\[\d+\]\)/g, '').trim();
+      if (desc.length > 500) desc = desc.slice(0, 500).trim() + '…';
+      bookSummaryCache[workKey] = desc || 'No summary available.';
+      return bookSummaryCache[workKey];
+    } catch (err) {
+      console.error('work summary failed', err);
+      return 'Couldn\'t load summary.';
+    }
+  }
+
+  // Build the recommendation set based on the user's library.
+  // Returns: { books: [...], source: 'authors' | 'wishlist' | 'fallback' }
+  async function getRecommendedBooks() {
+    const all = await getBooks();
+    const finished = all.filter(b => b.status === 'finished');
+    const wishlist = all.filter(b => b.status === 'library' || b.status === 'reading');
+
+    // Build a set of already-owned work keys (and titles, in case keys differ)
+    // so we don't recommend books the user already has.
+    const ownedKeys = new Set();
+    const ownedTitles = new Set();
+    all.forEach(b => {
+      if (b.workKey) ownedKeys.add(b.workKey);
+      if (b.title) ownedTitles.add(b.title.toLowerCase());
+    });
+
+    function dedupe(books) {
+      const seen = new Set();
+      const out = [];
+      for (const b of books) {
+        if (!b.title) continue;
+        const key = b.workKey || b.title.toLowerCase();
+        if (seen.has(key)) continue;
+        if (ownedKeys.has(b.workKey)) continue;
+        if (ownedTitles.has(b.title.toLowerCase())) continue;
+        seen.add(key);
+        out.push(b);
+      }
+      return out;
+    }
+
+    // Primary: authors of finished books
+    if (finished.length > 0) {
+      const authorCounts = {};
+      finished.forEach(b => {
+        if (b.author) authorCounts[b.author] = (authorCounts[b.author] || 0) + 1;
+      });
+      const authors = Object.keys(authorCounts);
+      // Fetch in parallel
+      const results = await Promise.all(authors.map(a => fetchBooksByAuthor(a)));
+      let combined = [];
+      results.forEach(r => combined = combined.concat(r));
+      combined = dedupe(combined);
+      if (combined.length >= 12) return { books: combined, source: 'authors' };
+      // Not enough — supplement with literary fiction
+      const supplement = await fetchSubjectBooks('fiction');
+      return { books: dedupe(combined.concat(supplement)), source: 'authors' };
+    }
+
+    // Secondary: authors of wishlist books
+    if (wishlist.length > 0) {
+      const authors = [...new Set(wishlist.map(b => b.author).filter(Boolean))];
+      const results = await Promise.all(authors.map(a => fetchBooksByAuthor(a)));
+      let combined = [];
+      results.forEach(r => combined = combined.concat(r));
+      combined = dedupe(combined);
+      if (combined.length >= 12) return { books: combined, source: 'wishlist' };
+      const supplement = await fetchSubjectBooks('fiction');
+      return { books: dedupe(combined.concat(supplement)), source: 'wishlist' };
+    }
+
+    // Fallback: a mixed wall of literary fiction + classics + poetry
+    const [fic, classics, poetry] = await Promise.all([
+      fetchSubjectBooks('fiction'),
+      fetchSubjectBooks('classics'),
+      fetchSubjectBooks('poetry')
+    ]);
+    // Interleave so the wall feels mixed, not sectioned
+    const max = Math.max(fic.length, classics.length, poetry.length);
+    const interleaved = [];
+    for (let i = 0; i < max; i++) {
+      if (fic[i]) interleaved.push(fic[i]);
+      if (classics[i]) interleaved.push(classics[i]);
+      if (poetry[i]) interleaved.push(poetry[i]);
+    }
+    return { books: dedupe(interleaved), source: 'fallback' };
+  }
+
+  // Render the personalized book wall
+  async function renderBookWall() {
+    const wallEl = document.getElementById('book-wall');
+    const statusEl = document.getElementById('book-wall-status');
+    if (!wallEl || !statusEl) return;
+
+    statusEl.textContent = 'Loading books…';
+    statusEl.className = 'book-wall-status';
+    statusEl.style.display = '';
+    wallEl.innerHTML = '';
+
+    let result;
+    try {
+      result = await getRecommendedBooks();
+    } catch (err) {
+      console.error(err);
+      statusEl.textContent = "Couldn't load books. Check your connection and try again.";
+      statusEl.className = 'book-wall-status error';
+      return;
+    }
+
+    const books = result.books;
+    if (!books || books.length === 0) {
+      statusEl.textContent = "No books to show right now.";
+      return;
+    }
+
+    // Limit the wall size — too many cards is overwhelming
+    const display = books.slice(0, 60);
+    statusEl.style.display = 'none';
+
+    const aspectRatios = [1.5, 1.55, 1.45, 1.6, 1.5];
+
+    // Get current library so we can mark books that are already saved
+    const currentLibrary = await getBooks();
+    const ownedTitles = new Set(currentLibrary.map(b => (b.title || '').toLowerCase()));
+    const ownedKeys = new Set(currentLibrary.map(b => b.workKey).filter(Boolean));
+
+    wallEl.innerHTML = display.map((b, i) => {
+      const ar = aspectRatios[i % aspectRatios.length];
+      const coverUrl = b.coverId ? `https://covers.openlibrary.org/b/id/${b.coverId}-L.jpg` : null;
+      const frontHtml = coverUrl
+        ? `<div class="wall-card-face wall-card-front" style="background-image: url('${coverUrl}');"></div>`
+        : `<div class="wall-card-face wall-card-front cv-fallback ${pickCoverClass(b.title)}">
+              <div class="ct">${escapeHtml(b.title.slice(0, 60))}</div>
+              <div class="ca">— ${escapeHtml((b.author || '').slice(0, 30))}</div>
+           </div>`;
+      const isSaved = ownedKeys.has(b.workKey) || ownedTitles.has((b.title || '').toLowerCase());
+      const saveBtnLabel = isSaved ? 'Saved ✓' : '+ Want to read';
+      const saveBtnClass = isSaved ? 'b-save-btn saved' : 'b-save-btn';
+      return `
+        <div class="wall-card" data-work="${escapeHtml(b.workKey)}" data-idx="${i}">
+          <div class="wall-card-inner" style="padding-bottom: ${ar * 100}%;">
+            ${frontHtml}
+            <div class="wall-card-face wall-card-back">
+              <div class="b-title">${escapeHtml(b.title)}</div>
+              <div class="b-author">${escapeHtml(b.author || 'Unknown')}${b.year ? `<span class="b-year">${b.year}</span>` : ''}</div>
+              <div class="b-summary loading" data-summary>Loading…</div>
+              <div class="b-actions">
+                <button class="${saveBtnClass}" data-save-book="${i}" ${isSaved ? 'disabled' : ''}>${saveBtnLabel}</button>
+              </div>
+              <div class="b-flip-back">↺ Tap card to flip back</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Wire up the flip behavior
+    wallEl.querySelectorAll('.wall-card').forEach(card => {
+      card.addEventListener('click', async (e) => {
+        // Don't flip if user clicked a button (save, etc.)
+        if (e.target.closest('button')) return;
+        const wasFlipped = card.classList.contains('flipped');
+        wallEl.querySelectorAll('.wall-card.flipped').forEach(c => {
+          if (c !== card) c.classList.remove('flipped');
+        });
+        card.classList.toggle('flipped');
+        if (!wasFlipped) {
+          const summaryEl = card.querySelector('[data-summary]');
+          const workKey = card.dataset.work;
+          if (summaryEl && workKey && summaryEl.classList.contains('loading')) {
+            const summary = await fetchWorkSummary(workKey);
+            summaryEl.textContent = summary;
+            summaryEl.classList.remove('loading');
+          }
+        }
+      });
+    });
+
+    // Wire up Save buttons
+    wallEl.querySelectorAll('[data-save-book]').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.saveBook, 10);
+        const book = display[idx];
+        if (!book) return;
+        if (btn.classList.contains('saved')) return;
+
+        // Add to library with status 'library' (Want to read)
+        const newBook = {
+          id: 'b_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          title: book.title,
+          author: book.author || '',
+          year: book.year || null,
+          coverId: book.coverId || null,
+          coverClass: pickCoverClass(book.title),
+          workKey: book.workKey,
+          status: 'library',
+          addedAt: new Date().toISOString()
+        };
+        const allBooks = await getBooks();
+        allBooks.unshift(newBook);
+        await saveBooks(allBooks);
+
+        // Update button state
+        btn.textContent = 'Saved ✓';
+        btn.classList.add('saved');
+        btn.disabled = true;
+
+        // Re-render Desk (in background) so it reflects the new book
+        if (typeof renderDesk === 'function') renderDesk();
+      });
+    });
+  }
+
+  // Render the book wall on page load (Discover is now the default tab)
+  let bookWallInitialized = false;
+  setTimeout(() => {
+    if (!bookWallInitialized) {
+      bookWallInitialized = true;
+      renderBookWall();
+    }
+  }, 200);
+
+  // Re-render the wall when navigating to Discover (so newly-saved books are filtered out)
+  document.querySelectorAll('.tab[data-target="discover"]').forEach(tab => {
+    tab.addEventListener('click', () => {
+      // Small delay so the screen transition happens first
+      setTimeout(() => renderBookWall(), 50);
+    });
+  });
+
   // Render community detail (header + posts list)
   async function renderCommunity(communityId) {
     const c = COMMUNITIES.find(x => x.id === communityId);
@@ -7413,24 +8128,29 @@
 
   // === Navigation between Discover sub-views ===
   function navigateDiscover(view, param) {
-    const all = document.querySelectorAll('.discover-view');
+    // The community/post sub-views now live under the Feed (home) screen.
+    // First, switch to the Feed tab if we're not already there.
+    const feedTab = document.querySelector('.tab[data-target="home"]');
+    const homeScreen = document.querySelector('.screen[data-screen="home"]');
+    if (feedTab && homeScreen && !homeScreen.classList.contains('active')) {
+      feedTab.click();
+    }
+
+    const all = document.querySelectorAll('.screen[data-screen="home"] .discover-view');
     all.forEach(v => v.classList.remove('active'));
 
     const target = document.getElementById('dv-' + view);
     if (target) target.classList.add('active');
 
-    // populate based on view
     if (view === 'community' && param) {
       renderCommunity(param);
-      // remember which community we're in for back-from-post
       window._currentCommunity = param;
     } else if (view === 'post' && param) {
       renderPost(param);
     }
 
-    // scroll the screen back to the top
-    const screen = document.querySelector('.screen[data-screen="discover"]');
-    if (screen) screen.scrollTop = 0;
+    // scroll the feed screen back to the top
+    if (homeScreen) homeScreen.scrollTop = 0;
   }
 
   // wire up back buttons
@@ -7581,6 +8301,63 @@
       }
     });
   });
+
+  // === FEED SEARCH ===
+  // Filters the visible communities and posts on Feed in real time
+  const feedSearchInput = document.getElementById('feed-search');
+  const feedSearchClear = document.getElementById('feed-search-clear');
+
+  function filterFeedBySearch(query) {
+    const q = (query || '').trim().toLowerCase();
+    const showClear = q.length > 0;
+    feedSearchClear.style.display = showClear ? 'flex' : 'none';
+
+    // Filter community cards
+    document.querySelectorAll('#threads-list .thread-card').forEach(card => {
+      const name = (card.querySelector('.name')?.textContent || '').toLowerCase();
+      const slug = (card.querySelector('.slug')?.textContent || '').toLowerCase();
+      const matches = !q || name.includes(q) || slug.includes(q);
+      card.style.display = matches ? '' : 'none';
+    });
+
+    // Filter followed-thread post cards on Home
+    document.querySelectorAll('#home-threads-list .post-card').forEach(card => {
+      const title = (card.querySelector('.post-title')?.textContent || '').toLowerCase();
+      const body = (card.querySelector('.post-body')?.textContent || '').toLowerCase();
+      const author = (card.querySelector('.who')?.textContent || '').toLowerCase();
+      const matches = !q || title.includes(q) || body.includes(q) || author.includes(q);
+      card.style.display = matches ? '' : 'none';
+    });
+  }
+
+  if (feedSearchInput) {
+    feedSearchInput.addEventListener('input', (e) => {
+      filterFeedBySearch(e.target.value);
+    });
+  }
+  if (feedSearchClear) {
+    feedSearchClear.addEventListener('click', () => {
+      feedSearchInput.value = '';
+      filterFeedBySearch('');
+      feedSearchInput.focus();
+    });
+  }
+
+  // Re-apply filter when the threads or posts get re-rendered
+  // (we observe the lists for child changes)
+  function reapplySearchAfterRender() {
+    if (feedSearchInput && feedSearchInput.value) {
+      filterFeedBySearch(feedSearchInput.value);
+    }
+  }
+  const _threadsList = document.getElementById('threads-list');
+  if (_threadsList) {
+    new MutationObserver(reapplySearchAfterRender).observe(_threadsList, { childList: true });
+  }
+  const _homeThreadsList = document.getElementById('home-threads-list');
+  if (_homeThreadsList) {
+    new MutationObserver(reapplySearchAfterRender).observe(_homeThreadsList, { childList: true });
+  }
 
   // === PROFILE SCREEN ===
   const profileScreen = document.getElementById('profile-screen');
