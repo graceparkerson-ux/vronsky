@@ -3694,6 +3694,329 @@
   }
   .trail-empty .add-btn { font-size: 13px; padding: 9px 16px; }
 
+  /* === CLUB CREATION === */
+
+  /* Inline owner actions (edit / delete) — small subtle buttons */
+  .owner-actions {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .owner-action-btn {
+    background: none;
+    border: none;
+    color: var(--text-3);
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .owner-action-btn:hover { background: var(--surface-soft); color: var(--text); }
+  .owner-action-btn.danger:hover { background: rgba(182, 73, 58, 0.1); color: #b6493a; }
+  .owner-action-btn svg { width: 12px; height: 12px; }
+
+  .post-detail .owner-actions {
+    margin-left: auto;
+  }
+  .post-head { align-items: center; }
+  .post-head .owner-actions { margin-left: auto; }
+  .comment .c-head .owner-actions { margin-left: 6px; }
+
+  /* === CLUB DETAIL PAGE === */
+  .club-view { display: none; }
+  .club-view.active { display: block; }
+
+  .club-header {
+    margin: 0 20px 18px;
+    padding: 24px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 16px;
+  }
+  .club-header .top-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 12px;
+  }
+  .club-header .privacy-badge {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .club-header .privacy-badge.public {
+    background: var(--surface-soft);
+    color: var(--text-2);
+  }
+  .club-header .privacy-badge svg { width: 20px; height: 20px; }
+  .club-header .name-block { flex: 1; min-width: 0; }
+  .club-header .name {
+    font-variation-settings: "opsz" 24, "wght" 600;
+    font-size: 22px;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+  }
+  .club-header .meta-row {
+    margin-top: 4px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-3);
+  }
+  .club-header .meta-row .privacy-text { color: var(--text-2); }
+  .club-header .desc {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.5;
+    margin-top: 12px;
+  }
+  .club-header .edit-row {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-soft);
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  /* Currently reading section in club */
+  .club-section {
+    margin: 0 20px 18px;
+    padding: 20px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 14px;
+  }
+  .club-section .label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .club-section .label {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    font-variation-settings: "opsz" 14, "wght" 600;
+  }
+
+  .club-current-book {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  .club-current-book .cover-mid {
+    width: 80px;
+    height: 120px;
+    border-radius: 5px;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--surface-2);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .club-current-book .cover-mid.cv-art {
+    padding: 8px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .club-current-book .info .t {
+    font-size: 16px;
+    font-variation-settings: "opsz" 14, "wght" 600;
+    line-height: 1.2;
+  }
+  .club-current-book .info .a {
+    font-size: 13px;
+    color: var(--text-2);
+    margin-top: 3px;
+  }
+  .club-current-book .info .y {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .club-no-book {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-3);
+    font-size: 13px;
+    font-style: italic;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+  }
+
+  /* Schedule */
+  .schedule-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .schedule-item {
+    display: grid;
+    grid-template-columns: 80px 1fr auto;
+    gap: 14px;
+    padding: 12px 14px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    align-items: center;
+  }
+  .schedule-item.past { opacity: 0.55; }
+  .schedule-item.next { border-color: var(--accent-tint); background: var(--accent-soft); }
+  .schedule-item .date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-2);
+    line-height: 1.2;
+  }
+  .schedule-item.next .date { color: var(--accent-deep); font-variation-settings: "wght" 600; }
+  .schedule-item .milestone {
+    font-size: 13px;
+    font-variation-settings: "opsz" 14, "wght" 500;
+    line-height: 1.3;
+  }
+  .schedule-item .delete-mile {
+    background: none;
+    border: none;
+    color: var(--text-3);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+  .schedule-item .delete-mile:hover { color: #b6493a; background: rgba(182,73,58,0.08); }
+
+  .schedule-empty {
+    text-align: center;
+    padding: 16px;
+    color: var(--text-3);
+    font-size: 12px;
+    font-style: italic;
+  }
+
+  /* Add milestone form (inline, only for owners) */
+  .add-milestone {
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 8px;
+    align-items: center;
+  }
+  .add-milestone input[type="date"],
+  .add-milestone input[type="text"] {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+  }
+  .add-milestone input[type="text"] { min-width: 0; }
+  .add-milestone input:focus { border-color: var(--accent); }
+  .add-milestone .add-btn-mile {
+    padding: 8px 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 12px;
+    font-variation-settings: "opsz" 14, "wght" 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .add-milestone .add-btn-mile:hover { background: var(--accent-deep); }
+  .add-milestone .add-btn-mile:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Club book picker (reused with status picker pattern) */
+  .pick-book-btn {
+    padding: 8px 14px;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 12px;
+    font-variation-settings: "opsz" 14, "wght" 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .pick-book-btn:hover { background: var(--accent); }
+
+  /* Privacy picker — same style as status picker */
+  .privacy-picker {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+  }
+  .privacy-opt {
+    text-align: left;
+    padding: 12px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px;
+    align-items: start;
+  }
+  .privacy-opt:hover { background: var(--surface); }
+  .privacy-opt.active {
+    background: var(--text);
+    color: var(--bg);
+  }
+  .privacy-opt .icon {
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    color: inherit;
+  }
+  .privacy-opt .icon svg { width: 16px; height: 16px; }
+  .privacy-opt .label-block .ttl {
+    font-size: 13px;
+    font-variation-settings: "opsz" 14, "wght" 600;
+    line-height: 1.2;
+  }
+  .privacy-opt .label-block .desc {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 2px;
+    line-height: 1.3;
+  }
+  .privacy-opt.active .label-block .desc { color: rgba(255,255,255,0.6); }
+
+  /* User-created club card (uses a slimmer variant of the seeded card) */
+  .club-card.is-user-club {
+    animation: bookIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
   /* === STATUS-CHANGE BOTTOM SHEET === */
   .sheet-overlay {
     position: absolute;
@@ -3901,40 +4224,63 @@
       border-radius: 0;
       box-shadow: none;
       background: transparent;
-      display: grid;
-      grid-template-rows: auto 1fr;
+      display: flex;
+      flex-direction: column;
     }
 
-    /* Hide the fake phone status bar on desktop */
+    /* On desktop: tabbar to top, screens below */
+    .tabbar { order: 1; }
+    .screens { order: 2; }
+    .statusbar { order: 0; }
+
+    /* Statusbar collapses to just the avatar, positioned over the tabbar's right edge */
     .statusbar {
-      max-width: 1280px;
-      margin: 0 auto;
-      width: 100%;
-      padding: 20px 48px 12px;
-      border-bottom: none;
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: auto;
+      width: auto;
+      padding: 0;
+      height: 68px;
+      max-width: none;
+      margin: 0;
+      z-index: 51;
+      display: flex;
+      align-items: center;
+      padding-right: max(48px, calc((100vw - 1280px) / 2 + 48px));
       background: transparent;
+      border: none;
     }
-    .statusbar > span:first-child { display: none; } /* hide the 9:41 */
-    .statusbar .brand span { font-size: 22px; letter-spacing: 0.02em; }
+    .statusbar > span:first-child,
+    .statusbar .brand { display: none; }
 
-    /* Tab bar moves from bottom to top, becomes the site nav */
+    /* Tab bar becomes the unified top nav: wordmark on left, tabs on right */
     .tabbar {
       position: sticky;
       top: 0;
-      height: 64px;
+      height: 68px;
       padding: 0 48px;
-      grid-template-columns: repeat(5, auto);
+      display: flex;
+      align-items: center;
       gap: 8px;
       background: rgba(246, 244, 238, 0.92);
       backdrop-filter: blur(12px);
       border-top: none;
       border-bottom: 1px solid var(--border);
       z-index: 50;
-      align-items: center;
       max-width: 1280px;
       margin: 0 auto;
       width: 100%;
-      justify-content: flex-start;
+    }
+
+    /* Wordmark on the left of the nav */
+    .tabbar::before {
+      content: "VRONSKY";
+      font-variation-settings: "opsz" 14, "wght" 700;
+      font-size: 20px;
+      letter-spacing: 0.04em;
+      color: var(--text);
+      margin-right: 32px;
     }
 
     .tab {
@@ -3949,6 +4295,7 @@
     .tab.active::before { display: none; }
     .tab.active {
       background: var(--accent-soft);
+      color: var(--accent);
       font-variation-settings: "opsz" 14, "wght" 600;
     }
     .tab:not(.active):hover { background: var(--surface); }
@@ -4279,6 +4626,142 @@
     </div>
   </div>
 
+  <!-- New Club modal -->
+  <div class="modal-overlay" id="new-club-modal">
+    <div class="modal" role="dialog" aria-labelledby="new-club-title">
+      <div class="modal-head">
+        <h3 id="new-club-title">Start a club</h3>
+        <button class="modal-close" id="nc-close-btn" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <form id="new-club-form">
+        <div class="modal-body">
+          <div class="form-row">
+            <label for="nc-name">Club name</label>
+            <input id="nc-name" type="text" name="name" required maxlength="60" placeholder="e.g., Tuesday Night Reads" />
+          </div>
+          <div class="form-row">
+            <label for="nc-description">What's it about?</label>
+            <textarea id="nc-description" name="description" maxlength="280" placeholder="A short description — what you read, how you meet, who it's for." style="min-height: 80px;"></textarea>
+          </div>
+          <div class="form-row">
+            <label>Privacy</label>
+            <div class="privacy-picker" id="nc-privacy-picker">
+              <div class="privacy-opt active" data-privacy="public">
+                <div class="icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
+                </div>
+                <div class="label-block">
+                  <div class="ttl">Public</div>
+                  <div class="desc">Anyone can find and join</div>
+                </div>
+              </div>
+              <div class="privacy-opt" data-privacy="private">
+                <div class="icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                </div>
+                <div class="label-block">
+                  <div class="ttl">Private</div>
+                  <div class="desc">Invite only</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <label for="nc-current-book">What are you reading? <span style="color: var(--text-3); font-weight: 400;">(optional)</span></label>
+            <input id="nc-current-book" type="text" placeholder="Title — Author" maxlength="120" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="modal-btn" id="nc-cancel-btn">Cancel</button>
+          <button type="submit" class="modal-btn primary">Create club</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Club modal (owners only) -->
+  <div class="modal-overlay" id="edit-club-modal">
+    <div class="modal" role="dialog" aria-labelledby="edit-club-title">
+      <div class="modal-head">
+        <h3 id="edit-club-title">Edit club</h3>
+        <button class="modal-close" id="ec-close-btn" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <form id="edit-club-form">
+        <div class="modal-body">
+          <div class="form-row">
+            <label for="ec-name">Club name</label>
+            <input id="ec-name" type="text" name="name" required maxlength="60" />
+          </div>
+          <div class="form-row">
+            <label for="ec-description">Description</label>
+            <textarea id="ec-description" name="description" maxlength="280" style="min-height: 80px;"></textarea>
+          </div>
+          <div class="form-row">
+            <label>Privacy</label>
+            <div class="privacy-picker" id="ec-privacy-picker">
+              <div class="privacy-opt" data-privacy="public">
+                <div class="icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
+                </div>
+                <div class="label-block">
+                  <div class="ttl">Public</div>
+                  <div class="desc">Anyone can find and join</div>
+                </div>
+              </div>
+              <div class="privacy-opt" data-privacy="private">
+                <div class="icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                </div>
+                <div class="label-block">
+                  <div class="ttl">Private</div>
+                  <div class="desc">Invite only</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" style="justify-content: space-between;">
+          <button type="button" class="modal-btn" id="ec-delete-btn" style="color: #b6493a;">Delete club</button>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="modal-btn" id="ec-cancel-btn">Cancel</button>
+            <button type="submit" class="modal-btn primary">Save</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Pick Book modal — search Open Library and choose a book for the club -->
+  <div class="modal-overlay" id="pick-book-modal">
+    <div class="modal" role="dialog" aria-labelledby="pick-book-title">
+      <div class="modal-head">
+        <h3 id="pick-book-title">Pick a book</h3>
+        <button class="modal-close" id="pb-close-btn" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row" style="margin-bottom: 14px;">
+          <div class="search-input-wrap">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+            <input id="pb-search" type="text" placeholder="Search title or author…" autocomplete="off" />
+          </div>
+        </div>
+        <div id="pb-results" class="search-results" style="max-height: 360px; overflow-y: auto;">
+          <div class="search-hint">Type to search Open Library</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="modal-btn" id="pb-clear-btn" style="color: var(--text-3);">Remove current book</button>
+        <button type="button" class="modal-btn" id="pb-cancel-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Status change bottom sheet -->
   <div class="sheet-overlay" id="status-sheet">
     <div class="sheet">
@@ -4437,380 +4920,14 @@
 
       <div class="feed-list" data-active="all">
 
-        <!-- POPULAR #1 trending review -->
-        <div class="feed-entry is-review cat-popular">
-          <div class="feed-head">
-            <div class="av av-9">SM</div>
-            <div class="feed-meta">
-              <div class="who">Sarah Mitchell <span class="verified">✓</span></div>
-              <div class="what"><span class="verb">finished &amp; reviewed</span></div>
-            </div>
-            <div class="trending">#1 <span class="arrow">↑</span></div>
-          </div>
-          <div class="book-strip">
-            <div class="cv mini-cover cv-13">
-              <div class="mt">Hamnet</div>
-              <div class="ma">O'Farrell</div>
-            </div>
-            <div class="info">
-              <div class="t">Hamnet</div>
-              <div class="a">Maggie O'Farrell</div>
-              <div class="extra">
-                <span class="stars">★★★★★</span>
-                <span>· 305p</span>
-              </div>
-            </div>
-          </div>
-          <div class="review-text">
-            Years from now I'll remember exactly where I was when I read the chapter about the bubonic plague. O'Farrell makes grief feel like weather — moving through everything, settling in places.
-          </div>
-          <div class="aggregate">
-            <div class="av-stack">
-              <div class="av-mini" style="background:#c97a3a;"></div>
-              <div class="av-mini" style="background:#2e7c70;"></div>
-              <div class="av-mini" style="background:#4a78c4;"></div>
-            </div>
-            <span><span class="v">2,431 readers</span> liked this review</span>
-          </div>
-          <div class="feed-actions">
-            <span><span class="num">2.4k</span> ♡</span>
-            <span><span class="num">187</span> ↳</span>
-            <span>+ Save</span>
-          </div>
-        </div>
-
-        <!-- FRIEND - review -->
-        <div class="feed-entry is-review cat-friends">
-          <div class="feed-head">
-            <div class="av av-1">MA</div>
-            <div class="feed-meta">
-              <div class="who">Maya Chen</div>
-              <div class="what"><span class="verb">finished &amp; reviewed</span> · 9 days reading</div>
-            </div>
-            <div class="feed-time">3h</div>
-          </div>
-          <div class="book-strip">
-            <div class="cv mini-cover cv-5">
-              <div class="mt">Klara &amp; the Sun</div>
-              <div class="ma">Ishiguro</div>
-            </div>
-            <div class="info">
-              <div class="t">Klara and the Sun</div>
-              <div class="a">Kazuo Ishiguro</div>
-              <div class="extra">
-                <span class="stars">★★★★★</span>
-                <span>· 412p</span>
-              </div>
-            </div>
-          </div>
-          <div class="review-text">
-            Quietly devastating. The way Klara reads the world is the most precise writing about loneliness I've encountered all year. Don't read this when you're tired.
-          </div>
-          <div class="feed-actions">
-            <span><span class="num">12</span> ♡</span>
-            <span>↳ Reply</span>
-            <span>+ Save book</span>
-          </div>
-        </div>
-
-        <!-- FRIEND - highlight -->
-        <div class="feed-entry cat-friends">
-          <div class="feed-head">
-            <div class="av av-3">SK</div>
-            <div class="feed-meta">
-              <div class="who">Sam Kowalski</div>
-              <div class="what"><span class="verb">highlighted</span> a passage</div>
-            </div>
-            <div class="feed-time">6h</div>
-          </div>
-          <div class="quote-block">
-            <p>The pollen had done its work. The forest could speak now, in the only language a forest knows — patience, repetition, and the slow march of leaves.</p>
-            <div class="attr">The Overstory · p.184</div>
-          </div>
-          <div class="feed-actions">
-            <span><span class="num">4</span> ♡</span>
-            <span>↳ Reply</span>
-            <span>↗ Save quote</span>
-          </div>
-        </div>
-
-        <!-- POPULAR #2 trending review -->
-        <div class="feed-entry is-review cat-popular">
-          <div class="feed-head">
-            <div class="av av-8">PR</div>
-            <div class="feed-meta">
-              <div class="who">Priya Reddy <span class="verified">✓</span></div>
-              <div class="what"><span class="verb">reviewed</span></div>
-            </div>
-            <div class="trending">#2 <span class="arrow">↑</span></div>
-          </div>
-          <div class="book-strip">
-            <div class="cv mini-cover cv-10">
-              <div class="mt">Demon Copperhead</div>
-              <div class="ma">Kingsolver</div>
-            </div>
-            <div class="info">
-              <div class="t">Demon Copperhead</div>
-              <div class="a">Barbara Kingsolver</div>
-              <div class="extra">
-                <span class="stars">★★★★★</span>
-                <span>· 560p</span>
-              </div>
-            </div>
-          </div>
-          <div class="review-text">
-            Kingsolver took David Copperfield and made it ours. A novel about Appalachia that refuses every cliché thrown at it, and somehow ends up tender anyway.
-          </div>
-          <div class="aggregate">
-            <div class="av-stack">
-              <div class="av-mini" style="background:#6b8e3a;"></div>
-              <div class="av-mini" style="background:#c4548a;"></div>
-              <div class="av-mini" style="background:#8a5a3c;"></div>
-            </div>
-            <span><span class="v">1,872 readers</span> liked this review</span>
-          </div>
-          <div class="feed-actions">
-            <span><span class="num">1.9k</span> ♡</span>
-            <span><span class="num">142</span> ↳</span>
-            <span>+ Save</span>
-          </div>
-        </div>
-
-        <!-- FRIEND - progress -->
-        <div class="feed-entry cat-friends">
-          <div class="feed-head">
-            <div class="av av-2">JR</div>
-            <div class="feed-meta">
-              <div class="who">Jordan Reyes</div>
-              <div class="what"><span class="verb">is 73% through</span> Atomic Habits</div>
-            </div>
-            <div class="feed-time">9h</div>
-          </div>
-          <div class="book-strip">
-            <div class="cv mini-cover cv-3">
-              <div class="mt">Atomic Habits</div>
-              <div class="ma">Clear</div>
-            </div>
-            <div class="info">
-              <div class="t">Atomic Habits</div>
-              <div class="a">James Clear</div>
-              <div class="pbar"><div style="width: 73%"></div></div>
-              <div class="extra">
-                <span>p.234 / 320</span>
-                <span>· started Apr 14</span>
-              </div>
-            </div>
-          </div>
-          <div class="feed-actions">
-            <span><span class="num">2</span> ♡</span>
-            <span>↳ Comment</span>
-            <span>+ Read along</span>
-          </div>
-        </div>
-
-        <!-- FRIEND - started -->
-        <div class="feed-entry cat-friends">
-          <div class="feed-head">
-            <div class="av av-5">AS</div>
-            <div class="feed-meta">
-              <div class="who">Aisha Soltani</div>
-              <div class="what"><span class="verb">started reading</span></div>
-            </div>
-            <div class="feed-time">1d</div>
-          </div>
-          <div class="book-strip">
-            <div class="cv mini-cover cv-9">
-              <div class="mt">The Wager</div>
-              <div class="ma">Grann</div>
-            </div>
-            <div class="info">
-              <div class="t">The Wager</div>
-              <div class="a">David Grann</div>
-              <div class="extra">
-                <span>329 pages</span>
-                <span>· est. 11 days</span>
-              </div>
-            </div>
-          </div>
-          <div class="feed-actions">
-            <span><span class="num">1</span> ♡</span>
-            <span>↳ Comment</span>
-            <span>+ Want to read</span>
-          </div>
-        </div>
-
-        <!-- POPULAR #3 trending review -->
-        <div class="feed-entry is-review cat-popular">
-          <div class="feed-head">
-            <div class="av av-7">WT</div>
-            <div class="feed-meta">
-              <div class="who">Wesley Tomlin</div>
-              <div class="what"><span class="verb">reviewed</span></div>
-            </div>
-            <div class="trending">#3 <span class="arrow">↑</span></div>
-          </div>
-          <div class="book-strip">
-            <div class="cv mini-cover cv-14">
-              <div class="mt">The Bee Sting</div>
-              <div class="ma">Murray</div>
-            </div>
-            <div class="info">
-              <div class="t">The Bee Sting</div>
-              <div class="a">Paul Murray</div>
-              <div class="extra">
-                <span class="stars">★★★★<span class="empty">★</span></span>
-                <span>· 656p</span>
-              </div>
-            </div>
-          </div>
-          <div class="review-text">
-            I thought this one was overhyped. I was wrong. The shifts in tense in the final third do something I've never seen a novel pull off before. Read it slowly.
-          </div>
-          <div class="aggregate">
-            <div class="av-stack">
-              <div class="av-mini" style="background:#b6493a;"></div>
-              <div class="av-mini" style="background:#4a78c4;"></div>
-              <div class="av-mini" style="background:#a86a2e;"></div>
-            </div>
-            <span><span class="v">1,453 readers</span> liked this review</span>
-          </div>
-          <div class="feed-actions">
-            <span><span class="num">1.5k</span> ♡</span>
-            <span><span class="num">89</span> ↳</span>
-            <span>+ Save</span>
-          </div>
-        </div>
-
-        <!-- FRIEND - finished review -->
-        <div class="feed-entry is-review cat-friends">
-          <div class="feed-head">
-            <div class="av av-6">NK</div>
-            <div class="feed-meta">
-              <div class="who">Noor Khalil</div>
-              <div class="what"><span class="verb">finished &amp; reviewed</span></div>
-            </div>
-            <div class="feed-time">1d</div>
-          </div>
-          <div class="book-strip">
-            <div class="cv mini-cover cv-7">
-              <div class="mt">A Little Life</div>
-              <div class="ma">Yanagihara</div>
-            </div>
-            <div class="info">
-              <div class="t">A Little Life</div>
-              <div class="a">Hanya Yanagihara</div>
-              <div class="extra">
-                <span class="stars">★★★★<span class="empty">★</span></span>
-                <span>· 814p</span>
-              </div>
-            </div>
-          </div>
-          <div class="review-text">
-            The hardest book I've read this year, and the one I'll think about the longest. Don't ask me to recommend it — I won't, but I won't take it back either.
-          </div>
-          <div class="finish-line">
-            <span>READING TIME · <span class="v">42 days</span></span>
-            <span>HIGHLIGHTS · <span class="v">31</span></span>
-          </div>
-          <div class="feed-actions">
-            <span><span class="num">18</span> ♡</span>
-            <span>↳ Reply</span>
-            <span>+ Save book</span>
-          </div>
-        </div>
-
-        <!-- POPULAR #4 trending review -->
-        <div class="feed-entry is-review cat-popular">
-          <div class="feed-head">
-            <div class="av av-4">EC</div>
-            <div class="feed-meta">
-              <div class="who">Elena Castro <span class="verified">✓</span></div>
-              <div class="what"><span class="verb">reviewed</span></div>
-            </div>
-            <div class="trending">#4 <span class="arrow">↑</span></div>
-          </div>
-          <div class="book-strip">
-            <div class="cv mini-cover cv-15">
-              <div class="mt">North Woods</div>
-              <div class="ma">Mason</div>
-            </div>
-            <div class="info">
-              <div class="t">North Woods</div>
-              <div class="a">Daniel Mason</div>
-              <div class="extra">
-                <span class="stars">★★★★★</span>
-                <span>· 384p</span>
-              </div>
-            </div>
-          </div>
-          <div class="review-text">
-            A novel told through one house and centuries of its inhabitants. Mason writes the kind of sentences you read twice — once for what they say, once for the way they say it.
-          </div>
-          <div class="aggregate">
-            <div class="av-stack">
-              <div class="av-mini" style="background:#2e7c70;"></div>
-              <div class="av-mini" style="background:#c97a3a;"></div>
-              <div class="av-mini" style="background:#6e4e6e;"></div>
-            </div>
-            <span><span class="v">987 readers</span> liked this review</span>
-          </div>
-          <div class="feed-actions">
-            <span><span class="num">987</span> ♡</span>
-            <span><span class="num">63</span> ↳</span>
-            <span>+ Save</span>
-          </div>
-        </div>
-
-        <!-- FRIEND - shelf -->
-        <div class="feed-entry cat-friends">
-          <div class="feed-head">
-            <div class="av av-4">MC</div>
-            <div class="feed-meta">
-              <div class="who">Marcus Chen</div>
-              <div class="what"><span class="verb">added 4 books to</span> Books to read on planes</div>
-            </div>
-            <div class="feed-time">2d</div>
-          </div>
-          <div class="mini-stack">
-            <div class="cv mini-cover cv-7"><div class="mt">Bel Canto</div></div>
-            <div class="cv mini-cover cv-10"><div class="mt">Pachinko</div></div>
-            <div class="cv mini-cover cv-11"><div class="mt">Educated</div></div>
-            <div class="cv mini-cover cv-2"><div class="mt">Demon</div></div>
-            <div class="meta">
-              <div class="t">17 books</div>
-              <div class="a">6 followers</div>
-            </div>
-          </div>
-          <div class="feed-actions">
-            <span><span class="num">6</span> ♡</span>
-            <span>↳ Comment</span>
-            <span>↗ Follow shelf</span>
-          </div>
-        </div>
-
-        <!-- FRIEND - quote -->
-        <div class="feed-entry cat-friends">
-          <div class="feed-head">
-            <div class="av av-7">RA</div>
-            <div class="feed-meta">
-              <div class="who">Rafael Andrade</div>
-              <div class="what"><span class="verb">marked a passage in</span> Bluets</div>
-            </div>
-            <div class="feed-time">2d</div>
-          </div>
-          <div class="quote-block">
-            <p>Suppose I were to begin by saying that I had fallen in love with a color.</p>
-            <div class="attr">Bluets · Maggie Nelson · p.1</div>
-          </div>
-          <div class="feed-actions">
-            <span><span class="num">9</span> ♡</span>
-            <span>↳ Reply</span>
-            <span>↗ Save quote</span>
-          </div>
+        <!-- Empty home feed -->
+        <div class="rec-empty" id="home-feed-empty">
+          <div class="em-mark">— Your feed is quiet —</div>
+          <h3>Nothing here yet.</h3>
+          <p>When you follow people or threads, their posts and reading activity show up here.</p>
         </div>
 
       </div>
-
     </section>
 
     <!-- ============ DISCOVER ============ -->
@@ -4839,291 +4956,7 @@
         <div class="chip" data-disc="audio">Audiobooks</div>
       </div>
 
-      <!-- HERO REC -->
-      <div class="hero-rec" data-id="rec-0">
-        <div class="top-bar">
-          <span>★ Top pick</span>
-          <span class="match">96% match</span>
-        </div>
-        <div class="body">
-          <div class="cv cv-6">
-            <div class="ct">A Memory<br>Called<br>Empire</div>
-            <div class="ca">— A. Martine</div>
-          </div>
-          <div>
-            <h2>A Memory Called Empire</h2>
-            <div class="author">Arkady Martine · 2019</div>
-            <div class="meta-line">
-              <span class="stars">★★★★★</span>
-              <span>· 4.6 avg</span>
-              <span>· 462p</span>
-              <span>· est. 14 days</span>
-            </div>
-          </div>
-        </div>
-        <div class="blurb">
-          "An ambassador uncovers a murder at the heart of a vast, alluring empire — a quiet sci-fi about identity, culture, and what we lose when we translate ourselves."
-        </div>
-        <div class="why-line">
-          <strong>Because</strong> you finished <em>Klara and the Sun</em> (5★) and rated <em>Project Hail Mary</em> 5★. Quiet, character-driven sci-fi with a political edge.
-        </div>
-        <div class="actions">
-          <button class="btn-skip" data-action="skip" data-target="rec-0">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-            Skip
-          </button>
-          <button class="btn-save" data-action="save" data-target="rec-0" data-title="A Memory Called Empire">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-            Save to queue
-          </button>
-        </div>
-      </div>
-
-      <!-- REC LIST -->
-      <div class="rec-list" id="rec-list">
-
-        <div class="rec-card" data-id="rec-1">
-          <div class="body">
-            <div class="cv cv-1">
-              <div class="ct">Never<br>Let Me<br>Go</div>
-              <div class="ca">— Ishiguro</div>
-            </div>
-            <div class="info">
-              <div class="t">Never Let Me Go</div>
-              <div class="a">Kazuo Ishiguro</div>
-              <div class="meta-row">
-                <span class="match">94% match</span>
-                <span class="stars">★★★★½</span>
-                <span>· 304p</span>
-              </div>
-            </div>
-            <div class="rec-actions">
-              <button class="rec-action skip" data-action="skip" data-target="rec-1" title="Skip">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-              </button>
-              <button class="rec-action save" data-action="save" data-target="rec-1" data-title="Never Let Me Go" title="Save">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-              </button>
-            </div>
-            <div class="why">
-              <strong>Because</strong> you loved <em>Klara and the Sun</em> by the same author (5★, finished Apr 18).
-            </div>
-          </div>
-        </div>
-
-        <div class="rec-card" data-id="rec-2">
-          <div class="body">
-            <div class="cv cv-8">
-              <div class="ct">Piranesi</div>
-              <div class="ca">— S. Clarke</div>
-            </div>
-            <div class="info">
-              <div class="t">Piranesi</div>
-              <div class="a">Susanna Clarke</div>
-              <div class="meta-row">
-                <span class="match">91% match</span>
-                <span class="stars">★★★★★</span>
-                <span>· 245p</span>
-              </div>
-            </div>
-            <div class="rec-actions">
-              <button class="rec-action skip" data-action="skip" data-target="rec-2" title="Skip">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-              </button>
-              <button class="rec-action save" data-action="save" data-target="rec-2" data-title="Piranesi" title="Save">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-              </button>
-            </div>
-            <div class="why">
-              <strong>Similar to</strong> the quiet, mysterious atmospheres in books you've highlighted lately.
-            </div>
-          </div>
-        </div>
-
-        <div class="rec-card" data-id="rec-3">
-          <div class="body">
-            <div class="cv cv-7">
-              <div class="ct">Devotions</div>
-              <div class="ca">— M. Oliver</div>
-            </div>
-            <div class="info">
-              <div class="t">Devotions</div>
-              <div class="a">Mary Oliver</div>
-              <div class="meta-row">
-                <span class="match">89% match</span>
-                <span class="stars">★★★★★</span>
-                <span>· 480p</span>
-                <span>· poetry</span>
-              </div>
-            </div>
-            <div class="rec-actions">
-              <button class="rec-action skip" data-action="skip" data-target="rec-3" title="Skip">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-              </button>
-              <button class="rec-action save" data-action="save" data-target="rec-3" data-title="Devotions" title="Save">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-              </button>
-            </div>
-            <div class="why">
-              <strong>Mary Oliver</strong> is your most-highlighted poet — 14 quotes saved across her work.
-            </div>
-          </div>
-        </div>
-
-        <div class="rec-card" data-id="rec-4">
-          <div class="body">
-            <div class="cv cv-11">
-              <div class="ct">The<br>Argonauts</div>
-              <div class="ca">— M. Nelson</div>
-            </div>
-            <div class="info">
-              <div class="t">The Argonauts</div>
-              <div class="a">Maggie Nelson</div>
-              <div class="meta-row">
-                <span class="match">87% match</span>
-                <span class="stars">★★★★½</span>
-                <span>· 160p</span>
-              </div>
-            </div>
-            <div class="rec-actions">
-              <button class="rec-action skip" data-action="skip" data-target="rec-4" title="Skip">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-              </button>
-              <button class="rec-action save" data-action="save" data-target="rec-4" data-title="The Argonauts" title="Save">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-              </button>
-            </div>
-            <div class="why">
-              <strong>If you liked</strong> the prose in <em>Bluets</em> (5★) — same author, hybrid memoir form.
-            </div>
-          </div>
-        </div>
-
-        <div class="rec-card" data-id="rec-5">
-          <div class="body">
-            <div class="cv cv-10">
-              <div class="ct">Sea of<br>Tranquility</div>
-              <div class="ca">— E. Mandel</div>
-            </div>
-            <div class="info">
-              <div class="t">Sea of Tranquility</div>
-              <div class="a">Emily St. John Mandel</div>
-              <div class="meta-row">
-                <span class="match">85% match</span>
-                <span class="stars">★★★★½</span>
-                <span>· 272p</span>
-              </div>
-            </div>
-            <div class="rec-actions">
-              <button class="rec-action skip" data-action="skip" data-target="rec-5" title="Skip">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-              </button>
-              <button class="rec-action save" data-action="save" data-target="rec-5" data-title="Sea of Tranquility" title="Save">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-              </button>
-            </div>
-            <div class="why">
-              <strong>Trending</strong> in your circle — 3 friends rated this 4★ or higher.
-            </div>
-          </div>
-        </div>
-
-        <div class="rec-card" data-id="rec-6">
-          <div class="body">
-            <div class="cv cv-17">
-              <div class="ct">Open<br>Throat</div>
-              <div class="ca">— H. Hoke</div>
-            </div>
-            <div class="info">
-              <div class="t">Open Throat</div>
-              <div class="a">Henry Hoke</div>
-              <div class="meta-row">
-                <span class="match">82% match</span>
-                <span class="stars">★★★★½</span>
-                <span>· 176p</span>
-                <span>· short read</span>
-              </div>
-            </div>
-            <div class="rec-actions">
-              <button class="rec-action skip" data-action="skip" data-target="rec-6" title="Skip">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-              </button>
-              <button class="rec-action save" data-action="save" data-target="rec-6" data-title="Open Throat" title="Save">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-              </button>
-            </div>
-            <div class="why">
-              <strong>Maya recommended</strong> this — she rated it 5★ and saved 7 highlights.
-            </div>
-          </div>
-        </div>
-
-        <div class="rec-card" data-id="rec-7">
-          <div class="body">
-            <div class="cv cv-16">
-              <div class="ct">Bel Canto</div>
-              <div class="ca">— Patchett</div>
-            </div>
-            <div class="info">
-              <div class="t">Bel Canto</div>
-              <div class="a">Ann Patchett</div>
-              <div class="meta-row">
-                <span class="match">79% match</span>
-                <span class="stars">★★★★½</span>
-                <span>· 320p</span>
-              </div>
-            </div>
-            <div class="rec-actions">
-              <button class="rec-action skip" data-action="skip" data-target="rec-7" title="Skip">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-              </button>
-              <button class="rec-action save" data-action="save" data-target="rec-7" data-title="Bel Canto" title="Save">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-              </button>
-            </div>
-            <div class="why">
-              <strong>From a shelf you follow</strong> — Marcus added this to "Books to read on planes".
-            </div>
-          </div>
-        </div>
-
-        <div class="rec-card" data-id="rec-8">
-          <div class="body">
-            <div class="cv cv-18">
-              <div class="ct">North<br>Woods</div>
-              <div class="ca">— D. Mason</div>
-            </div>
-            <div class="info">
-              <div class="t">North Woods</div>
-              <div class="a">Daniel Mason</div>
-              <div class="meta-row">
-                <span class="match">76% match</span>
-                <span class="stars">★★★★½</span>
-                <span>· 384p</span>
-              </div>
-            </div>
-            <div class="rec-actions">
-              <button class="rec-action skip" data-action="skip" data-target="rec-8" title="Skip">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-              </button>
-              <button class="rec-action save" data-action="save" data-target="rec-8" data-title="North Woods" title="Save">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-              </button>
-            </div>
-            <div class="why">
-              <strong>Trending</strong> — 1.4k Vronsky readers rated this 4★+ this month.
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Empty state (hidden until everything dismissed) -->
-      <div class="rec-empty" id="rec-empty" style="display:none;">
-        <div class="em-mark">— ALL CAUGHT UP —</div>
-        <h3>You've cleared the queue.</h3>
-        <p>New recommendations arrive every Monday morning. Until then, check your saved books.</p>
-      </div>
+      <!-- Discover home — for now, only the threads section since real recommendations need real reading data -->
 
       <!-- Threads — communities to browse -->
       <div class="threads-preview">
@@ -5170,247 +5003,71 @@
     <!-- ============ CLUBS ============ -->
     <section class="screen" data-screen="clubs">
 
-      <div class="page-head">
-        <h1>Clubs</h1>
-        <div class="actions">
-          <div class="head-btn" title="search clubs">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+      <!-- HOME sub-view -->
+      <div class="club-view active" id="cv-home">
+
+        <div class="page-head">
+          <h1>Clubs</h1>
+          <div class="actions">
+            <div class="head-btn" title="search clubs">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+            </div>
+            <button class="new-btn" id="new-club-btn" title="Create a new club">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              <span>New</span>
+            </button>
           </div>
-          <button class="new-btn" title="Create a new club">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-            <span>New</span>
+        </div>
+
+        <!-- YOUR CLUBS -->
+        <div class="clubs-section">
+          <div class="label-row">
+            <span class="label">Your clubs</span>
+            <span class="ct" id="your-clubs-count">0 active</span>
+          </div>
+
+          <!-- User-created clubs go here, prepended via JS -->
+          <div id="user-clubs-list"></div>
+
+          <!-- Empty state when user has not created/joined any clubs -->
+          <div class="rec-empty" id="your-clubs-empty">
+            <div class="em-mark">— No clubs yet —</div>
+            <h3>You haven't joined or started any clubs.</h3>
+            <p>Tap "+ New" above to start one, or browse public clubs below to find one to join.</p>
+          </div>
+
+        </div>
+
+        <!-- BROWSE PUBLIC CLUBS -->
+        <div class="clubs-section">
+          <div class="label-row">
+            <span class="label">Browse public clubs</span>
+            <span class="ct" id="browse-clubs-count">0 active</span>
+          </div>
+
+          <!-- Public clubs created by anyone show here, populated by JS -->
+          <div id="browse-clubs-list"></div>
+
+          <!-- Empty state -->
+          <div class="rec-empty" id="browse-clubs-empty">
+            <div class="em-mark">— No public clubs yet —</div>
+            <h3>Be the first.</h3>
+            <p>Public clubs created by anyone will show up here for other readers to discover and join.</p>
+          </div>
+
+        </div>
+
+      </div> <!-- /cv-home -->
+
+      <!-- CLUB DETAIL sub-view (rendered by JS) -->
+      <div class="club-view" id="cv-detail">
+        <div style="padding: 0 24px 14px;">
+          <button class="back-btn" id="club-back-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            Back to clubs
           </button>
         </div>
-      </div>
-
-      <!-- YOUR CLUBS -->
-      <div class="clubs-section">
-        <div class="label-row">
-          <span class="label">Your clubs</span>
-          <span class="ct">2 active</span>
-        </div>
-
-        <!-- Private club -->
-        <div class="club-card">
-          <div class="ch">
-            <div class="privacy private" title="Private club">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-            </div>
-            <div class="name">Slow Reads Society</div>
-            <div class="members">12 members</div>
-          </div>
-          <div class="body">
-            <div class="cv cv-7">
-              <div class="ct">Middle<br>march</div>
-              <div class="ca">— Eliot</div>
-            </div>
-            <div class="reading-info">
-              <div class="now">Currently reading · week 7 of 12</div>
-              <div class="t">Middlemarch</div>
-              <div class="a">George Eliot</div>
-              <div class="pace-row">
-                <span><span class="you-mark">You</span> · ch. 14</span>
-                <span><span class="group-mark">Group</span> · ch. 16</span>
-              </div>
-              <div class="pace-track">
-                <div class="you-pos" style="width: 16%;"></div>
-                <div class="group-pos" style="left: 18.6%;"></div>
-              </div>
-            </div>
-          </div>
-          <div class="footer">
-            <div class="av-stack">
-              <div class="av-mini" style="background:#c97a3a;"></div>
-              <div class="av-mini" style="background:#2e7c70;"></div>
-              <div class="av-mini" style="background:#4a78c4;"></div>
-            </div>
-            <div class="activity"><strong>3 new posts</strong> in chapter 14 thread</div>
-            <span class="arrow">→</span>
-          </div>
-        </div>
-
-        <!-- Public club -->
-        <div class="club-card">
-          <div class="ch">
-            <div class="privacy" title="Public club">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
-            </div>
-            <div class="name">Sci-Fi Sunday</div>
-            <div class="members">47 members</div>
-          </div>
-          <div class="body">
-            <div class="cv cv-10">
-              <div class="ct">Sea of<br>Tranquility</div>
-              <div class="ca">— Mandel</div>
-            </div>
-            <div class="reading-info">
-              <div class="now">Currently reading · book of the month</div>
-              <div class="t">Sea of Tranquility</div>
-              <div class="a">Emily St. John Mandel</div>
-              <div class="pace-row">
-                <span><span class="you-mark">You</span> · 64%</span>
-                <span><span class="group-mark">Group</span> · 71%</span>
-              </div>
-              <div class="pace-track">
-                <div class="you-pos" style="width: 64%;"></div>
-                <div class="group-pos" style="left: 71%;"></div>
-              </div>
-            </div>
-          </div>
-          <div class="footer">
-            <div class="av-stack">
-              <div class="av-mini" style="background:#6b8e3a;"></div>
-              <div class="av-mini" style="background:#c4548a;"></div>
-              <div class="av-mini" style="background:#8a5a3c;"></div>
-            </div>
-            <div class="activity"><strong>7 new highlights</strong> · thread "Time and the orchard"</div>
-            <span class="arrow">→</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- BROWSE PUBLIC CLUBS -->
-      <div class="clubs-section">
-        <div class="label-row">
-          <span class="label">Browse public clubs</span>
-          <span class="ct">214 active</span>
-        </div>
-
-        <div class="filter-bar">
-          <div class="chip active">All</div>
-          <div class="chip">Fiction</div>
-          <div class="chip">Nonfiction</div>
-          <div class="chip">Poetry</div>
-          <div class="chip">Slow pace</div>
-          <div class="chip">In-person</div>
-        </div>
-
-        <div class="browse-card">
-          <div class="cv cv-13">
-            <div class="ct">James</div>
-            <div class="ca">— Everett</div>
-          </div>
-          <div class="info">
-            <div class="name-row">
-              <div class="name">The Bookshelf Diaries</div>
-              <div class="privacy-mini" title="Public">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
-              </div>
-            </div>
-            <div class="tagline">Literary fiction · weekly chapter</div>
-            <div class="stats-row">
-              <span class="now-reading">Now: James</span>
-              <span class="members">234 members</span>
-            </div>
-          </div>
-          <button class="join-btn">Join</button>
-        </div>
-
-        <div class="browse-card">
-          <div class="cv cv-15">
-            <div class="ct">Demon</div>
-            <div class="ca">— Kingsolver</div>
-          </div>
-          <div class="info">
-            <div class="name-row">
-              <div class="name">Page Turners NYC</div>
-              <div class="privacy-mini">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
-              </div>
-            </div>
-            <div class="tagline">Casual · in-person + online · monthly</div>
-            <div class="stats-row">
-              <span class="now-reading">Now: Demon Copperhead</span>
-              <span class="members">89 members</span>
-            </div>
-          </div>
-          <button class="join-btn">Join</button>
-        </div>
-
-        <div class="browse-card">
-          <div class="cv cv-11">
-            <div class="ct">Bluets</div>
-            <div class="ca">— Nelson</div>
-          </div>
-          <div class="info">
-            <div class="name-row">
-              <div class="name">Margin Notes</div>
-              <div class="privacy-mini private-icon" style="color: var(--accent);" title="Request to join">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-              </div>
-            </div>
-            <div class="tagline">Hybrid forms, essays, poetics</div>
-            <div class="stats-row">
-              <span class="now-reading">Now: Bluets</span>
-              <span class="members">56 members</span>
-            </div>
-          </div>
-          <button class="join-btn requested">Request</button>
-        </div>
-
-        <div class="browse-card">
-          <div class="cv cv-3">
-            <div class="ct">Devotions</div>
-            <div class="ca">— Oliver</div>
-          </div>
-          <div class="info">
-            <div class="name-row">
-              <div class="name">Dawn Pages</div>
-              <div class="privacy-mini">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
-              </div>
-            </div>
-            <div class="tagline">Poetry · morning reads · 6 AM thread</div>
-            <div class="stats-row">
-              <span class="now-reading">Now: Devotions</span>
-              <span class="members">43 members</span>
-            </div>
-          </div>
-          <button class="join-btn">Join</button>
-        </div>
-
-        <div class="browse-card">
-          <div class="cv cv-5">
-            <div class="ct">The<br>Recognitions</div>
-            <div class="ca">— Gaddis</div>
-          </div>
-          <div class="info">
-            <div class="name-row">
-              <div class="name">The Backlist</div>
-              <div class="privacy-mini">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
-              </div>
-            </div>
-            <div class="tagline">Older novels · pre-2000 · slow read</div>
-            <div class="stats-row">
-              <span class="now-reading">Now: The Recognitions</span>
-              <span class="members">121 members</span>
-            </div>
-          </div>
-          <button class="join-btn">Join</button>
-        </div>
-
-        <div class="browse-card">
-          <div class="cv cv-12">
-            <div class="ct">Winter</div>
-            <div class="ca">— Ali Smith</div>
-          </div>
-          <div class="info">
-            <div class="name-row">
-              <div class="name">Quiet Books Club</div>
-              <div class="privacy-mini" style="color: var(--accent);">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-              </div>
-            </div>
-            <div class="tagline">Literary · slow · thoughtful · small</div>
-            <div class="stats-row">
-              <span class="now-reading">Now: Winter</span>
-              <span class="members">28 members</span>
-            </div>
-          </div>
-          <button class="join-btn requested">Request</button>
-        </div>
-
+        <div id="club-detail"></div>
       </div>
 
     </section>
@@ -6407,6 +6064,631 @@
   renderDesk();
   renderTrail();
 
+  // === CLUBS (user-created) ===
+  // Each club: { id, name, description, privacy: 'public'|'private', currentBook?, members: 1, createdAt }
+  const CLUBS_KEY = 'vronsky_clubs';
+
+  async function getClubs() {
+    const raw = await Store.get(CLUBS_KEY);
+    if (!raw) return [];
+    try { return JSON.parse(raw) || []; } catch { return []; }
+  }
+  async function saveClubs(clubs) {
+    await Store.set(CLUBS_KEY, JSON.stringify(clubs));
+  }
+
+  // Stable cover-color picker for the club's current book preview
+  function pickClubCoverClass(text) {
+    if (!text) return 'cv-1';
+    let hash = 0;
+    for (let i = 0; i < text.length; i++) {
+      hash = ((hash << 5) - hash) + text.charCodeAt(i);
+      hash |= 0;
+    }
+    return 'cv-' + ((Math.abs(hash) % 12) + 1);
+  }
+
+  function renderClubCardHtml(club) {
+    // currentBook is now { title, author, year, coverId } or null
+    const b = club.currentBook;
+    const titlePart = b ? b.title : '';
+    const authorPart = b && b.author ? b.author : '';
+
+    const coverHtml = b
+      ? (b.coverId
+          ? `<div class="cv" style="background-image: url(${coverImageUrl(b.coverId, 'M')}); background-size: cover; background-position: center;"></div>`
+          : `<div class="cv ${pickClubCoverClass(b.title)}">
+                <div class="ct">${escapeHtml(titlePart.slice(0, 28))}</div>
+                ${authorPart ? `<div class="ca">— ${escapeHtml(authorPart.slice(0, 24))}</div>` : ''}
+             </div>`)
+      : `<div class="cv" style="background: var(--surface-soft); border: 1px dashed var(--border-strong); display: grid; place-items: center; color: var(--text-3);">
+            <div style="font-size: 9px; text-align: center; padding: 6px;">No book yet</div>
+         </div>`;
+
+    const privacyHtml = club.privacy === 'private'
+      ? `<div class="privacy private" title="Private club">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+         </div>`
+      : `<div class="privacy" title="Public club">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>
+         </div>`;
+
+    return `
+      <div class="club-card is-user-club" data-club-id="${club.id}" style="cursor: pointer;">
+        <div class="ch">
+          ${privacyHtml}
+          <div class="name">${escapeHtml(club.name)}</div>
+          <div class="members">${club.members} member${club.members === 1 ? '' : 's'}</div>
+        </div>
+        <div class="body">
+          ${coverHtml}
+          <div class="reading-info">
+            <div class="now">${b ? 'CURRENTLY READING' : 'NO BOOK YET'}</div>
+            <div class="t">${b ? escapeHtml(titlePart) : 'Pick a book to get started'}</div>
+            ${authorPart ? `<div class="a">${escapeHtml(authorPart)}</div>` : ''}
+            ${club.description ? `<div style="margin-top: 8px; font-size: 12px; color: var(--text-2); line-height: 1.4;">${escapeHtml(club.description)}</div>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function renderUserClubs() {
+    const clubs = await getClubs();
+    const container = document.getElementById('user-clubs-list');
+    if (!container) return;
+
+    // Newest first
+    const sorted = [...clubs].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    container.innerHTML = sorted.map(c => renderClubCardHtml(c)).join('');
+
+    // Update the count
+    const countEl = document.getElementById('your-clubs-count');
+    if (countEl) {
+      countEl.textContent = `${clubs.length} active`;
+    }
+    // Show/hide the empty state
+    const emptyEl = document.getElementById('your-clubs-empty');
+    if (emptyEl) emptyEl.style.display = clubs.length === 0 ? 'block' : 'none';
+  }
+
+  // === Create-club modal ===
+  const newClubModal = document.getElementById('new-club-modal');
+  const newClubForm = document.getElementById('new-club-form');
+  const ncPrivacyPicker = document.getElementById('nc-privacy-picker');
+  let ncActivePrivacy = 'public';
+
+  function openNewClubModal() {
+    ncActivePrivacy = 'public';
+    ncPrivacyPicker.querySelectorAll('.privacy-opt').forEach(opt => {
+      opt.classList.toggle('active', opt.dataset.privacy === 'public');
+    });
+    document.getElementById('nc-name').value = '';
+    document.getElementById('nc-description').value = '';
+    document.getElementById('nc-current-book').value = '';
+    newClubModal.classList.add('show');
+    setTimeout(() => document.getElementById('nc-name').focus(), 200);
+  }
+  function closeNewClubModal() { newClubModal.classList.remove('show'); }
+
+  document.getElementById('new-club-btn').addEventListener('click', openNewClubModal);
+  document.getElementById('nc-close-btn').addEventListener('click', closeNewClubModal);
+  document.getElementById('nc-cancel-btn').addEventListener('click', closeNewClubModal);
+  newClubModal.addEventListener('click', (e) => { if (e.target === newClubModal) closeNewClubModal(); });
+
+  // Privacy picker
+  ncPrivacyPicker.querySelectorAll('.privacy-opt').forEach(opt => {
+    opt.addEventListener('click', () => {
+      ncPrivacyPicker.querySelectorAll('.privacy-opt').forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      ncActivePrivacy = opt.dataset.privacy;
+    });
+  });
+
+  // Submit
+  newClubForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('nc-name').value.trim();
+    if (!name) return;
+    const description = document.getElementById('nc-description').value.trim();
+    const currentBook = document.getElementById('nc-current-book').value.trim();
+    const me = await getUser();
+    const ownerId = me ? me.username : null;
+
+    // Parse "Title — Author" into a structured currentBook (so it can render with a cover)
+    let bookObj = null;
+    if (currentBook) {
+      const parts = currentBook.split(/\s*[—-]\s*/);
+      bookObj = {
+        title: parts[0] || currentBook,
+        author: parts.slice(1).join(' — ') || '',
+        year: null,
+        coverId: null
+      };
+    }
+
+    const newClub = {
+      id: 'club_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+      name,
+      description,
+      privacy: ncActivePrivacy,
+      currentBook: bookObj,
+      schedule: [], // array of { id, date, milestone }
+      members: 1, // creator
+      ownerId,
+      createdAt: new Date().toISOString()
+    };
+    const clubs = await getClubs();
+    clubs.unshift(newClub);
+    await saveClubs(clubs);
+    closeNewClubModal();
+    await renderUserClubs();
+    await renderBrowseClubs();
+  });
+
+  // Add ESC support
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && newClubModal.classList.contains('show')) closeNewClubModal();
+  });
+
+  // === CLUB OWNERSHIP / NAVIGATION / DETAIL PAGE ===
+
+  async function isClubOwner(club) {
+    if (!club || !club.ownerId) return false;
+    const me = await getUser();
+    return me && me.username === club.ownerId;
+  }
+
+  function navigateClubs(view, clubId) {
+    document.querySelectorAll('.club-view').forEach(v => v.classList.remove('active'));
+    const target = document.getElementById('cv-' + view);
+    if (target) target.classList.add('active');
+    if (view === 'detail' && clubId) {
+      window._currentClub = clubId;
+      renderClubDetail(clubId);
+    }
+    const screen = document.querySelector('.screen[data-screen="clubs"]');
+    if (screen) screen.scrollTop = 0;
+  }
+
+  document.getElementById('club-back-btn').addEventListener('click', () => {
+    navigateClubs('home');
+  });
+
+  // Render the per-club detail page
+  async function renderClubDetail(clubId) {
+    const clubs = await getClubs();
+    const club = clubs.find(c => c.id === clubId);
+    const container = document.getElementById('club-detail');
+    if (!club) {
+      container.innerHTML = '<div class="rec-empty"><h3>Club not found.</h3></div>';
+      return;
+    }
+    const owner = await isClubOwner(club);
+
+    // Privacy badge
+    const isPrivate = club.privacy === 'private';
+    const privacyBadge = isPrivate
+      ? `<div class="privacy-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>`
+      : `<div class="privacy-badge public"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg></div>`;
+
+    // Currently reading block
+    let currentReadingBlock;
+    if (club.currentBook) {
+      const b = club.currentBook;
+      const coverHtml = b.coverId
+        ? `<div class="cover-mid" style="background-image: url(${coverImageUrl(b.coverId, 'M')})"></div>`
+        : `<div class="cover-mid cv-art ${pickCoverClass(b.title)}">
+              <div style="font-size: 11px; font-weight: 600; line-height: 1.1;">${escapeHtml(b.title.slice(0, 30))}</div>
+              <div style="font-size: 9px; opacity: 0.75;">— ${escapeHtml((b.author || '').slice(0, 22))}</div>
+           </div>`;
+      currentReadingBlock = `
+        <div class="club-current-book">
+          ${coverHtml}
+          <div class="info">
+            <div class="t">${escapeHtml(b.title)}</div>
+            ${b.author ? `<div class="a">${escapeHtml(b.author)}</div>` : ''}
+            ${b.year ? `<div class="y">${escapeHtml(String(b.year))}</div>` : ''}
+          </div>
+        </div>
+      `;
+    } else {
+      currentReadingBlock = `<div class="club-no-book">No book chosen yet.${owner ? ' Pick one below.' : ''}</div>`;
+    }
+
+    // Schedule rendering
+    const schedule = (club.schedule || []).slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    const today = new Date().toISOString().slice(0, 10);
+    const nextIdx = schedule.findIndex(s => s.date >= today);
+    const scheduleHtml = schedule.length > 0
+      ? schedule.map((s, i) => {
+          const isPast = s.date < today;
+          const isNext = i === nextIdx;
+          const dateLabel = formatScheduleDate(s.date);
+          const deleteBtn = owner
+            ? `<button class="delete-mile" data-del-mile="${s.id}" aria-label="Remove milestone">×</button>`
+            : '<span></span>';
+          return `
+            <div class="schedule-item ${isPast ? 'past' : ''} ${isNext ? 'next' : ''}">
+              <div class="date">${escapeHtml(dateLabel)}</div>
+              <div class="milestone">${escapeHtml(s.milestone)}</div>
+              ${deleteBtn}
+            </div>
+          `;
+        }).join('')
+      : '<div class="schedule-empty">No reading schedule yet.</div>';
+
+    // Schedule add form (owner only)
+    const addMilestoneForm = owner ? `
+      <div class="add-milestone">
+        <input type="date" id="add-mile-date" min="${today}" />
+        <input type="text" id="add-mile-text" placeholder="e.g., Chapters 1–3" maxlength="120" />
+        <button class="add-btn-mile" id="add-mile-btn" disabled>Add</button>
+      </div>
+    ` : '';
+
+    // Owner controls in header
+    const editControls = owner ? `
+      <div class="edit-row">
+        <div class="owner-actions">
+          <button class="owner-action-btn" id="club-edit-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit details
+          </button>
+        </div>
+      </div>
+    ` : '';
+
+    // Pick book button (owner only)
+    const pickBookBtn = owner ? `
+      <button class="pick-book-btn" id="pick-book-btn">
+        ${club.currentBook ? 'Change book' : 'Pick a book'}
+      </button>
+    ` : '';
+
+    container.innerHTML = `
+      <div class="club-header">
+        <div class="top-row">
+          ${privacyBadge}
+          <div class="name-block">
+            <div class="name">${escapeHtml(club.name)}</div>
+            <div class="meta-row">
+              <span class="privacy-text">${isPrivate ? 'Private club' : 'Public club'}</span>
+              <span>·</span>
+              <span>${club.members} member${club.members === 1 ? '' : 's'}</span>
+            </div>
+          </div>
+        </div>
+        ${club.description ? `<div class="desc">${escapeHtml(club.description)}</div>` : ''}
+        ${editControls}
+      </div>
+
+      <div class="club-section">
+        <div class="label-row">
+          <span class="label">Currently reading</span>
+          ${pickBookBtn}
+        </div>
+        ${currentReadingBlock}
+      </div>
+
+      <div class="club-section">
+        <div class="label-row">
+          <span class="label">Reading schedule</span>
+        </div>
+        <div class="schedule-list">${scheduleHtml}</div>
+        ${addMilestoneForm}
+      </div>
+    `;
+
+    // Wire up owner controls
+    if (owner) {
+      const editBtn = container.querySelector('#club-edit-btn');
+      if (editBtn) editBtn.addEventListener('click', () => openEditClubModal(club.id));
+
+      const pickBtn = container.querySelector('#pick-book-btn');
+      if (pickBtn) pickBtn.addEventListener('click', () => openPickBookModal(club.id));
+
+      // Add-milestone wiring
+      const addMileBtn = container.querySelector('#add-mile-btn');
+      const dateInput = container.querySelector('#add-mile-date');
+      const textInput = container.querySelector('#add-mile-text');
+      function checkAddMileEnabled() {
+        addMileBtn.disabled = !(dateInput.value && textInput.value.trim());
+      }
+      if (dateInput) dateInput.addEventListener('input', checkAddMileEnabled);
+      if (textInput) textInput.addEventListener('input', checkAddMileEnabled);
+      if (addMileBtn) addMileBtn.addEventListener('click', async () => {
+        const date = dateInput.value;
+        const milestone = textInput.value.trim();
+        if (!date || !milestone) return;
+        await addMilestone(club.id, { date, milestone });
+        await renderClubDetail(club.id);
+      });
+
+      // Delete-milestone buttons
+      container.querySelectorAll('[data-del-mile]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          await removeMilestone(club.id, btn.dataset.delMile);
+          await renderClubDetail(club.id);
+        });
+      });
+    }
+  }
+
+  // Pretty schedule date: 2026-05-04 → "May 4"
+  function formatScheduleDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr + 'T00:00:00');
+    if (isNaN(d)) return dateStr;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  async function addMilestone(clubId, milestone) {
+    const clubs = await getClubs();
+    const club = clubs.find(c => c.id === clubId);
+    if (!club) return;
+    if (!club.schedule) club.schedule = [];
+    club.schedule.push({
+      id: 'mile_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
+      date: milestone.date,
+      milestone: milestone.milestone
+    });
+    await saveClubs(clubs);
+  }
+
+  async function removeMilestone(clubId, mileId) {
+    const clubs = await getClubs();
+    const club = clubs.find(c => c.id === clubId);
+    if (!club || !club.schedule) return;
+    club.schedule = club.schedule.filter(s => s.id !== mileId);
+    await saveClubs(clubs);
+  }
+
+  async function setClubBook(clubId, book) {
+    const clubs = await getClubs();
+    const club = clubs.find(c => c.id === clubId);
+    if (!club) return;
+    club.currentBook = book; // can be null to clear
+    await saveClubs(clubs);
+  }
+
+  async function deleteClub(clubId) {
+    const clubs = await getClubs();
+    const updated = clubs.filter(c => c.id !== clubId);
+    await saveClubs(updated);
+  }
+
+  async function updateClubMeta(clubId, updates) {
+    const clubs = await getClubs();
+    const club = clubs.find(c => c.id === clubId);
+    if (!club) return;
+    Object.assign(club, updates);
+    await saveClubs(clubs);
+  }
+
+  // === Edit Club modal ===
+  const editClubModal = document.getElementById('edit-club-modal');
+  const editClubForm = document.getElementById('edit-club-form');
+  const ecPrivacyPicker = document.getElementById('ec-privacy-picker');
+  let ecActivePrivacy = 'public';
+  let ecEditingClubId = null;
+
+  async function openEditClubModal(clubId) {
+    const clubs = await getClubs();
+    const club = clubs.find(c => c.id === clubId);
+    if (!club) return;
+    ecEditingClubId = clubId;
+    document.getElementById('ec-name').value = club.name;
+    document.getElementById('ec-description').value = club.description || '';
+    ecActivePrivacy = club.privacy;
+    ecPrivacyPicker.querySelectorAll('.privacy-opt').forEach(opt => {
+      opt.classList.toggle('active', opt.dataset.privacy === ecActivePrivacy);
+    });
+    editClubModal.classList.add('show');
+    setTimeout(() => document.getElementById('ec-name').focus(), 200);
+  }
+  function closeEditClubModal() {
+    editClubModal.classList.remove('show');
+    ecEditingClubId = null;
+  }
+
+  document.getElementById('ec-close-btn').addEventListener('click', closeEditClubModal);
+  document.getElementById('ec-cancel-btn').addEventListener('click', closeEditClubModal);
+  editClubModal.addEventListener('click', (e) => { if (e.target === editClubModal) closeEditClubModal(); });
+
+  ecPrivacyPicker.querySelectorAll('.privacy-opt').forEach(opt => {
+    opt.addEventListener('click', () => {
+      ecPrivacyPicker.querySelectorAll('.privacy-opt').forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      ecActivePrivacy = opt.dataset.privacy;
+    });
+  });
+
+  editClubForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!ecEditingClubId) return;
+    const name = document.getElementById('ec-name').value.trim();
+    if (!name) return;
+    await updateClubMeta(ecEditingClubId, {
+      name,
+      description: document.getElementById('ec-description').value.trim(),
+      privacy: ecActivePrivacy
+    });
+    const id = ecEditingClubId;
+    closeEditClubModal();
+    await renderClubDetail(id);
+    await renderUserClubs();
+    await renderBrowseClubs();
+  });
+
+  document.getElementById('ec-delete-btn').addEventListener('click', async () => {
+    if (!ecEditingClubId) return;
+    if (!confirm('Delete this club? This cannot be undone.')) return;
+    await deleteClub(ecEditingClubId);
+    closeEditClubModal();
+    navigateClubs('home');
+    await renderUserClubs();
+    await renderBrowseClubs();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && editClubModal.classList.contains('show')) closeEditClubModal();
+  });
+
+  // === Pick Book modal (Open Library search → set club.currentBook) ===
+  const pickBookModal = document.getElementById('pick-book-modal');
+  const pbSearchInput = document.getElementById('pb-search');
+  const pbResults = document.getElementById('pb-results');
+  let pbForClubId = null;
+  let pbSearchTimer = null;
+
+  function openPickBookModal(clubId) {
+    pbForClubId = clubId;
+    pbSearchInput.value = '';
+    pbResults.innerHTML = '<div class="search-hint">Type to search Open Library</div>';
+    pickBookModal.classList.add('show');
+    setTimeout(() => pbSearchInput.focus(), 200);
+  }
+  function closePickBookModal() {
+    pickBookModal.classList.remove('show');
+    pbForClubId = null;
+  }
+  document.getElementById('pb-close-btn').addEventListener('click', closePickBookModal);
+  document.getElementById('pb-cancel-btn').addEventListener('click', closePickBookModal);
+  pickBookModal.addEventListener('click', (e) => { if (e.target === pickBookModal) closePickBookModal(); });
+
+  // Clear current book
+  document.getElementById('pb-clear-btn').addEventListener('click', async () => {
+    if (!pbForClubId) return;
+    await setClubBook(pbForClubId, null);
+    const id = pbForClubId;
+    closePickBookModal();
+    await renderClubDetail(id);
+    await renderUserClubs();
+  });
+
+  // Debounced search
+  pbSearchInput.addEventListener('input', () => {
+    clearTimeout(pbSearchTimer);
+    const q = pbSearchInput.value.trim();
+    if (!q) {
+      pbResults.innerHTML = '<div class="search-hint">Type to search Open Library</div>';
+      return;
+    }
+    pbResults.innerHTML = '<div class="search-hint">Searching…</div>';
+    pbSearchTimer = setTimeout(async () => {
+      const results = await searchOpenLibrary(q);
+      if (!results.length) {
+        pbResults.innerHTML = '<div class="search-hint">No results.</div>';
+        return;
+      }
+      pbResults.innerHTML = results.slice(0, 12).map(r => {
+        const cover = r.coverId
+          ? `<div class="cv-thumb" style="background-image: url(${coverImageUrl(r.coverId, 'S')})"></div>`
+          : `<div class="cv-thumb cv-art ${pickCoverClass(r.title)}">
+                <div>${escapeHtml(r.title.slice(0, 30))}</div>
+                <div style="opacity:0.7;">${escapeHtml((r.author || '').slice(0, 20))}</div>
+             </div>`;
+        return `
+          <div class="search-result" data-pb-pick='${escapeHtml(JSON.stringify(r))}'>
+            ${cover}
+            <div class="info">
+              <div class="t">${escapeHtml(r.title)}</div>
+              <div class="a">${escapeHtml(r.author || '')}${r.year ? ' · ' + r.year : ''}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      pbResults.querySelectorAll('[data-pb-pick]').forEach(el => {
+        el.addEventListener('click', async () => {
+          const r = JSON.parse(el.dataset.pbPick);
+          if (!pbForClubId) return;
+          await setClubBook(pbForClubId, {
+            title: r.title,
+            author: r.author || '',
+            year: r.year || null,
+            coverId: r.coverId || null
+          });
+          const id = pbForClubId;
+          closePickBookModal();
+          await renderClubDetail(id);
+          await renderUserClubs();
+        });
+      });
+    }, 300);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && pickBookModal.classList.contains('show')) closePickBookModal();
+  });
+
+  // === Browse public clubs (everyone's public clubs) ===
+  async function renderBrowseClubs() {
+    const clubs = await getClubs();
+    const publicClubs = clubs.filter(c => c.privacy === 'public');
+    const list = document.getElementById('browse-clubs-list');
+    const empty = document.getElementById('browse-clubs-empty');
+    const count = document.getElementById('browse-clubs-count');
+    if (!list) return;
+
+    if (publicClubs.length === 0) {
+      list.innerHTML = '';
+      if (empty) empty.style.display = 'block';
+    } else {
+      if (empty) empty.style.display = 'none';
+      list.innerHTML = publicClubs.map(c => renderClubCardHtml(c)).join('');
+      // wire clicks
+      list.querySelectorAll('[data-club-id]').forEach(el => {
+        el.addEventListener('click', () => navigateClubs('detail', el.dataset.clubId));
+      });
+    }
+    if (count) count.textContent = `${publicClubs.length} active`;
+  }
+
+  // Click handler for user clubs (in #user-clubs-list) — open detail page
+  // We delegate from the list since cards are re-rendered
+  document.getElementById('user-clubs-list').addEventListener('click', (e) => {
+    const card = e.target.closest('[data-club-id]');
+    if (card) navigateClubs('detail', card.dataset.clubId);
+  });
+
+  // Initial render of browse section too
+  renderBrowseClubs();
+
+  // === DELETE OWN POSTS / COMMENTS ===
+
+  // Helper: am I the author?
+  async function isMyPost(post) {
+    if (!post || !post.author) return false;
+    const me = await getUser();
+    return me && post.author === '@' + me.username;
+  }
+  async function isMyComment(comment) {
+    if (!comment || !comment.author) return false;
+    const me = await getUser();
+    return me && comment.author === '@' + me.username;
+  }
+
+  async function deleteUserPost(postId) {
+    const posts = await getUserPosts();
+    const updated = posts.filter(p => p.id !== postId);
+    await Store.set(POSTS_KEY, JSON.stringify(updated));
+    // also remove all comments on that post
+    const comments = await getUserComments();
+    const updatedComments = comments.filter(c => c.postId !== postId);
+    await Store.set(COMMENTS_KEY, JSON.stringify(updatedComments));
+  }
+
+  async function deleteUserComment(commentId) {
+    const comments = await getUserComments();
+    const updated = comments.filter(c => c.id !== commentId);
+    await Store.set(COMMENTS_KEY, JSON.stringify(updated));
+  }
+
+
+  // Initial render
+  renderUserClubs();
+
   // === THREADS (Reddit-style, inside Discover) ===
 
   // Seeded communities — these are baked into the app
@@ -6419,30 +6701,10 @@
     { id: 'mary_oliver', type: 'author', name: 'Mary Oliver', slug: 'r/mary_oliver', members: 1208, desc: 'For readers of the late American poet. Wild Geese, Devotions, A Thousand Mornings — all welcome.' }
   ];
 
-  // Seeded posts — at least one or two per community
-  const SEED_POSTS = [
-    { id: 'sp1', communityId: 'lit_fic', author: '@lila_okafor', type: 'review', title: 'James (Percival Everett) — required reading', body: "Everett doesn't retell Huck Finn — he reframes the entire moral architecture. The voice in this thing is something I'll never shake. There's a moment in chapter four where the narrator's interiority cracks open and you realize you've been reading the wrong book your whole life.", rating: 5, ts: '6h', commentCount: 47, score: 142 },
-    { id: 'sp2', communityId: 'lit_fic', author: '@theo_n', type: 'discussion', title: 'Best contemporary lit fic of 2025?', body: "Trying to assemble a year-end list. What are people loving? Looking for things that broke through to you, not the conventional best-of picks. Tell me about the book your friend wouldn't shut up about.", rating: null, ts: '1d', commentCount: 89, score: 67 },
-    { id: 'sp3', communityId: 'klara', author: '@sara_petrosian', type: 'discussion', title: 'What did you make of the ending? [SPOILERS]', body: "I've read three Ishiguros now and the endings always do this thing — quiet, almost domestic, devastating. The way Klara's understanding shifts in the last twenty pages, and the very last image of her in the yard… I keep returning to it. Curious what others took from it.", rating: null, ts: '12h', commentCount: 34, score: 89 },
-    { id: 'sp4', communityId: 'klara', author: '@maya_chen', type: 'review', title: 'Quietly devastating', body: "The way Klara reads the world is the most precise writing about loneliness I've encountered all year. Don't read this when you're tired.", rating: 5, ts: '3d', commentCount: 12, score: 31 },
-    { id: 'sp5', communityId: 'ishiguro', author: '@rafael_andrade', type: 'discussion', title: 'Ranking his novels', body: "My personal ranking, would love to hear yours: 1. The Remains of the Day 2. Never Let Me Go 3. Klara and the Sun 4. An Artist of the Floating World 5. The Buried Giant. Reasons in the comments.", rating: null, ts: '2d', commentCount: 156, score: 211 },
-    { id: 'sp6', communityId: 'sci_fi', author: '@dev_khanna', type: 'review', title: 'A Memory Called Empire — quiet sci-fi at its best', body: "Imagine if Le Guin wrote a thriller about cultural imperialism and the slow violence of translation. That's roughly what this is. The world-building is dense but never showy.", rating: 5, ts: '1d', commentCount: 22, score: 78 },
-    { id: 'sp7', communityId: 'sci_fi', author: '@aisha_soltani', type: 'question', title: 'Recommendations for someone burned out on space opera?', body: "Looking for something more grounded — near-future, climate-adjacent, urban, social. Octavia Butler vibes if possible. I love big ideas but want them in a small, breathing scale.", rating: null, ts: '5h', commentCount: 41, score: 53 },
-    { id: 'sp8', communityId: 'poetry', author: '@clara_voss', type: 'discussion', title: 'Poems that ruined other poems for you', body: 'Mary Oliver\'s "Wild Geese" did this for me — hard to read other nature poems without measuring them against it. What did this for you?', rating: null, ts: '8h', commentCount: 67, score: 124 },
-    { id: 'sp9', communityId: 'mary_oliver', author: '@noor_khalil', type: 'discussion', title: 'Devotions vs the individual collections', body: "For someone new to Oliver — would you recommend the omnibus (Devotions) or starting with one of the smaller collections? I want to give it the time it deserves.", rating: null, ts: '3d', commentCount: 18, score: 22 }
-  ];
-
-  // Seeded comments
-  const SEED_COMMENTS = [
-    { id: 'sc1', postId: 'sp1', author: '@maya_chen', body: 'Yes — the voice is the thing. I read this on a flight and was useless to my seatmate the entire time.', ts: '5h', score: 28 },
-    { id: 'sc2', postId: 'sp1', author: '@theo_n', body: "I went into this thinking it would be in conversation with Twain, but it's really in conversation with us.", ts: '3h', score: 19 },
-    { id: 'sc3', postId: 'sp3', author: '@maya_chen', body: 'The shift is so subtle. I had to go back and reread the last chapter — that final image floored me.', ts: '10h', score: 14 },
-    { id: 'sc4', postId: 'sp3', author: '@rafael_andrade', body: "I think Klara understanding she can't fix what she set out to fix is the heart of it. And then the choice she makes anyway.", ts: '8h', score: 23 },
-    { id: 'sc5', postId: 'sp5', author: '@maya_chen', body: 'Buried Giant ranked last? Bold. I think it\'s his most underrated.', ts: '1d', score: 9 },
-    { id: 'sc6', postId: 'sp7', author: '@theo_n', body: 'Try Severance by Ling Ma. Climate-adjacent, urban, devastatingly small in scale.', ts: '4h', score: 17 },
-    { id: 'sc7', postId: 'sp7', author: '@dev_khanna', body: 'Parable of the Sower if you haven\'t. Probably the answer you already saw coming.', ts: '3h', score: 12 },
-    { id: 'sc8', postId: 'sp8', author: '@noor_khalil', body: '"The Layers" by Stanley Kunitz did this for me. I haven\'t been able to read about regret the same way since.', ts: '6h', score: 31 }
-  ];
+  // Seeded posts/comments — intentionally empty. Real content only.
+  // When users post in a community, their posts populate this experience.
+  const SEED_POSTS = [];
+  const SEED_COMMENTS = [];
 
   // Storage keys for user-created posts and comments
   const POSTS_KEY = 'vronsky_user_posts';
@@ -6744,7 +7006,13 @@
           </button>
         </div>
         <div id="community-posts-list">
-          ${posts.map(p => renderPostCardHtml(p)).join('')}
+          ${posts.length === 0
+            ? `<div class="rec-empty" style="margin: 0;">
+                 <div class="em-mark">— No posts yet —</div>
+                 <h3>This thread is waiting.</h3>
+                 <p>Be the first to write a review, ask a question, or start a discussion.</p>
+               </div>`
+            : posts.map(p => renderPostCardHtml(p)).join('')}
         </div>
       </div>
     `;
@@ -6791,6 +7059,16 @@
     const community = COMMUNITIES.find(c => c.id === post.communityId);
     const comments = await commentsForPost(postId);
     const container = document.getElementById('post-detail');
+    const mine = await isMyPost(post);
+
+    const ownerControls = mine
+      ? `<div class="owner-actions">
+           <button class="owner-action-btn danger" id="post-delete-btn">
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+             Delete
+           </button>
+         </div>`
+      : '';
 
     container.innerHTML = `
       <div class="post-detail">
@@ -6798,6 +7076,7 @@
           <span class="who">${escapeHtml(post.author)}</span>
           <span class="type ${post.type}">${escapeHtml(post.type)}</span>
           <span class="time">${escapeHtml(post.ts || 'just now')}</span>
+          ${ownerControls}
         </div>
         <div class="post-title-large">${escapeHtml(post.title)}</div>
         ${post.rating ? `<div class="post-rating-large">${renderStarsLarge(post.rating)}</div>` : ''}
@@ -6819,10 +7098,29 @@
           </div>
         </div>
         <div id="comments-list">
-          ${comments.map(c => renderCommentHtml(c)).join('')}
+          ${(await Promise.all(comments.map(c => renderCommentHtml(c)))).join('')}
         </div>
       </div>
     `;
+
+    // Wire delete-post button
+    if (mine) {
+      const delBtn = container.querySelector('#post-delete-btn');
+      if (delBtn) delBtn.addEventListener('click', async () => {
+        if (!confirm('Delete this post? This cannot be undone.')) return;
+        await deleteUserPost(post.id);
+        navigateDiscover('community', post.communityId);
+      });
+    }
+
+    // Wire delete-comment buttons
+    container.querySelectorAll('[data-del-comment]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this comment?')) return;
+        await deleteUserComment(btn.dataset.delComment);
+        await renderPost(postId); // re-render
+      });
+    });
 
     // navigate back to community by tapping the "posted in r/..." line
     container.querySelector('[data-go-community]').addEventListener('click', (e) => {
@@ -6859,12 +7157,21 @@
     wireVotePills(container);
   }
 
-  function renderCommentHtml(c) {
+  async function renderCommentHtml(c) {
+    const mine = await isMyComment(c);
+    const ownerCtrl = mine
+      ? `<div class="owner-actions">
+           <button class="owner-action-btn danger" data-del-comment="${c.id}" title="Delete comment">
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+           </button>
+         </div>`
+      : '';
     return `
       <div class="comment ${c.isNew ? 'is-new' : ''}">
         <div class="c-head">
           <span class="who">${escapeHtml(c.author)}</span>
           <span class="time">${escapeHtml(c.ts || 'just now')}</span>
+          ${ownerCtrl}
         </div>
         <div class="c-body">${escapeHtml(c.body)}</div>
         <div class="c-foot">
