@@ -5157,6 +5157,10 @@
         Mark as Finished
         <span class="check" data-ss-check="finished" style="display:none;">✓</span>
       </div>
+      <div class="sheet-action" data-ss-action="edit-review" id="ss-edit-review" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit rating &amp; review
+      </div>
       <div class="sheet-action danger" data-ss-action="delete">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
         Remove from library
@@ -6336,6 +6340,12 @@
       }
 
       document.getElementById('trail-best-cards').innerHTML = cards.join('');
+      // Wire clicks on best cards to edit review/rating
+      document.querySelectorAll('#trail-best-cards [data-edit-review]').forEach(card => {
+        card.addEventListener('click', () => {
+          openReviewModal(card.dataset.editReview);
+        });
+      });
     }
   }
 
@@ -6356,7 +6366,7 @@
             <div class="ca">— ${escapeHtml(book.author.slice(0, 14))}</div>
          </div>`;
     return `
-      <div class="best-card">
+      <div class="best-card" data-edit-review="${book.id}" style="cursor: pointer;">
         ${coverHtml}
         <div class="info">
           <div class="superlative">${escapeHtml(superlative)}</div>
@@ -6425,6 +6435,11 @@
     statusSheet.querySelectorAll('[data-ss-status]').forEach(a => {
       a.classList.toggle('active', a.dataset.ssStatus === book.status);
     });
+    // Show "Edit rating & review" only for finished books
+    const editReviewAction = document.getElementById('ss-edit-review');
+    if (editReviewAction) {
+      editReviewAction.style.display = book.status === 'finished' ? '' : 'none';
+    }
 
     statusSheet.classList.add('show');
   }
@@ -6466,6 +6481,14 @@
     await renderTrail();
   });
 
+  // Edit rating & review (for finished books)
+  statusSheet.querySelector('[data-ss-action="edit-review"]').addEventListener('click', () => {
+    if (!ssActiveBookId) return;
+    const id = ssActiveBookId;
+    closeStatusSheet();
+    openReviewModal(id);
+  });
+
   // === REVIEW MODAL (prompted when book becomes Finished) ===
   const reviewModal = document.getElementById('review-modal');
   const reviewForm = document.getElementById('review-form');
@@ -6480,6 +6503,13 @@
     const books = await getBooks();
     const book = books.find(b => b.id === bookId);
     if (!book) return;
+
+    // Set the title contextually — first review vs editing existing
+    const titleEl = document.getElementById('review-title');
+    if (titleEl) {
+      const hasExisting = book.rating || book.review;
+      titleEl.textContent = hasExisting ? 'Your review' : 'Write a review';
+    }
 
     const coverHtml = book.coverId
       ? `<div class="cv-real" style="background-image: url(${coverImageUrl(book.coverId, 'M')})"></div>`
@@ -7603,30 +7633,58 @@
   // Books they've already added to their library are filtered out so the
   // wall always shows discoveries.
 
-  // Cache fetched results by query so repeat searches are instant
+  // Cache fetched results by query so repeat searches are instant.
+  // The 'v2' prefix invalidates old cache after a quality-filter upgrade.
   const bookWallCache = {};
   // Cache fetched book summaries (per work key)
   const bookSummaryCache = {};
+  const WALL_CACHE_VERSION = 'v2';
 
-  // Fetch books from a specific Open Library subject.
-  // Filters aggressively for books with good cover art and broad popularity.
+  // Heuristic: detect non-English titles by character set.
+  // Catches Cyrillic, Chinese, Japanese, Korean, Arabic, Hebrew, Greek, etc.
+  // Returns true if the title looks like it's in a non-Latin script.
+  function looksNonEnglish(title) {
+    if (!title) return false;
+    // Match any character outside basic Latin + extended Latin + common punctuation
+    // \u0000-\u024F covers Latin + Latin Extended A/B
+    return /[\u0370-\uffff]/.test(title);
+  }
+
+  // Quality filter: must have cover, must look English, must have decent edition count
+  function isQualityBook(book) {
+    if (!book.title || !book.coverId) return false;
+    if (looksNonEnglish(book.title)) return false;
+    // Optional language check — skip books where Open Library has language info but it's not English
+    if (book.languages && book.languages.length > 0 && !book.languages.includes('eng')) return false;
+    return true;
+  }
+
+  // Fetch books matching a subject via search.json (which exposes language + ISBN).
+  // We intentionally use search.json instead of subjects.json because the latter
+  // doesn't return language metadata.
   async function fetchSubjectBooks(subject, limit = 50) {
     const cacheKey = 'subj:' + subject + ':' + limit;
     if (bookWallCache[cacheKey]) return bookWallCache[cacheKey];
     try {
-      const res = await fetch(`https://openlibrary.org/subjects/${encodeURIComponent(subject)}.json?limit=${limit}`);
-      if (!res.ok) throw new Error('subject ' + res.status);
+      // Build a search query: subject:X AND language:eng AND has cover
+      const url = `https://openlibrary.org/search.json?subject=${encodeURIComponent(subject)}&language=eng&has_fulltext=false&limit=${limit}&sort=editions&fields=key,title,author_name,first_publish_year,cover_i,edition_count,language,isbn`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('subject search ' + res.status);
       const data = await res.json();
-      const works = (data.works || [])
-        .filter(w => w.cover_id) // ONLY books with covers
-        .map(w => ({
-          workKey: w.key,
-          title: w.title,
-          author: (w.authors && w.authors[0] && w.authors[0].name) || '',
-          year: w.first_publish_year || null,
-          coverId: w.cover_id,
-          editionCount: w.edition_count || 1
-        }));
+      const works = (data.docs || [])
+        .map(d => ({
+          workKey: d.key,
+          title: d.title,
+          author: (d.author_name && d.author_name[0]) || '',
+          year: d.first_publish_year || null,
+          coverId: d.cover_i,
+          editionCount: d.edition_count || 1,
+          languages: d.language || [],
+          hasIsbn: !!(d.isbn && d.isbn.length > 0)
+        }))
+        .filter(isQualityBook)
+        // Prefer books with at least 3 editions (popularity signal — better cover art)
+        .filter(w => w.editionCount >= 3 || w.hasIsbn);
       bookWallCache[cacheKey] = works;
       return works;
     } catch (err) {
@@ -7635,24 +7693,27 @@
     }
   }
 
-  // Fetch books by an author. Sorts by edition_count (proxy for popularity).
+  // Fetch books by an author with English-only and quality filters
   async function fetchBooksByAuthor(author) {
     const cacheKey = 'auth:' + author.toLowerCase();
     if (bookWallCache[cacheKey]) return bookWallCache[cacheKey];
     try {
-      const res = await fetch(`https://openlibrary.org/search.json?author=${encodeURIComponent(author)}&limit=30&sort=editions`);
+      const url = `https://openlibrary.org/search.json?author=${encodeURIComponent(author)}&language=eng&limit=30&sort=editions&fields=key,title,author_name,first_publish_year,cover_i,edition_count,language,isbn`;
+      const res = await fetch(url);
       if (!res.ok) throw new Error('search ' + res.status);
       const data = await res.json();
       const works = (data.docs || [])
-        .filter(d => d.cover_i) // ONLY with covers
         .map(d => ({
           workKey: d.key,
           title: d.title,
           author: (d.author_name && d.author_name[0]) || author,
           year: d.first_publish_year || null,
           coverId: d.cover_i,
-          editionCount: d.edition_count || 1
-        }));
+          editionCount: d.edition_count || 1,
+          languages: d.language || [],
+          hasIsbn: !!(d.isbn && d.isbn.length > 0)
+        }))
+        .filter(isQualityBook);
       bookWallCache[cacheKey] = works;
       return works;
     } catch (err) {
@@ -7871,7 +7932,7 @@
 
   // Progressive book wall render. Books appear as each fetch completes,
   // not all-at-once after the slowest one.
-  const WALL_CACHE_KEY = 'vronsky_wall_session';
+  const WALL_CACHE_KEY = 'vronsky_wall_session_v2';
   const WALL_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
   let _wallRendered = false;
 
