@@ -63,16 +63,6 @@
       radial-gradient(ellipse 800px 600px at 30% 20%, rgba(122, 26, 43, 0.04), transparent),
       radial-gradient(ellipse 600px 500px at 80% 80%, rgba(122, 26, 43, 0.025), transparent);
   }
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background-image: radial-gradient(circle at center, rgba(0,0,0,0.04) 1px, transparent 1.5px);
-    background-size: 22px 22px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
   .num, code { font-family: 'JetBrains Mono', monospace; font-feature-settings: "tnum"; }
 
   /* === APP FRAME === */
@@ -4003,24 +3993,40 @@
   .b-save-btn.saved:hover { background: var(--surface-soft); }
 
   /* === FEED SEARCH BAR === */
+  /* Filter row: chips left, search right */
+  .feed-filter-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    margin-bottom: 18px;
+    gap: 12px;
+  }
+  .feed-filter-row .filter-bar {
+    margin: 0;
+    padding: 0;
+  }
+
   .feed-search-wrap {
     position: relative;
-    margin: 0 24px 16px;
     display: flex;
     align-items: center;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    transition: border-color 0.18s, box-shadow 0.18s;
+    border-radius: 8px;
+    transition: border-color 0.18s, box-shadow 0.18s, width 0.2s ease;
+    width: 180px;
+    flex-shrink: 0;
   }
   .feed-search-wrap:focus-within {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px rgba(122, 26, 43, 0.08);
+    width: 240px;
   }
   .feed-search-icon {
-    width: 16px;
-    height: 16px;
-    margin-left: 14px;
+    width: 14px;
+    height: 14px;
+    margin-left: 10px;
     color: var(--text-3);
     flex-shrink: 0;
   }
@@ -4028,9 +4034,9 @@
     flex: 1;
     background: none;
     border: none;
-    padding: 12px 12px 12px 10px;
+    padding: 8px 8px 8px 8px;
     font-family: inherit;
-    font-size: 14px;
+    font-size: 13px;
     color: var(--text);
     outline: none;
     min-width: 0;
@@ -4040,13 +4046,13 @@
     background: none;
     border: none;
     cursor: pointer;
-    padding: 8px 14px 8px 4px;
+    padding: 6px 10px 6px 2px;
     color: var(--text-3);
     display: flex;
     align-items: center;
   }
   .feed-search-clear:hover { color: var(--text); }
-  .feed-search-clear svg { width: 14px; height: 14px; }
+  .feed-search-clear svg { width: 12px; height: 12px; }
 
   /* === CLUB CREATION === */
 
@@ -5276,18 +5282,19 @@
       <div class="discover-view active" id="dv-home">
 
         <!-- Search bar -->
-        <div class="feed-search-wrap">
-          <svg class="feed-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
-          <input id="feed-search" type="text" placeholder="Search posts, threads, people…" autocomplete="off" />
-          <button class="feed-search-clear" id="feed-search-clear" style="display:none;" title="Clear">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-          </button>
-        </div>
-
-        <!-- All / Following toggle -->
-        <div class="filter-bar">
-          <div class="chip active" data-filter="all">All</div>
-          <div class="chip" data-filter="following">Following</div>
+        <!-- Filter row: All/Following on the left, search on the right -->
+        <div class="feed-filter-row">
+          <div class="filter-bar">
+            <div class="chip active" data-filter="all">All</div>
+            <div class="chip" data-filter="following">Following</div>
+          </div>
+          <div class="feed-search-wrap">
+            <svg class="feed-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+            <input id="feed-search" type="text" placeholder="Search…" autocomplete="off" />
+            <button class="feed-search-clear" id="feed-search-clear" style="display:none;" title="Clear">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
         </div>
 
         <!-- COMMUNITIES section: visible to all, lets you find threads to follow -->
@@ -6577,10 +6584,74 @@
   // Each club: { id, name, description, privacy: 'public'|'private', currentBook?, members: 1, createdAt }
   const CLUBS_KEY = 'vronsky_clubs';
 
+  // Seeded clubs — demo content, all public. Owned by fictional users so the
+  // current user discovers them via "Browse" but can't edit/delete them.
+  const SEED_CLUBS = [
+    {
+      id: 'sc_slow_reads',
+      name: 'Slow Reads Society',
+      description: 'A small group reading literary fiction at a chapter-a-week pace. We meet over Zoom every other Tuesday and keep our conversations off-app.',
+      privacy: 'public',
+      currentBook: { title: 'Middlemarch', author: 'George Eliot', year: 1871, coverId: 8231996 },
+      schedule: [
+        { id: 'sm1', date: '2026-05-12', milestone: 'Chapters 1–8' },
+        { id: 'sm2', date: '2026-05-26', milestone: 'Chapters 9–16' },
+        { id: 'sm3', date: '2026-06-09', milestone: 'Chapters 17–24' }
+      ],
+      members: 12,
+      ownerId: 'miranda_h',
+      createdAt: '2026-03-15T10:00:00Z'
+    },
+    {
+      id: 'sc_scifi_sundays',
+      name: 'Sci-Fi Sundays',
+      description: 'A book of the month, voted on Wednesdays, discussed on Sundays. Soft sci-fi welcome.',
+      privacy: 'public',
+      currentBook: { title: 'A Memory Called Empire', author: 'Arkady Martine', year: 2019, coverId: 8902203 },
+      schedule: [
+        { id: 'sm4', date: '2026-05-04', milestone: 'Through chapter 10' },
+        { id: 'sm5', date: '2026-05-18', milestone: 'Through chapter 20' },
+        { id: 'sm6', date: '2026-05-31', milestone: 'Finish + final discussion' }
+      ],
+      members: 47,
+      ownerId: 'dev_k',
+      createdAt: '2026-02-01T10:00:00Z'
+    },
+    {
+      id: 'sc_poetry_mornings',
+      name: 'Poetry, Before Coffee',
+      description: 'One poem a day, every weekday morning. We read it, sit with it, and someone leaves a sentence in the thread.',
+      privacy: 'public',
+      currentBook: { title: 'The Hurting Kind', author: 'Ada Limón', year: 2022, coverId: 12658189 },
+      schedule: [],
+      members: 89,
+      ownerId: 'noor_k',
+      createdAt: '2026-01-20T10:00:00Z'
+    },
+    {
+      id: 'sc_ishiguro_chronological',
+      name: 'Reading Ishiguro Chronologically',
+      description: 'One Ishiguro per month, in order of publication. Currently on book three.',
+      privacy: 'public',
+      currentBook: { title: 'The Remains of the Day', author: 'Kazuo Ishiguro', year: 1989, coverId: 8316308 },
+      schedule: [
+        { id: 'sm7', date: '2026-05-30', milestone: 'Finish + meeting' }
+      ],
+      members: 23,
+      ownerId: 'rafael_a',
+      createdAt: '2026-03-01T10:00:00Z'
+    }
+  ];
+
   async function getClubs() {
     const raw = await Store.get(CLUBS_KEY);
     if (!raw) return [];
     try { return JSON.parse(raw) || []; } catch { return []; }
+  }
+  // Get user clubs + seeded ones merged together (used for lookups by id)
+  async function getAllClubs() {
+    const userClubs = await getClubs();
+    return [...userClubs, ...SEED_CLUBS];
   }
   async function saveClubs(clubs) {
     await Store.set(CLUBS_KEY, JSON.stringify(clubs));
@@ -6766,7 +6837,7 @@
 
   // Render the per-club detail page
   async function renderClubDetail(clubId) {
-    const clubs = await getClubs();
+    const clubs = await getAllClubs();
     const club = clubs.find(c => c.id === clubId);
     const container = document.getElementById('club-detail');
     if (!club) {
@@ -7133,8 +7204,10 @@
 
   // === Browse public clubs (everyone's public clubs) ===
   async function renderBrowseClubs() {
-    const clubs = await getClubs();
-    const publicClubs = clubs.filter(c => c.privacy === 'public');
+    const userClubs = await getClubs();
+    const userPublicClubs = userClubs.filter(c => c.privacy === 'public');
+    // Merge user-created public clubs with seeded ones; user's own first
+    const publicClubs = [...userPublicClubs, ...SEED_CLUBS];
     const list = document.getElementById('browse-clubs-list');
     const empty = document.getElementById('browse-clubs-empty');
     const count = document.getElementById('browse-clubs-count');
@@ -7210,10 +7283,65 @@
     { id: 'mary_oliver', type: 'author', name: 'Mary Oliver', slug: 'r/mary_oliver', members: 1208, desc: 'For readers of the late American poet. Wild Geese, Devotions, A Thousand Mornings — all welcome.' }
   ];
 
-  // Seeded posts/comments — intentionally empty. Real content only.
-  // When users post in a community, their posts populate this experience.
-  const SEED_POSTS = [];
-  const SEED_COMMENTS = [];
+  // Seeded posts — demo content that gives the app some life on day one.
+  // (Will be replaced by real user content as people post.)
+  const SEED_POSTS = [
+    // Literary Fiction
+    { id: 'sp_lf1', communityId: 'lit_fic', author: '@miranda_h', type: 'review', title: 'James (Percival Everett) — required reading', body: "Everett doesn't retell Huck Finn — he reframes the entire moral architecture. The voice in this thing is something I'll never shake. There's a moment in chapter four where the narrator's interiority cracks open and you realize you've been reading the wrong book your whole life.", rating: 5, ts: '6h', commentCount: 3, score: 142 },
+    { id: 'sp_lf2', communityId: 'lit_fic', author: '@theo_n', type: 'discussion', title: 'Best contemporary lit fic of 2025?', body: "Trying to assemble a year-end list. What are people loving? Looking for things that broke through to you, not the conventional best-of picks. Tell me about the book your friend wouldn't shut up about.", rating: null, ts: '1d', commentCount: 2, score: 67 },
+    { id: 'sp_lf3', communityId: 'lit_fic', author: '@ada_r', type: 'review', title: 'Trust by Hernan Diaz — a slow burn worth it', body: "Four nested narratives about money, marriage, and authorship in early 20th-century New York. The first section reads like a stiff Edith Wharton pastiche on purpose — stick with it. The unraveling is everything.", rating: 4, ts: '2d', commentCount: 1, score: 54 },
+
+    // Klara and the Sun
+    { id: 'sp_k1', communityId: 'klara', author: '@sara_p', type: 'discussion', title: 'What did you make of the ending? [SPOILERS]', body: "I've read three Ishiguros now and the endings always do this thing — quiet, almost domestic, devastating. The way Klara's understanding shifts in the last twenty pages, and the very last image of her in the yard… I keep returning to it. Curious what others took from it.", rating: null, ts: '12h', commentCount: 2, score: 89 },
+    { id: 'sp_k2', communityId: 'klara', author: '@maya_c', type: 'review', title: 'Quietly devastating', body: "The way Klara reads the world is the most precise writing about loneliness I've encountered all year. Don't read this when you're tired.", rating: 5, ts: '3d', commentCount: 0, score: 31 },
+
+    // Ishiguro
+    { id: 'sp_i1', communityId: 'ishiguro', author: '@rafael_a', type: 'discussion', title: 'Ranking his novels', body: "My personal ranking, would love to hear yours: 1. The Remains of the Day 2. Never Let Me Go 3. Klara and the Sun 4. An Artist of the Floating World 5. The Buried Giant. Reasons in the comments.", rating: null, ts: '2d', commentCount: 1, score: 211 },
+    { id: 'sp_i2', communityId: 'ishiguro', author: '@josephine_l', type: 'discussion', title: 'The "unreliable narrator" reading is overstated', body: "Hot take maybe — calling Stevens an unreliable narrator misses the point. He's painfully reliable about what he sees. The problem is what he refuses to see. There's a difference and it matters for how the book lands.", rating: null, ts: '4d', commentCount: 0, score: 38 },
+
+    // Sci-Fi Readers
+    { id: 'sp_sf1', communityId: 'sci_fi', author: '@dev_k', type: 'review', title: 'A Memory Called Empire — quiet sci-fi at its best', body: "Imagine if Le Guin wrote a thriller about cultural imperialism and the slow violence of translation. That's roughly what this is. The world-building is dense but never showy.", rating: 5, ts: '1d', commentCount: 0, score: 78 },
+    { id: 'sp_sf2', communityId: 'sci_fi', author: '@aisha_s', type: 'question', title: 'Recommendations for someone burned out on space opera?', body: "Looking for something more grounded — near-future, climate-adjacent, urban, social. Octavia Butler vibes if possible. I love big ideas but want them in a small, breathing scale.", rating: null, ts: '5h', commentCount: 2, score: 53 },
+    { id: 'sp_sf3', communityId: 'sci_fi', author: '@tomas_b', type: 'review', title: 'The Three-Body Problem deserves a re-read', body: "First time I read it I bounced off the physics. Second time, knowing what was coming, the slow build of dread in part one hit completely differently. Cixin Liu is doing something with scale that no one else is.", rating: 4, ts: '3d', commentCount: 0, score: 92 },
+
+    // Poetry Corner
+    { id: 'sp_p1', communityId: 'poetry', author: '@clara_v', type: 'discussion', title: 'Poems that ruined other poems for you', body: 'Mary Oliver\'s "Wild Geese" did this for me — hard to read other nature poems without measuring them against it. What did this for you?', rating: null, ts: '8h', commentCount: 2, score: 124 },
+    { id: 'sp_p2', communityId: 'poetry', author: '@noor_k', type: 'review', title: 'Ada Limón\'s "The Hurting Kind"', body: "Read this start to finish in one sitting. The way she writes about animals — horses especially — does something to time. Slowed me right down. Going back tomorrow with a pencil.", rating: 5, ts: '2d', commentCount: 0, score: 47 },
+
+    // Mary Oliver
+    { id: 'sp_mo1', communityId: 'mary_oliver', author: '@noor_k', type: 'discussion', title: 'Devotions vs the individual collections', body: "For someone new to Oliver — would you recommend the omnibus (Devotions) or starting with one of the smaller collections? I want to give it the time it deserves.", rating: null, ts: '3d', commentCount: 0, score: 22 },
+    { id: 'sp_mo2', communityId: 'mary_oliver', author: '@vesna_t', type: 'discussion', title: 'Where do you read her?', body: "Maybe a strange question but Oliver is one of those poets where setting matters. I read her on porches, mostly. Curious where she lives for other people.", rating: null, ts: '5d', commentCount: 0, score: 19 }
+  ];
+
+  // Seeded comments
+  const SEED_COMMENTS = [
+    // James thread
+    { id: 'sc_lf1a', postId: 'sp_lf1', author: '@maya_c', body: 'Yes — the voice is the thing. I read this on a flight and was useless to my seatmate the entire time.', ts: '5h', score: 28 },
+    { id: 'sc_lf1b', postId: 'sp_lf1', author: '@theo_n', body: "I went into this thinking it would be in conversation with Twain, but it's really in conversation with us.", ts: '3h', score: 19 },
+    { id: 'sc_lf1c', postId: 'sp_lf1', author: '@ada_r', body: 'Chapter four broke me. Going to be thinking about that scene for years.', ts: '2h', score: 12 },
+
+    // Best contemp lit fic
+    { id: 'sc_lf2a', postId: 'sp_lf2', author: '@josephine_l', body: 'My friend wouldn\'t shut up about Birnam Wood (Eleanor Catton). Now I won\'t shut up about it either.', ts: '20h', score: 41 },
+    { id: 'sc_lf2b', postId: 'sp_lf2', author: '@dev_k', body: 'The Bee Sting (Paul Murray). Long but earns it.', ts: '14h', score: 23 },
+
+    // Trust review
+    { id: 'sc_lf3a', postId: 'sp_lf3', author: '@miranda_h', body: 'The Wharton pastiche is the trick — Diaz is making you feel the genre before tearing it apart.', ts: '1d', score: 18 },
+
+    // Klara endings
+    { id: 'sc_k1a', postId: 'sp_k1', author: '@maya_c', body: 'The shift is so subtle. I had to go back and reread the last chapter — that final image floored me.', ts: '10h', score: 14 },
+    { id: 'sc_k1b', postId: 'sp_k1', author: '@rafael_a', body: "I think Klara understanding she can't fix what she set out to fix is the heart of it. And then the choice she makes anyway.", ts: '8h', score: 23 },
+
+    // Ranking Ishiguro
+    { id: 'sc_i1a', postId: 'sp_i1', author: '@maya_c', body: 'Buried Giant ranked last? Bold. I think it\'s his most underrated.', ts: '1d', score: 9 },
+
+    // Burned out on space opera
+    { id: 'sc_sf2a', postId: 'sp_sf2', author: '@theo_n', body: 'Try Severance by Ling Ma. Climate-adjacent, urban, devastatingly small in scale.', ts: '4h', score: 17 },
+    { id: 'sc_sf2b', postId: 'sp_sf2', author: '@dev_k', body: 'Parable of the Sower if you haven\'t. Probably the answer you already saw coming.', ts: '3h', score: 12 },
+
+    // Poems that ruined poems
+    { id: 'sc_p1a', postId: 'sp_p1', author: '@noor_k', body: '"The Layers" by Stanley Kunitz did this for me. I haven\'t been able to read about regret the same way since.', ts: '6h', score: 31 },
+    { id: 'sc_p1b', postId: 'sp_p1', author: '@vesna_t', body: 'Larkin\'s "The Whitsun Weddings" ruined every train poem for me, in the best way.', ts: '4h', score: 18 }
+  ];
 
   // Storage keys for user-created posts and comments
   const POSTS_KEY = 'vronsky_user_posts';
