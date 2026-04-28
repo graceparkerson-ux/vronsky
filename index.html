@@ -2081,35 +2081,6 @@
     max-width: 380px;
   }
 
-  /* Editorial epigraph above the wordmark */
-  .auth-epigraph {
-    text-align: center;
-    font-family: Georgia, 'Times New Roman', serif;
-    font-style: italic;
-    font-size: 13px;
-    color: var(--accent);
-    margin-bottom: 18px;
-    letter-spacing: 0.02em;
-    opacity: 0.85;
-    transition: opacity 0.6s ease;
-    min-height: 36px; /* prevent layout shift between short/long quotes */
-    line-height: 1.4;
-  }
-  .auth-epigraph.fading {
-    opacity: 0;
-  }
-  .auth-epigraph .attr {
-    display: block;
-    margin-top: 4px;
-    font-size: 10px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    font-style: normal;
-    color: var(--text-3);
-    font-variation-settings: "opsz" 14, "wght" 600;
-    opacity: 0.85;
-  }
-
   .auth-brand {
     text-align: center;
     margin-bottom: 44px;
@@ -2273,35 +2244,6 @@
   .auth-note strong {
     color: var(--text);
     font-variation-settings: "wght" 600;
-  }
-
-  /* Mode toggle: Sign up | Sign in */
-  .auth-mode-toggle {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 4px;
-    margin: 0 0 22px;
-  }
-  .auth-mode-btn {
-    background: none;
-    border: none;
-    color: var(--text-2);
-    font-family: inherit;
-    font-size: 13px;
-    font-variation-settings: "opsz" 14, "wght" 500;
-    cursor: pointer;
-    padding: 9px 12px;
-    border-radius: 7px;
-    transition: all 0.15s;
-  }
-  .auth-mode-btn:hover { color: var(--text); }
-  .auth-mode-btn.active {
-    background: var(--text);
-    color: var(--bg);
   }
 
   /* Error messages under auth forms */
@@ -4868,7 +4810,7 @@
     .profile-info { padding: 40px 24px 32px; }
     .profile-info .av-large { width: 100px; height: 100px; font-size: 36px; }
     .profile-info .name { font-size: 32px; }
-    .auth-screen { display: grid; place-items: center; min-height: 100vh; }
+    .auth-screen { min-height: 100vh; }
     .user-menu { top: 60px; }
     .sheet { max-width: 480px; margin: 0 auto; border-radius: 18px; }
   }
@@ -4894,7 +4836,6 @@
 
   <!-- Sign-up overlay (shown when no account exists) -->
   <div class="auth-screen" id="auth-screen">
-    <div class="auth-epigraph" id="auth-epigraph">"It is a truth universally acknowledged…"</div>
     <div class="auth-brand">
       <div class="wordmark">Vronsky</div>
     </div>
@@ -5963,78 +5904,6 @@
     }
     // Otherwise the auth screen is shown by default
   })();
-
-  // === ROTATING LITERARY EPIGRAPHS (auth screen) ===
-  // Famous opening lines and iconic quotes from beloved books.
-  // Cycles every 15 seconds with a soft fade.
-  const LITERARY_QUOTES = [
-    { quote: "It is a truth universally acknowledged…", source: "Pride and Prejudice — Jane Austen" },
-    { quote: "Happy families are all alike; every unhappy family is unhappy in its own way.", source: "Anna Karenina — Leo Tolstoy" },
-    { quote: "Call me Ishmael.", source: "Moby-Dick — Herman Melville" },
-    { quote: "Many years later, as he faced the firing squad, Colonel Aureliano Buendía was to remember that distant afternoon when his father took him to discover ice.", source: "One Hundred Years of Solitude — Gabriel García Márquez" },
-    { quote: "It was the best of times, it was the worst of times.", source: "A Tale of Two Cities — Charles Dickens" },
-    { quote: "All this happened, more or less.", source: "Slaughterhouse-Five — Kurt Vonnegut" },
-    { quote: "124 was spiteful. Full of a baby's venom.", source: "Beloved — Toni Morrison" },
-    { quote: "Mother died today. Or, maybe, yesterday; I can't be sure.", source: "The Stranger — Albert Camus" },
-    { quote: "Whether I shall turn out to be the hero of my own life, or whether that station will be held by anybody else, these pages must show.", source: "David Copperfield — Charles Dickens" },
-    { quote: "It was a bright cold day in April, and the clocks were striking thirteen.", source: "1984 — George Orwell" },
-    { quote: "All happy families are alike, but each unhappy family is unhappy in its own way.", source: "Anna Karenina — Leo Tolstoy" },
-    { quote: "I am an invisible man.", source: "Invisible Man — Ralph Ellison" },
-    { quote: "Lolita, light of my life, fire of my loins.", source: "Lolita — Vladimir Nabokov" },
-    { quote: "You don't know about me without you have read a book by the name of The Adventures of Tom Sawyer; but that ain't no matter.", source: "The Adventures of Huckleberry Finn — Mark Twain" },
-    { quote: "Someone must have slandered Josef K., for one morning, without having done anything wrong, he was arrested.", source: "The Trial — Franz Kafka" },
-    { quote: "The past is a foreign country; they do things differently there.", source: "The Go-Between — L. P. Hartley" },
-    { quote: "It was a pleasure to burn.", source: "Fahrenheit 451 — Ray Bradbury" },
-    { quote: "Tell me, Muse, of the man of many ways, who was driven far journeys.", source: "The Odyssey — Homer" },
-    { quote: "Stately, plump Buck Mulligan came from the stairhead, bearing a bowl of lather on which a mirror and a razor lay crossed.", source: "Ulysses — James Joyce" }
-  ];
-
-  let _quoteIdx = -1;
-  let _quoteInterval = null;
-
-  function pickNextQuote() {
-    if (LITERARY_QUOTES.length <= 1) return 0;
-    let next;
-    do { next = Math.floor(Math.random() * LITERARY_QUOTES.length); }
-    while (next === _quoteIdx);
-    return next;
-  }
-
-  function rotateQuote() {
-    const el = document.getElementById('auth-epigraph');
-    if (!el) return;
-    el.classList.add('fading');
-    setTimeout(() => {
-      _quoteIdx = pickNextQuote();
-      const q = LITERARY_QUOTES[_quoteIdx];
-      el.innerHTML = `"${escapeHtml(q.quote)}"<span class="attr">${escapeHtml(q.source)}</span>`;
-      el.classList.remove('fading');
-    }, 600); // matches the CSS transition
-  }
-
-  function startQuoteRotation() {
-    // Initial set (no fade) — pick a random first quote
-    const el = document.getElementById('auth-epigraph');
-    if (!el) return;
-    _quoteIdx = Math.floor(Math.random() * LITERARY_QUOTES.length);
-    const q = LITERARY_QUOTES[_quoteIdx];
-    el.innerHTML = `"${escapeHtml(q.quote)}"<span class="attr">${escapeHtml(q.source)}</span>`;
-
-    if (_quoteInterval) clearInterval(_quoteInterval);
-    _quoteInterval = setInterval(rotateQuote, 15000);
-  }
-
-  function stopQuoteRotation() {
-    if (_quoteInterval) {
-      clearInterval(_quoteInterval);
-      _quoteInterval = null;
-    }
-  }
-
-  // Start rotation if the auth screen is visible on load
-  if (!authScreen.classList.contains('hidden')) {
-    startQuoteRotation();
-  }
 
   // Avatar click → toggle the menu
   const avatarBtn = document.getElementById('user-avatar');
