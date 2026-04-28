@@ -7608,21 +7608,25 @@
   // Cache fetched book summaries (per work key)
   const bookSummaryCache = {};
 
-  // Fetch books from a specific Open Library subject
-  async function fetchSubjectBooks(subject) {
-    const cacheKey = 'subj:' + subject;
+  // Fetch books from a specific Open Library subject.
+  // Filters aggressively for books with good cover art and broad popularity.
+  async function fetchSubjectBooks(subject, limit = 50) {
+    const cacheKey = 'subj:' + subject + ':' + limit;
     if (bookWallCache[cacheKey]) return bookWallCache[cacheKey];
     try {
-      const res = await fetch(`https://openlibrary.org/subjects/${encodeURIComponent(subject)}.json?limit=40`);
+      const res = await fetch(`https://openlibrary.org/subjects/${encodeURIComponent(subject)}.json?limit=${limit}`);
       if (!res.ok) throw new Error('subject ' + res.status);
       const data = await res.json();
-      const works = (data.works || []).map(w => ({
-        workKey: w.key,
-        title: w.title,
-        author: (w.authors && w.authors[0] && w.authors[0].name) || '',
-        year: w.first_publish_year || null,
-        coverId: w.cover_id || null
-      }));
+      const works = (data.works || [])
+        .filter(w => w.cover_id) // ONLY books with covers
+        .map(w => ({
+          workKey: w.key,
+          title: w.title,
+          author: (w.authors && w.authors[0] && w.authors[0].name) || '',
+          year: w.first_publish_year || null,
+          coverId: w.cover_id,
+          editionCount: w.edition_count || 1
+        }));
       bookWallCache[cacheKey] = works;
       return works;
     } catch (err) {
@@ -7631,21 +7635,24 @@
     }
   }
 
-  // Fetch books by an author name (uses Open Library's general search)
+  // Fetch books by an author. Sorts by edition_count (proxy for popularity).
   async function fetchBooksByAuthor(author) {
     const cacheKey = 'auth:' + author.toLowerCase();
     if (bookWallCache[cacheKey]) return bookWallCache[cacheKey];
     try {
-      const res = await fetch(`https://openlibrary.org/search.json?author=${encodeURIComponent(author)}&limit=20`);
+      const res = await fetch(`https://openlibrary.org/search.json?author=${encodeURIComponent(author)}&limit=30&sort=editions`);
       if (!res.ok) throw new Error('search ' + res.status);
       const data = await res.json();
-      const works = (data.docs || []).map(d => ({
-        workKey: d.key, // /works/OL...W
-        title: d.title,
-        author: (d.author_name && d.author_name[0]) || author,
-        year: d.first_publish_year || null,
-        coverId: d.cover_i || null
-      })).filter(w => w.coverId); // Prefer books with covers
+      const works = (data.docs || [])
+        .filter(d => d.cover_i) // ONLY with covers
+        .map(d => ({
+          workKey: d.key,
+          title: d.title,
+          author: (d.author_name && d.author_name[0]) || author,
+          year: d.first_publish_year || null,
+          coverId: d.cover_i,
+          editionCount: d.edition_count || 1
+        }));
       bookWallCache[cacheKey] = works;
       return works;
     } catch (err) {
@@ -7674,16 +7681,35 @@
     }
   }
 
-  // Build the recommendation set based on the user's library.
-  // Returns: { books: [...], source: 'authors' | 'wishlist' | 'fallback' }
-  // Build the recommendation set based on the user's library.
-  // Each entry in `streams` is a Promise<book[]> — they resolve independently
-  // so the wall can render progressively as each completes.
-  // Returns: { streams: Promise<book[]>[], owned: Set<string>, source: string }
+  // Fisher-Yates shuffle (in-place)
+  function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  // === DISCOVERY ALGORITHM ===
+  //
+  // The wall is a curated mix from several "buckets":
+  //
+  //   30% — Recent/popular literary fiction
+  //   25% — Classics (canonical works)
+  //   15% — Award winners / acclaimed
+  //   15% — Genre variety (mystery, sci-fi, poetry, memoir — rotating)
+  //   15% — Taste-based (books by authors the user has finished — if any)
+  //
+  // Each bucket fetches independently. Books are filtered for cover quality
+  // (only those with cover_id). The final wall is shuffled so the user sees
+  // a different mix every session, but stable while they're browsing.
+  //
+  // This produces a wall that's beautiful, varied, and slightly different
+  // every time — like a well-curated bookstore window.
+
   async function getRecommendationStreams() {
     const all = await getBooks();
     const finished = all.filter(b => b.status === 'finished');
-    const wishlist = all.filter(b => b.status === 'library' || b.status === 'reading');
 
     // Build set of already-owned identifiers
     const ownedKeys = new Set();
@@ -7694,30 +7720,45 @@
     });
     const owned = { keys: ownedKeys, titles: ownedTitles };
 
-    // Primary: authors of finished books — one stream per author
+    // Pool of genre subjects we might pull from for variety
+    // (each session will randomly pick a few from this list)
+    const genrePool = [
+      'mystery', 'science_fiction', 'poetry', 'memoir',
+      'historical_fiction', 'fantasy', 'short_stories', 'essays'
+    ];
+    const pickedGenres = shuffleArray([...genrePool]).slice(0, 3);
+
+    // Each "stream" is a Promise<book[]> tagged with a target proportion
+    // The wall builder picks books from each stream up to its share.
+    const streams = [
+      // Bucket 1: Recent/popular literary fiction (30%)
+      { weight: 0.30, promise: fetchSubjectBooks('fiction', 50), tag: 'literary' },
+      // Bucket 2: Classics (25%)
+      { weight: 0.25, promise: fetchSubjectBooks('classics', 50), tag: 'classics' },
+      // Bucket 3: Award winners / acclaimed (15%)
+      // Open Library tags some books with "Booker Prize" etc.; "fiction" with high editions is a decent proxy
+      { weight: 0.15, promise: fetchSubjectBooks('booker_prize_winners', 30), tag: 'awards' },
+    ];
+
+    // Bucket 4: Genre variety (15% split across picked genres)
+    const genreShare = 0.15 / pickedGenres.length;
+    pickedGenres.forEach(g => {
+      streams.push({ weight: genreShare, promise: fetchSubjectBooks(g, 25), tag: 'genre:' + g });
+    });
+
+    // Bucket 5: Taste-based — only if user has finished books (15%)
     if (finished.length > 0) {
       const authors = [...new Set(finished.map(b => b.author).filter(Boolean))];
-      const streams = authors.map(a => fetchBooksByAuthor(a));
-      // Add a fiction supplement so we always have enough
-      streams.push(fetchSubjectBooks('fiction'));
-      return { streams, owned, source: 'authors' };
+      const tasteShare = 0.15 / authors.length;
+      authors.forEach(a => {
+        streams.push({ weight: tasteShare, promise: fetchBooksByAuthor(a), tag: 'taste:' + a });
+      });
+    } else {
+      // No taste data — give that 15% to short stories or another classic genre
+      streams.push({ weight: 0.15, promise: fetchSubjectBooks('contemporary_fiction', 30), tag: 'extra' });
     }
 
-    // Secondary: authors of wishlist books
-    if (wishlist.length > 0) {
-      const authors = [...new Set(wishlist.map(b => b.author).filter(Boolean))];
-      const streams = authors.map(a => fetchBooksByAuthor(a));
-      streams.push(fetchSubjectBooks('fiction'));
-      return { streams, owned, source: 'wishlist' };
-    }
-
-    // Fallback: literary mix
-    const streams = [
-      fetchSubjectBooks('fiction'),
-      fetchSubjectBooks('classics'),
-      fetchSubjectBooks('poetry')
-    ];
-    return { streams, owned, source: 'fallback' };
+    return { streams, owned, source: finished.length > 0 ? 'mixed_with_taste' : 'mixed' };
   }
 
   // Render skeletons while books are loading — gives the wall a real shape from the start
@@ -7873,13 +7914,11 @@
     }
 
     const { streams, owned } = recPlan;
-    // Track books we've already added to the wall so streams don't duplicate
-    const accumulated = [];
+    const TARGET_TOTAL = 60; // total books on the wall
     const seenKeys = new Set();
-    let firstRender = true;
 
     function shouldInclude(b) {
-      if (!b || !b.title) return false;
+      if (!b || !b.title || !b.coverId) return false; // require cover art
       const key = b.workKey || b.title.toLowerCase();
       if (seenKeys.has(key)) return false;
       if (owned.keys.has(b.workKey)) return false;
@@ -7888,32 +7927,49 @@
       return true;
     }
 
-    // Process each stream as it resolves
-    await Promise.all(streams.map(async (streamPromise) => {
+    // Resolve all buckets in parallel
+    const bucketResults = await Promise.all(streams.map(async (s) => {
       try {
-        const books = await streamPromise;
-        const fresh = books.filter(shouldInclude);
-        if (fresh.length === 0) return;
-
-        // Interleave new books into accumulated for visual variety
-        // Simple approach: shuffle the fresh batch slightly then append
-        for (const b of fresh) accumulated.push(b);
-
-        // First render: replace skeletons with real cards
-        if (firstRender) {
-          firstRender = false;
-          await renderWallFromBookList(accumulated.slice(0, 60), wallEl);
-        } else {
-          // Subsequent streams: append new cards without disturbing flipped state
-          await appendNewCardsToWall(fresh, accumulated, wallEl);
-        }
+        const books = await s.promise;
+        return { weight: s.weight, books, tag: s.tag };
       } catch (err) {
-        console.warn('stream failed', err);
+        console.warn('bucket failed', s.tag, err);
+        return { weight: s.weight, books: [], tag: s.tag };
       }
     }));
 
-    // If everything failed and we still have skeletons, show error
-    if (firstRender) {
+    // Pick books from each bucket up to its weighted share
+    const finalList = [];
+    for (const bucket of bucketResults) {
+      const targetCount = Math.round(bucket.weight * TARGET_TOTAL);
+      // Shuffle within the bucket so we don't always get the top N
+      const shuffledBucket = shuffleArray([...bucket.books]);
+      let added = 0;
+      for (const b of shuffledBucket) {
+        if (added >= targetCount) break;
+        if (shouldInclude(b)) {
+          finalList.push(b);
+          added++;
+        }
+      }
+    }
+
+    // If we're under the target, top up from any bucket that has more available
+    if (finalList.length < TARGET_TOTAL) {
+      for (const bucket of bucketResults) {
+        if (finalList.length >= TARGET_TOTAL) break;
+        for (const b of bucket.books) {
+          if (finalList.length >= TARGET_TOTAL) break;
+          if (shouldInclude(b)) finalList.push(b);
+        }
+      }
+    }
+
+    // Shuffle the final list so genres/eras are mixed throughout the wall,
+    // not arranged in clumps by bucket
+    shuffleArray(finalList);
+
+    if (finalList.length === 0) {
       wallEl.innerHTML = '';
       if (statusEl) {
         statusEl.textContent = "Couldn't load books right now.";
@@ -7923,10 +7979,12 @@
       return;
     }
 
+    await renderWallFromBookList(finalList, wallEl);
+
     // Cache for fast re-load
     try {
       sessionStorage.setItem(WALL_CACHE_KEY, JSON.stringify({
-        books: accumulated.slice(0, 60),
+        books: finalList,
         ts: Date.now()
       }));
     } catch (e) { /* sessionStorage might be full */ }
