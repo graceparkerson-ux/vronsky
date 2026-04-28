@@ -3981,6 +3981,143 @@
   }
   .b-save-btn.saved:hover { background: var(--surface-soft); }
 
+  /* === USER PROFILE (viewing other users) === */
+  .user-profile-card {
+    padding: 0 24px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .up-header {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 18px;
+  }
+  .up-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .up-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .up-name {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .up-handle {
+    font-size: 13px;
+    color: var(--text-3);
+    margin-top: 2px;
+  }
+  .up-bio {
+    font-size: 13px;
+    color: var(--text-2);
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+  .user-follow-btn {
+    background: var(--accent);
+    color: white;
+    border: 1px solid var(--accent);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
+  }
+  .user-follow-btn.following {
+    background: transparent;
+    color: var(--accent);
+  }
+  .user-follow-btn:hover { opacity: 0.9; }
+  .up-stats {
+    display: flex;
+    gap: 28px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-soft);
+  }
+  .up-stat {
+    display: flex;
+    flex-direction: column;
+  }
+  .up-stat .num {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .up-stat .lbl {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-3);
+    margin-top: 2px;
+  }
+  .up-section { padding: 0 24px; }
+  .up-section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-3);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  .up-post {
+    padding: 12px 14px;
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .up-post:hover {
+    border-color: var(--border);
+    background: var(--surface-soft);
+  }
+  .up-post-head {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-size: 11px;
+    color: var(--text-3);
+    margin-bottom: 6px;
+  }
+  .up-post-type {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .up-post-rating { color: var(--accent); letter-spacing: 0.05em; }
+  .up-post-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.35;
+    margin-bottom: 4px;
+  }
+  .up-post-body {
+    font-size: 12px;
+    color: var(--text-2);
+    line-height: 1.5;
+  }
+
   /* === FEED SEARCH BAR === */
   /* Filter row: chips left, search right */
   .feed-filter-row {
@@ -4042,6 +4179,87 @@
   }
   .feed-search-clear:hover { color: var(--text); }
   .feed-search-clear svg { width: 12px; height: 12px; }
+
+  /* Search results dropdown */
+  .feed-search-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    width: 320px;
+    max-height: 480px;
+    overflow-y: auto;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 8px 32px -8px rgba(20, 14, 18, 0.18);
+    z-index: 50;
+    padding: 8px 0;
+  }
+  .feed-search-dropdown .sec-label {
+    padding: 8px 14px 4px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    font-weight: 600;
+  }
+  .feed-search-dropdown .res-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+  .feed-search-dropdown .res-item:hover { background: var(--surface-soft); }
+  .feed-search-dropdown .res-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .feed-search-dropdown .res-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: var(--surface-soft);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .feed-search-dropdown .res-icon svg { width: 16px; height: 16px; }
+  .feed-search-dropdown .res-info { min-width: 0; flex: 1; }
+  .feed-search-dropdown .res-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .feed-search-dropdown .res-sub {
+    font-size: 11px;
+    color: var(--text-3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .feed-search-dropdown .res-empty {
+    padding: 14px;
+    text-align: center;
+    color: var(--text-3);
+    font-size: 12px;
+    font-style: italic;
+  }
 
   /* === CLUB CREATION === */
 
@@ -5274,7 +5492,6 @@
       <!-- HOME sub-view (the feed itself) -->
       <div class="discover-view active" id="dv-home">
 
-        <!-- Search bar -->
         <!-- Filter row: All/Following on the left, search on the right -->
         <div class="feed-filter-row">
           <div class="filter-bar">
@@ -5283,10 +5500,11 @@
           </div>
           <div class="feed-search-wrap">
             <svg class="feed-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
-            <input id="feed-search" type="text" placeholder="Search…" autocomplete="off" />
+            <input id="feed-search" type="text" placeholder="Search people, communities…" autocomplete="off" />
             <button class="feed-search-clear" id="feed-search-clear" style="display:none;" title="Clear">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
+            <div class="feed-search-dropdown" id="feed-search-dropdown" style="display:none;"></div>
           </div>
         </div>
 
@@ -5338,6 +5556,17 @@
           </button>
         </div>
         <div id="post-detail"></div>
+      </div>
+
+      <!-- USER PROFILE sub-view (rendered by JS — for viewing other users) -->
+      <div class="discover-view" id="dv-user">
+        <div style="padding: 0 24px 14px;">
+          <button class="back-btn" data-back-to="home">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            Back to Feed
+          </button>
+        </div>
+        <div id="user-profile-detail"></div>
       </div>
 
     </section>
@@ -7298,6 +7527,50 @@
     { id: 'mary_oliver', type: 'author', name: 'Mary Oliver', slug: 'r/mary_oliver', members: 1208, desc: 'For readers of the late American poet. Wild Geese, Devotions, A Thousand Mornings — all welcome.' }
   ];
 
+  // Seeded users — fictional readers who appear in posts/comments + are searchable
+  // These match the @handles used in SEED_POSTS / SEED_COMMENTS. Real users (you)
+  // are stored separately and merged with these in search results.
+  const SEED_USERS = [
+    { username: 'miranda_h', name: 'Miranda Holloway', bio: 'Editor by day, novel-finisher by night. Currently chipping at the doorstop on my nightstand.', booksRead: 87, joined: '2024' },
+    { username: 'theo_n', name: 'Theo Nakashima', bio: 'Translator. Big fan of long sentences and longer winters.', booksRead: 142, joined: '2023' },
+    { username: 'ada_r', name: 'Ada Reeves', bio: 'Reading my way through every Booker winner since 1980. Slow going. Worth it.', booksRead: 64, joined: '2024' },
+    { username: 'sara_p', name: 'Sara Patel', bio: 'Quiet endings only.', booksRead: 51, joined: '2025' },
+    { username: 'maya_c', name: 'Maya Chen', bio: 'Fiction, mostly. Occasional essays. The longer the better.', booksRead: 73, joined: '2024' },
+    { username: 'rafael_a', name: 'Rafael Almeida', bio: 'Reading Ishiguro chronologically. Currently between novels three and four.', booksRead: 95, joined: '2023' },
+    { username: 'josephine_l', name: 'Josephine Lin', bio: 'I have opinions about narrators.', booksRead: 118, joined: '2023' },
+    { username: 'dev_k', name: 'Dev Kapoor', bio: 'Sci-fi, mostly soft. Currently lost in Liu Cixin.', booksRead: 89, joined: '2024' },
+    { username: 'aisha_s', name: 'Aisha Saleh', bio: 'Climate fiction, near-future things, and the occasional break for a 19th-century novel.', booksRead: 56, joined: '2025' },
+    { username: 'tomas_b', name: 'Tomás Bianchi', bio: 'Big books. Long flights. Whichever I have more of that month.', booksRead: 102, joined: '2023' },
+    { username: 'clara_v', name: 'Clara Voss', bio: 'Poetry, prose poetry, prose that reads like poetry.', booksRead: 47, joined: '2024' },
+    { username: 'noor_k', name: 'Noor Khan', bio: 'I read mornings only. Coffee then a poem.', booksRead: 68, joined: '2024' },
+    { username: 'vesna_t', name: 'Vesna Toma', bio: 'Recovering grad student. Books that made me drop out: too many to list.', booksRead: 134, joined: '2022' }
+  ];
+
+  // Get all known users (real + seeded). The current user comes from auth.
+  async function getAllUsers() {
+    const me = await getUser();
+    const all = [...SEED_USERS];
+    if (me && me.username && !all.find(u => u.username === me.username)) {
+      all.unshift({
+        username: me.username,
+        name: me.name || me.username,
+        bio: me.bio || '',
+        booksRead: 0, // could be computed from finished books — kept simple for now
+        joined: (me.createdAt || '').slice(0, 4) || '2026',
+        isMe: true
+      });
+    }
+    return all;
+  }
+
+  // Lookup a single user by username — checks seed users + current user
+  async function findUserByUsername(username) {
+    if (!username) return null;
+    const clean = username.replace(/^@/, '').toLowerCase();
+    const all = await getAllUsers();
+    return all.find(u => u.username.toLowerCase() === clean) || null;
+  }
+
   // Seeded posts — demo content that gives the app some life on day one.
   // (Will be replaced by real user content as people post.)
   const SEED_POSTS = [
@@ -7325,7 +7598,17 @@
 
     // Mary Oliver
     { id: 'sp_mo1', communityId: 'mary_oliver', author: '@noor_k', type: 'discussion', title: 'Devotions vs the individual collections', body: "For someone new to Oliver — would you recommend the omnibus (Devotions) or starting with one of the smaller collections? I want to give it the time it deserves.", rating: null, ts: '3d', commentCount: 0, score: 22 },
-    { id: 'sp_mo2', communityId: 'mary_oliver', author: '@vesna_t', type: 'discussion', title: 'Where do you read her?', body: "Maybe a strange question but Oliver is one of those poets where setting matters. I read her on porches, mostly. Curious where she lives for other people.", rating: null, ts: '5d', commentCount: 0, score: 19 }
+    { id: 'sp_mo2', communityId: 'mary_oliver', author: '@vesna_t', type: 'discussion', title: 'Where do you read her?', body: "Maybe a strange question but Oliver is one of those poets where setting matters. I read her on porches, mostly. Curious where she lives for other people.", rating: null, ts: '5d', commentCount: 0, score: 19 },
+
+    // More book reviews — these flesh out the feed
+    { id: 'sp_r1', communityId: 'lit_fic', author: '@maya_c', type: 'review', title: 'Demon Copperhead — Kingsolver doing something extraordinary', body: "I went in skeptical of the David Copperfield-as-Appalachia premise. Twenty pages in I was a convert. The voice carries this — Demon's narration is funny, raw, and so consistently itself that the 500+ pages disappear. Kingsolver writes about poverty without sentimentality and about addiction without lecturing.", rating: 5, ts: '8h', commentCount: 0, score: 89 },
+    { id: 'sp_r2', communityId: 'lit_fic', author: '@josephine_l', type: 'review', title: 'A Little Life — I don\'t know if I can recommend it', body: "Finished it last night and I'm still inside the book. Yanagihara writes male intimacy and male suffering with a particularity I haven't read elsewhere. But this novel is also relentless in a way that crosses into something I can't quite endorse. Maybe that's the point. Read at your own risk.", rating: 4, ts: '2d', commentCount: 0, score: 67 },
+    { id: 'sp_r3', communityId: 'sci_fi', author: '@aisha_s', type: 'review', title: 'Station Eleven re-read — somehow better', body: "Read it the year it came out, re-read it after the show, read it again last month. It keeps becoming a different book. The Traveling Symphony, the Prophet, the airport — Mandel's structure is closer to a piece of music than a novel.", rating: 5, ts: '1d', commentCount: 0, score: 71 },
+    { id: 'sp_r4', communityId: 'poetry', author: '@vesna_t', type: 'review', title: 'Citizen by Claudia Rankine', body: "Not really a book of poems and not really not. The hybrid form — prose, lyric, image — is doing the political work of the book. I read it slowly, one section at a time. It will leave a mark.", rating: 5, ts: '4d', commentCount: 0, score: 92 },
+    { id: 'sp_r5', communityId: 'lit_fic', author: '@theo_n', type: 'review', title: 'Pachinko by Min Jin Lee', body: "A four-generation epic that earns every one of its 500 pages. Lee writes the immigrant experience with a wide-angle lens — diaspora across decades — but the emotional close-ups are what stick. The character of Sunja is one of the most quietly heroic protagonists I've read in years.", rating: 5, ts: '3d', commentCount: 0, score: 134 },
+    { id: 'sp_r6', communityId: 'ishiguro', author: '@miranda_h', type: 'review', title: 'The Buried Giant deserves another look', body: "I bounced off this in 2015 and came back to it last month. The fog as metaphor is heavy-handed if you read it impatiently — but if you slow to the pace it sets, the way memory and forgetting are handled is among the most haunting in his work. Underrated.", rating: 4, ts: '6d', commentCount: 0, score: 56 },
+    { id: 'sp_r7', communityId: 'sci_fi', author: '@dev_k', type: 'review', title: 'Piranesi by Susanna Clarke', body: "I will say very little about the plot. Just: the voice in this is unlike anything else I read this year. A short novel that operates on the architecture of a much longer one. Read it cold — don't even read the back cover.", rating: 5, ts: '4d', commentCount: 0, score: 178 },
+    { id: 'sp_r8', communityId: 'lit_fic', author: '@ada_r', type: 'review', title: 'The Overstory — necessary, frustrating, great', body: "Powers is doing something that the novel form may not actually be capable of — telling the story of trees on a timescale that humans can register. The first section (the eight character portraits) is some of the best contemporary fiction I've read. The middle drags. The ending earns it.", rating: 4, ts: '5d', commentCount: 0, score: 88 }
   ];
 
   // Seeded comments
@@ -7428,6 +7711,29 @@
     else followed.splice(idx, 1);
     await Store.set(FOLLOWED_KEY, JSON.stringify(followed));
     return idx === -1; // true = newly followed
+  }
+
+  // === USER FOLLOWING ===
+  const FOLLOWED_USERS_KEY = 'vronsky_followed_users';
+
+  async function getFollowedUsers() {
+    const raw = await Store.get(FOLLOWED_USERS_KEY);
+    if (!raw) return [];
+    try { return JSON.parse(raw) || []; } catch { return []; }
+  }
+  async function isFollowingUser(username) {
+    if (!username) return false;
+    const followed = await getFollowedUsers();
+    return followed.includes(username);
+  }
+  async function toggleFollowUser(username) {
+    if (!username) return false;
+    const followed = await getFollowedUsers();
+    const idx = followed.indexOf(username);
+    if (idx === -1) followed.push(username);
+    else followed.splice(idx, 1);
+    await Store.set(FOLLOWED_USERS_KEY, JSON.stringify(followed));
+    return idx === -1;
   }
 
   // === VOTING ===
@@ -8252,6 +8558,113 @@
     `;
   }
 
+  // === USER PROFILE — shown when the current user clicks on someone else's @handle ===
+  async function renderUserProfile(username) {
+    const container = document.getElementById('user-profile-detail');
+    if (!container) return;
+    const user = await findUserByUsername(username);
+    if (!user) {
+      container.innerHTML = '<div class="rec-empty"><h3>User not found.</h3></div>';
+      return;
+    }
+
+    const me = await getUser();
+    const isMe = me && me.username && me.username.toLowerCase() === user.username.toLowerCase();
+    const following = await isFollowingUser(user.username);
+
+    // Pull this user's posts and comments from seeded + user-created
+    const userPosts = await getUserPosts();
+    const userComments = await getUserComments();
+    const allPosts = [...SEED_POSTS, ...userPosts];
+    const allComments = [...SEED_COMMENTS, ...userComments];
+    const handle = '@' + user.username.toLowerCase();
+    const theirPosts = allPosts.filter(p => (p.author || '').toLowerCase() === handle).slice(0, 20);
+    const theirReviews = theirPosts.filter(p => p.type === 'review');
+    const theirCommentsCount = allComments.filter(c => (c.author || '').toLowerCase() === handle).length;
+
+    const initial = (user.name || user.username || '?').charAt(0).toUpperCase();
+
+    const followBtnHtml = isMe ? '' : `
+      <button class="user-follow-btn ${following ? 'following' : ''}" data-toggle-follow-user="${escapeHtml(user.username)}">
+        ${following ? 'Following' : 'Follow'}
+      </button>
+    `;
+
+    const postsHtml = theirPosts.length === 0
+      ? '<div class="rec-empty" style="padding: 24px 0;"><p style="color: var(--text-3); font-size: 13px;">No posts yet.</p></div>'
+      : (await Promise.all(theirPosts.map(async p => await renderPost.toString && renderPostCardForProfile(p)))).join('');
+
+    container.innerHTML = `
+      <div class="user-profile-card">
+        <div class="up-header">
+          <div class="up-avatar">${initial}</div>
+          <div class="up-info">
+            <div class="up-name">${escapeHtml(user.name || user.username)}</div>
+            <div class="up-handle">@${escapeHtml(user.username)}</div>
+            ${user.bio ? `<div class="up-bio">${escapeHtml(user.bio)}</div>` : ''}
+          </div>
+          ${followBtnHtml}
+        </div>
+        <div class="up-stats">
+          <div class="up-stat">
+            <span class="num">${user.booksRead || 0}</span>
+            <span class="lbl">books read</span>
+          </div>
+          <div class="up-stat">
+            <span class="num">${theirPosts.length}</span>
+            <span class="lbl">posts</span>
+          </div>
+          <div class="up-stat">
+            <span class="num">${theirCommentsCount}</span>
+            <span class="lbl">comments</span>
+          </div>
+          <div class="up-stat">
+            <span class="num">${user.joined || '—'}</span>
+            <span class="lbl">joined</span>
+          </div>
+        </div>
+      </div>
+      <div class="up-section">
+        <div class="up-section-label">Recent posts</div>
+        <div class="up-posts">${postsHtml}</div>
+      </div>
+    `;
+
+    // wire follow button
+    const followBtn = container.querySelector('[data-toggle-follow-user]');
+    if (followBtn) {
+      followBtn.addEventListener('click', async () => {
+        const u = followBtn.dataset.toggleFollowUser;
+        const nowFollowing = await toggleFollowUser(u);
+        followBtn.classList.toggle('following', nowFollowing);
+        followBtn.textContent = nowFollowing ? 'Following' : 'Follow';
+      });
+    }
+
+    // wire post clicks → navigate to post
+    container.querySelectorAll('[data-go-post]').forEach(el => {
+      el.addEventListener('click', () => navigateDiscover('post', el.dataset.goPost));
+    });
+  }
+
+  // Compact post card used on user profiles (lighter than the full feed post-card)
+  function renderPostCardForProfile(p) {
+    const ratingHtml = p.rating
+      ? `<span class="up-post-rating">${'★'.repeat(p.rating)}${'☆'.repeat(5 - p.rating)}</span>`
+      : '';
+    return `
+      <div class="up-post" data-go-post="${escapeHtml(p.id)}">
+        <div class="up-post-head">
+          <span class="up-post-type">${escapeHtml(p.type || 'post')}</span>
+          ${ratingHtml}
+          <span class="up-post-ts">${escapeHtml(p.ts || '')}</span>
+        </div>
+        <div class="up-post-title">${escapeHtml(p.title || '')}</div>
+        ${p.body ? `<div class="up-post-body">${escapeHtml(p.body.slice(0, 200))}${p.body.length > 200 ? '…' : ''}</div>` : ''}
+      </div>
+    `;
+  }
+
   // === Navigation between Discover sub-views ===
   function navigateDiscover(view, param) {
     // The community/post sub-views now live under the Feed (home) screen.
@@ -8273,6 +8686,8 @@
       window._currentCommunity = param;
     } else if (view === 'post' && param) {
       renderPost(param);
+    } else if (view === 'user' && param) {
+      renderUserProfile(param);
     }
 
     // scroll the feed screen back to the top
@@ -8428,62 +8843,142 @@
     });
   });
 
-  // === FEED SEARCH ===
-  // Filters the visible communities and posts on Feed in real time
+  // === CLICKABLE @handles ===
+  // Any element with class "who" containing a handle becomes clickable —
+  // tapping it opens that user's profile.
+  document.addEventListener('click', (e) => {
+    const whoEl = e.target.closest('.who');
+    if (!whoEl) return;
+    const text = (whoEl.textContent || '').trim();
+    // Only match if it starts with @ — avoid matching community slugs like r/...
+    if (!text.startsWith('@')) return;
+    const username = text.replace(/^@/, '').split(/\s/)[0];
+    if (!username) return;
+    e.stopPropagation();
+    navigateDiscover('user', username);
+  });
+
+  // Make .who elements look clickable
+  const whoStyle = document.createElement('style');
+  whoStyle.textContent = `
+    .who { cursor: default; }
+    .post-card .who, .post-head .who, .comment-head .who { transition: color 0.12s; }
+    .post-card .who:hover, .post-head .who:hover, .comment-head .who:hover { color: var(--accent); cursor: pointer; }
+  `;
+  document.head.appendChild(whoStyle);
+
+  // === FEED SEARCH (dropdown of People + Communities) ===
   const feedSearchInput = document.getElementById('feed-search');
   const feedSearchClear = document.getElementById('feed-search-clear');
+  const feedSearchDropdown = document.getElementById('feed-search-dropdown');
 
-  function filterFeedBySearch(query) {
+  function userInitial(user) {
+    return (user.name || user.username || '?').charAt(0).toUpperCase();
+  }
+
+  async function runFeedSearch(query) {
     const q = (query || '').trim().toLowerCase();
-    const showClear = q.length > 0;
-    feedSearchClear.style.display = showClear ? 'flex' : 'none';
+    if (feedSearchClear) feedSearchClear.style.display = q.length > 0 ? 'flex' : 'none';
 
-    // Filter community cards
-    document.querySelectorAll('#threads-list .thread-card').forEach(card => {
-      const name = (card.querySelector('.name')?.textContent || '').toLowerCase();
-      const slug = (card.querySelector('.slug')?.textContent || '').toLowerCase();
-      const matches = !q || name.includes(q) || slug.includes(q);
-      card.style.display = matches ? '' : 'none';
-    });
+    if (!q) {
+      if (feedSearchDropdown) feedSearchDropdown.style.display = 'none';
+      return;
+    }
 
-    // Filter followed-thread post cards on Home
-    document.querySelectorAll('#home-threads-list .post-card').forEach(card => {
-      const title = (card.querySelector('.post-title')?.textContent || '').toLowerCase();
-      const body = (card.querySelector('.post-body')?.textContent || '').toLowerCase();
-      const author = (card.querySelector('.who')?.textContent || '').toLowerCase();
-      const matches = !q || title.includes(q) || body.includes(q) || author.includes(q);
-      card.style.display = matches ? '' : 'none';
+    // Match users (by username or display name)
+    const allUsers = await getAllUsers();
+    const matchingUsers = allUsers.filter(u => {
+      return u.username.toLowerCase().includes(q) ||
+             (u.name || '').toLowerCase().includes(q);
+    }).slice(0, 6);
+
+    // Match communities (by name or slug)
+    const matchingCommunities = COMMUNITIES.filter(c => {
+      return (c.name || '').toLowerCase().includes(q) ||
+             (c.slug || '').toLowerCase().includes(q);
+    }).slice(0, 6);
+
+    // Build dropdown HTML
+    const sections = [];
+
+    if (matchingUsers.length > 0) {
+      const items = matchingUsers.map(u => `
+        <div class="res-item" data-user="${escapeHtml(u.username)}">
+          <div class="res-avatar">${escapeHtml(userInitial(u))}</div>
+          <div class="res-info">
+            <div class="res-name">${escapeHtml(u.name || u.username)}${u.isMe ? ' <span style="color: var(--text-3); font-weight: normal;">· you</span>' : ''}</div>
+            <div class="res-sub">@${escapeHtml(u.username)}</div>
+          </div>
+        </div>
+      `).join('');
+      sections.push(`<div class="sec-label">People</div>${items}`);
+    }
+
+    if (matchingCommunities.length > 0) {
+      const items = matchingCommunities.map(c => `
+        <div class="res-item" data-community="${escapeHtml(c.id)}">
+          <div class="res-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
+          </div>
+          <div class="res-info">
+            <div class="res-name">${escapeHtml(c.name)}</div>
+            <div class="res-sub">${escapeHtml(c.slug)} · ${(c.members || 0).toLocaleString()} members</div>
+          </div>
+        </div>
+      `).join('');
+      sections.push(`<div class="sec-label">Communities</div>${items}`);
+    }
+
+    if (sections.length === 0) {
+      feedSearchDropdown.innerHTML = '<div class="res-empty">No results.</div>';
+    } else {
+      feedSearchDropdown.innerHTML = sections.join('');
+    }
+    feedSearchDropdown.style.display = 'block';
+
+    // Wire clicks
+    feedSearchDropdown.querySelectorAll('[data-user]').forEach(el => {
+      el.addEventListener('click', () => {
+        navigateDiscover('user', el.dataset.user);
+        closeSearchDropdown();
+      });
     });
+    feedSearchDropdown.querySelectorAll('[data-community]').forEach(el => {
+      el.addEventListener('click', () => {
+        navigateDiscover('community', el.dataset.community);
+        closeSearchDropdown();
+      });
+    });
+  }
+
+  function closeSearchDropdown() {
+    if (feedSearchDropdown) feedSearchDropdown.style.display = 'none';
+    if (feedSearchInput) feedSearchInput.value = '';
+    if (feedSearchClear) feedSearchClear.style.display = 'none';
   }
 
   if (feedSearchInput) {
     feedSearchInput.addEventListener('input', (e) => {
-      filterFeedBySearch(e.target.value);
+      runFeedSearch(e.target.value);
+    });
+    feedSearchInput.addEventListener('focus', () => {
+      if (feedSearchInput.value.trim()) runFeedSearch(feedSearchInput.value);
     });
   }
   if (feedSearchClear) {
     feedSearchClear.addEventListener('click', () => {
-      feedSearchInput.value = '';
-      filterFeedBySearch('');
+      closeSearchDropdown();
       feedSearchInput.focus();
     });
   }
 
-  // Re-apply filter when the threads or posts get re-rendered
-  // (we observe the lists for child changes)
-  function reapplySearchAfterRender() {
-    if (feedSearchInput && feedSearchInput.value) {
-      filterFeedBySearch(feedSearchInput.value);
+  // Close the dropdown when clicking outside the search wrap
+  document.addEventListener('click', (e) => {
+    const wrap = e.target.closest('.feed-search-wrap');
+    if (!wrap && feedSearchDropdown && feedSearchDropdown.style.display !== 'none') {
+      feedSearchDropdown.style.display = 'none';
     }
-  }
-  const _threadsList = document.getElementById('threads-list');
-  if (_threadsList) {
-    new MutationObserver(reapplySearchAfterRender).observe(_threadsList, { childList: true });
-  }
-  const _homeThreadsList = document.getElementById('home-threads-list');
-  if (_homeThreadsList) {
-    new MutationObserver(reapplySearchAfterRender).observe(_homeThreadsList, { childList: true });
-  }
+  });
 
   // === PROFILE SCREEN ===
   const profileScreen = document.getElementById('profile-screen');
