@@ -2190,6 +2190,55 @@
     font-variation-settings: "wght" 600;
   }
 
+  /* Mode toggle: Sign up | Sign in */
+  .auth-mode-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    margin: 0 0 22px;
+  }
+  .auth-mode-btn {
+    background: none;
+    border: none;
+    color: var(--text-2);
+    font-family: inherit;
+    font-size: 13px;
+    font-variation-settings: "opsz" 14, "wght" 500;
+    cursor: pointer;
+    padding: 9px 12px;
+    border-radius: 7px;
+    transition: all 0.15s;
+  }
+  .auth-mode-btn:hover { color: var(--text); }
+  .auth-mode-btn.active {
+    background: var(--text);
+    color: var(--bg);
+  }
+
+  /* Error messages under auth forms */
+  .auth-error {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: rgba(182, 73, 58, 0.08);
+    border: 1px solid rgba(182, 73, 58, 0.2);
+    border-radius: 8px;
+    color: #b6493a;
+    font-size: 12px;
+    line-height: 1.4;
+    display: none;
+  }
+  .auth-error.show { display: block; }
+
+  /* Loading spinner state on submit button */
+  .auth-submit.loading {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
   /* avatar in status bar */
   .user-avatar {
     width: 26px;
@@ -4484,6 +4533,8 @@
     .page-head h1 { font-size: 64px; }
   }
 </style>
+<!-- Supabase JavaScript client — v2 from official CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -4502,10 +4553,18 @@
     <div class="auth-brand">
       <div class="wordmark">Vronsky</div>
     </div>
-    <form class="auth-form" id="auth-form">
+
+    <!-- Mode toggle: Sign up | Sign in -->
+    <div class="auth-mode-toggle" id="auth-mode-toggle">
+      <button type="button" class="auth-mode-btn active" data-mode="signup">Create account</button>
+      <button type="button" class="auth-mode-btn" data-mode="signin">Sign in</button>
+    </div>
+
+    <!-- Sign-up form -->
+    <form class="auth-form" id="signup-form">
       <div class="auth-field">
-        <label>Your name</label>
-        <input type="text" name="name" required placeholder="Reader" autocomplete="name" />
+        <label>Display name</label>
+        <input type="text" name="name" required placeholder="Your name" autocomplete="name" />
       </div>
       <div class="auth-field">
         <label>Username</label>
@@ -4518,11 +4577,27 @@
         <label>Email</label>
         <input type="email" name="email" required placeholder="you@example.com" autocomplete="email" />
       </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" name="password" required placeholder="At least 8 characters" autocomplete="new-password" minlength="8" />
+      </div>
       <button type="submit" class="auth-submit">Create my account →</button>
+      <div class="auth-error" id="signup-error"></div>
     </form>
-    <div class="auth-note">
-      <strong>Heads up:</strong> for now your profile is saved only in this browser. We'll add real accounts when we hook up a backend.
-    </div>
+
+    <!-- Sign-in form (hidden by default) -->
+    <form class="auth-form" id="signin-form" style="display:none;">
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" name="email" required placeholder="you@example.com" autocomplete="email" />
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" name="password" required placeholder="Your password" autocomplete="current-password" />
+      </div>
+      <button type="submit" class="auth-submit">Sign in →</button>
+      <div class="auth-error" id="signin-error"></div>
+    </form>
   </div>
 
   <!-- Drop-down menu shown when avatar is tapped -->
@@ -5287,14 +5362,26 @@
 
 <script>
   // === ACCOUNT MANAGEMENT ===
-  // We need somewhere to save the user's profile that survives a page reload.
-  // Claude's artifact runtime gives us window.storage (an async key-value store).
-  // If this file is ever opened outside Claude, we fall back to localStorage.
+  // ============================================
+  // SUPABASE BACKEND
+  // ============================================
+  // Real auth + database. Created in Phase 2.
+  const SUPABASE_URL = 'https://fzceeloricfxmviitnyc.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_ZA99LywGcmn_wWjf_t3mrg_DvmQwzFK';
+  const sb = (typeof window !== 'undefined' && window.supabase && window.supabase.createClient)
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
+  if (!sb) {
+    console.warn('Supabase client failed to load — auth and backend features will be unavailable.');
+  }
 
-  const AUTH_KEY = 'vronsky_user';
+  // ============================================
+  // STORAGE WRAPPER
+  // ============================================
+  // localStorage fallback for non-auth data (books, posts, etc.)
+  // We're keeping this for now — Session 2 of the backend migration
+  // will replace these with Supabase calls table by table.
   const useArtifactStorage = typeof window !== 'undefined' && typeof window.storage !== 'undefined';
-
-  // A small wrapper so the rest of the code can just call Store.get/set/delete
   const Store = {
     async get(key) {
       if (useArtifactStorage) {
@@ -5302,7 +5389,7 @@
           const result = await window.storage.get(key);
           return result && result.value ? result.value : null;
         } catch (e) {
-          return null; // key not found
+          return null;
         }
       }
       return localStorage.getItem(key);
@@ -5324,16 +5411,44 @@
     }
   };
 
+  // ============================================
+  // CURRENT USER
+  // ============================================
+  // Cached profile object — populated on login, cleared on logout.
+  // Shape: { id, name, username, email, createdAt }
+  let currentUser = null;
+
   async function getUser() {
-    const raw = await Store.get(AUTH_KEY);
-    if (!raw) return null;
-    try { return JSON.parse(raw); } catch { return null; }
+    return currentUser;
   }
-  async function setUser(user) {
-    await Store.set(AUTH_KEY, JSON.stringify(user));
-  }
-  async function clearUser() {
-    await Store.delete(AUTH_KEY);
+
+  async function loadCurrentUser() {
+    if (!sb) { currentUser = null; return null; }
+    // Get the active Supabase session (if any)
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { currentUser = null; return null; }
+
+    // Fetch the matching profile row
+    const { data: profile, error } = await sb
+      .from('profiles')
+      .select('id, username, display_name, email, created_at')
+      .eq('id', session.user.id)
+      .single();
+
+    if (error || !profile) {
+      console.warn('Profile fetch failed:', error);
+      currentUser = null;
+      return null;
+    }
+
+    currentUser = {
+      id: profile.id,
+      name: profile.display_name || profile.username,
+      username: profile.username,
+      email: profile.email,
+      createdAt: profile.created_at
+    };
+    return currentUser;
   }
 
   // Tiny HTML-escape helper used everywhere we render user-supplied text.
@@ -5347,13 +5462,11 @@
       .replace(/'/g, '&#39;');
   }
 
-  // Take "Eliza Mason" → "EM"
   function getInitials(name) {
-    const parts = name.trim().split(/\s+/);
+    const parts = (name || '').trim().split(/\s+/);
     return (parts.map(p => p[0]).slice(0, 2).join('') || '?').toUpperCase();
   }
 
-  // Update every part of the UI that displays the user's info.
   function renderUser(user) {
     if (!user) return;
     const initials = getInitials(user.name);
@@ -5371,31 +5484,147 @@
     });
   }
 
+  // ============================================
+  // AUTH SCREEN BEHAVIOR
+  // ============================================
   const authScreen = document.getElementById('auth-screen');
+  const signupForm = document.getElementById('signup-form');
+  const signinForm = document.getElementById('signin-form');
+  const signupError = document.getElementById('signup-error');
+  const signinError = document.getElementById('signin-error');
 
-  // On page load: check storage. If user exists, hide the sign-up screen.
+  function showAuthError(el, msg) {
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+  function clearAuthError(el) {
+    el.textContent = '';
+    el.classList.remove('show');
+  }
+
+  // Mode toggle: signup | signin
+  document.querySelectorAll('.auth-mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.mode;
+      document.querySelectorAll('.auth-mode-btn').forEach(b => {
+        b.classList.toggle('active', b === btn);
+      });
+      if (mode === 'signup') {
+        signupForm.style.display = '';
+        signinForm.style.display = 'none';
+      } else {
+        signupForm.style.display = 'none';
+        signinForm.style.display = '';
+      }
+      clearAuthError(signupError);
+      clearAuthError(signinError);
+    });
+  });
+
+  // SIGN UP
+  signupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearAuthError(signupError);
+    const submitBtn = signupForm.querySelector('.auth-submit');
+    submitBtn.classList.add('loading');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating account…';
+
+    try {
+      const formData = new FormData(signupForm);
+      const name = formData.get('name').trim();
+      const username = formData.get('username').trim().toLowerCase().replace(/^@/, '');
+      const email = formData.get('email').trim();
+      const password = formData.get('password');
+
+      // Pre-check: is username already taken?
+      const { data: existing } = await sb
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .maybeSingle();
+      if (existing) {
+        throw new Error('That username is already taken. Try another.');
+      }
+
+      // Sign up with Supabase. The metadata travels into the profiles trigger.
+      const { data, error } = await sb.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { username, display_name: name }
+        }
+      });
+      if (error) throw error;
+
+      // Some Supabase configs require email confirmation before login;
+      // others sign you in immediately. Handle both.
+      if (data.session) {
+        // Signed in — load profile and dismiss auth screen
+        await loadCurrentUser();
+        if (currentUser) {
+          renderUser(currentUser);
+          authScreen.classList.add('hidden');
+        }
+      } else {
+        // Email confirmation required
+        showAuthError(signupError, "Account created! Check your email to confirm, then come back and sign in.");
+      }
+    } catch (err) {
+      console.error(err);
+      showAuthError(signupError, err.message || 'Something went wrong. Try again.');
+    } finally {
+      submitBtn.classList.remove('loading');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create my account →';
+    }
+  });
+
+  // SIGN IN
+  signinForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearAuthError(signinError);
+    const submitBtn = signinForm.querySelector('.auth-submit');
+    submitBtn.classList.add('loading');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Signing in…';
+
+    try {
+      const formData = new FormData(signinForm);
+      const email = formData.get('email').trim();
+      const password = formData.get('password');
+
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+
+      await loadCurrentUser();
+      if (currentUser) {
+        renderUser(currentUser);
+        authScreen.classList.add('hidden');
+      }
+    } catch (err) {
+      console.error(err);
+      // Translate the most common error
+      const msg = err.message === 'Invalid login credentials'
+        ? 'Email or password is incorrect.'
+        : (err.message || 'Sign in failed. Try again.');
+      showAuthError(signinError, msg);
+    } finally {
+      submitBtn.classList.remove('loading');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Sign in →';
+    }
+  });
+
+  // ON PAGE LOAD: restore session if there is one
   (async () => {
-    const user = await getUser();
+    const user = await loadCurrentUser();
     if (user) {
       authScreen.classList.add('hidden');
       renderUser(user);
     }
+    // Otherwise the auth screen is shown by default
   })();
-
-  // Sign-up form submission
-  document.getElementById('auth-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const user = {
-      name: formData.get('name').trim(),
-      username: formData.get('username').trim().toLowerCase().replace(/^@/, ''),
-      email: formData.get('email').trim(),
-      createdAt: new Date().toISOString()
-    };
-    await setUser(user);
-    renderUser(user);
-    authScreen.classList.add('hidden');
-  });
 
   // Avatar click → toggle the menu
   const avatarBtn = document.getElementById('user-avatar');
@@ -5412,9 +5641,10 @@
     }
   });
 
-  // Sign out → clear data, reload (which shows the sign-up screen again)
+  // Sign out via Supabase, then reload to show auth screen
   document.getElementById('signout-btn').addEventListener('click', async () => {
-    await clearUser();
+    await sb.auth.signOut();
+    currentUser = null;
     location.reload();
   });
 
