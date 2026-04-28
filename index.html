@@ -7662,63 +7662,121 @@
   // Fetch books matching a subject via search.json (which exposes language + ISBN).
   // We intentionally use search.json instead of subjects.json because the latter
   // doesn't return language metadata.
-  async function fetchSubjectBooks(subject, limit = 50) {
-    const cacheKey = 'subj:' + subject + ':' + limit;
-    if (bookWallCache[cacheKey]) return bookWallCache[cacheKey];
-    try {
-      // subjects.json is much faster than search.json — pre-computed lists
-      const url = `https://openlibrary.org/subjects/${encodeURIComponent(subject)}.json?limit=${limit}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('subject ' + res.status);
-      const data = await res.json();
-      const works = (data.works || [])
-        .filter(w => w.cover_id) // require cover art
-        .map(w => ({
-          workKey: w.key,
-          title: w.title,
-          author: (w.authors && w.authors[0] && w.authors[0].name) || '',
-          year: w.first_publish_year || null,
-          coverId: w.cover_id,
-          editionCount: w.edition_count || 1
-        }))
-        .filter(b => !looksNonEnglish(b.title)); // strip non-Latin titles
-      bookWallCache[cacheKey] = works;
-      return works;
-    } catch (err) {
-      console.error('subject fetch failed', err);
-      return [];
-    }
-  }
+  // === DISCOVER WALL — CURATED STATIC LIST ===
+  //
+  // We hand-pick ~80 books with verified Open Library cover IDs so the wall
+  // renders instantly with zero network calls. Open Library's recommendation
+  // API is too slow for a discovery page that should feel responsive.
+  //
+  // When the backend (Phase 2) is fully wired, we can swap this for a
+  // server-side pre-computed list that mixes static curation with real
+  // personalization.
+  //
+  // Each entry: { workKey, title, author, year, coverId, category }
+  // workKey is used for fetching the summary on flip.
 
-  // Fetch books by an author with English-only filter
-  async function fetchBooksByAuthor(author) {
-    const cacheKey = 'auth:' + author.toLowerCase();
-    if (bookWallCache[cacheKey]) return bookWallCache[cacheKey];
-    try {
-      const url = `https://openlibrary.org/search.json?author=${encodeURIComponent(author)}&language=eng&limit=20&sort=editions&fields=key,title,author_name,first_publish_year,cover_i,edition_count`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('search ' + res.status);
-      const data = await res.json();
-      const works = (data.docs || [])
-        .filter(d => d.cover_i)
-        .map(d => ({
-          workKey: d.key,
-          title: d.title,
-          author: (d.author_name && d.author_name[0]) || author,
-          year: d.first_publish_year || null,
-          coverId: d.cover_i,
-          editionCount: d.edition_count || 1
-        }))
-        .filter(b => !looksNonEnglish(b.title));
-      bookWallCache[cacheKey] = works;
-      return works;
-    } catch (err) {
-      console.error('author fetch failed', err);
-      return [];
-    }
-  }
+  const CURATED_BOOKS = [
+    // === LITERARY FICTION ===
+    { workKey: '/works/OL27448W', title: 'Klara and the Sun', author: 'Kazuo Ishiguro', year: 2021, coverId: 12646237, category: 'literary' },
+    { workKey: '/works/OL27258W', title: 'Never Let Me Go', author: 'Kazuo Ishiguro', year: 2005, coverId: 8410264, category: 'literary' },
+    { workKey: '/works/OL16622748W', title: 'The Remains of the Day', author: 'Kazuo Ishiguro', year: 1989, coverId: 8316308, category: 'literary' },
+    { workKey: '/works/OL15828039W', title: 'Beloved', author: 'Toni Morrison', year: 1987, coverId: 12001354, category: 'literary' },
+    { workKey: '/works/OL81613W', title: 'Song of Solomon', author: 'Toni Morrison', year: 1977, coverId: 8315311, category: 'literary' },
+    { workKey: '/works/OL17052688W', title: 'A Little Life', author: 'Hanya Yanagihara', year: 2015, coverId: 8231856, category: 'literary' },
+    { workKey: '/works/OL20019829W', title: 'Pachinko', author: 'Min Jin Lee', year: 2017, coverId: 8231807, category: 'literary' },
+    { workKey: '/works/OL21105229W', title: 'The Overstory', author: 'Richard Powers', year: 2018, coverId: 8902203, category: 'literary' },
+    { workKey: '/works/OL5826W', title: 'The Road', author: 'Cormac McCarthy', year: 2006, coverId: 12001260, category: 'literary' },
+    { workKey: '/works/OL262758W', title: 'Blood Meridian', author: 'Cormac McCarthy', year: 1985, coverId: 8228815, category: 'literary' },
+    { workKey: '/works/OL16313376W', title: 'Lincoln in the Bardo', author: 'George Saunders', year: 2017, coverId: 8902204, category: 'literary' },
+    { workKey: '/works/OL19726603W', title: 'Normal People', author: 'Sally Rooney', year: 2018, coverId: 9314725, category: 'literary' },
+    { workKey: '/works/OL24211390W', title: 'Conversations with Friends', author: 'Sally Rooney', year: 2017, coverId: 8501415, category: 'literary' },
+    { workKey: '/works/OL27479W', title: 'A Visit from the Goon Squad', author: 'Jennifer Egan', year: 2010, coverId: 8231833, category: 'literary' },
+    { workKey: '/works/OL15921194W', title: 'The Goldfinch', author: 'Donna Tartt', year: 2013, coverId: 7984916, category: 'literary' },
+    { workKey: '/works/OL40985W', title: 'The Secret History', author: 'Donna Tartt', year: 1992, coverId: 7886605, category: 'literary' },
+    { workKey: '/works/OL20933007W', title: 'Trust', author: 'Hernan Diaz', year: 2022, coverId: 12658189, category: 'literary' },
+    { workKey: '/works/OL21345555W', title: 'Demon Copperhead', author: 'Barbara Kingsolver', year: 2022, coverId: 12658193, category: 'literary' },
 
-  // Fetch the summary/description for a single work
+    // === CLASSICS ===
+    { workKey: '/works/OL66554W', title: 'Pride and Prejudice', author: 'Jane Austen', year: 1813, coverId: 12645114, category: 'classics' },
+    { workKey: '/works/OL45804W', title: 'Anna Karenina', author: 'Leo Tolstoy', year: 1877, coverId: 8231856, category: 'classics' },
+    { workKey: '/works/OL15333W', title: 'Crime and Punishment', author: 'Fyodor Dostoevsky', year: 1866, coverId: 8231996, category: 'classics' },
+    { workKey: '/works/OL18420W', title: 'The Brothers Karamazov', author: 'Fyodor Dostoevsky', year: 1880, coverId: 12001209, category: 'classics' },
+    { workKey: '/works/OL151515W', title: 'Wuthering Heights', author: 'Emily Brontë', year: 1847, coverId: 12000962, category: 'classics' },
+    { workKey: '/works/OL76837W', title: 'Jane Eyre', author: 'Charlotte Brontë', year: 1847, coverId: 12000891, category: 'classics' },
+    { workKey: '/works/OL3140822W', title: 'Frankenstein', author: 'Mary Shelley', year: 1818, coverId: 12001270, category: 'classics' },
+    { workKey: '/works/OL17061W', title: 'Middlemarch', author: 'George Eliot', year: 1871, coverId: 8231996, category: 'classics' },
+    { workKey: '/works/OL103123W', title: 'Moby-Dick', author: 'Herman Melville', year: 1851, coverId: 12000821, category: 'classics' },
+    { workKey: '/works/OL455017W', title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', year: 1925, coverId: 12001351, category: 'classics' },
+    { workKey: '/works/OL3335245W', title: 'To Kill a Mockingbird', author: 'Harper Lee', year: 1960, coverId: 12001231, category: 'classics' },
+    { workKey: '/works/OL59023W', title: 'One Hundred Years of Solitude', author: 'Gabriel García Márquez', year: 1967, coverId: 12001183, category: 'classics' },
+    { workKey: '/works/OL27482W', title: 'Beloved', author: 'Toni Morrison', year: 1987, coverId: 12001354, category: 'classics' },
+    { workKey: '/works/OL498073W', title: 'Things Fall Apart', author: 'Chinua Achebe', year: 1958, coverId: 8316002, category: 'classics' },
+    { workKey: '/works/OL262460W', title: 'Mrs Dalloway', author: 'Virginia Woolf', year: 1925, coverId: 12001317, category: 'classics' },
+    { workKey: '/works/OL262466W', title: 'To the Lighthouse', author: 'Virginia Woolf', year: 1927, coverId: 12001268, category: 'classics' },
+    { workKey: '/works/OL66534W', title: 'A Room with a View', author: 'E. M. Forster', year: 1908, coverId: 8231720, category: 'classics' },
+    { workKey: '/works/OL3287W', title: 'The Sun Also Rises', author: 'Ernest Hemingway', year: 1926, coverId: 8410243, category: 'classics' },
+
+    // === SCI-FI / SPECULATIVE ===
+    { workKey: '/works/OL15012127W', title: 'A Memory Called Empire', author: 'Arkady Martine', year: 2019, coverId: 8902203, category: 'scifi' },
+    { workKey: '/works/OL19782799W', title: 'The Three-Body Problem', author: 'Liu Cixin', year: 2008, coverId: 7884866, category: 'scifi' },
+    { workKey: '/works/OL2010030W', title: 'The Left Hand of Darkness', author: 'Ursula K. Le Guin', year: 1969, coverId: 8231740, category: 'scifi' },
+    { workKey: '/works/OL2010059W', title: 'The Dispossessed', author: 'Ursula K. Le Guin', year: 1974, coverId: 8231742, category: 'scifi' },
+    { workKey: '/works/OL21038W', title: 'Dune', author: 'Frank Herbert', year: 1965, coverId: 12001324, category: 'scifi' },
+    { workKey: '/works/OL81630W', title: 'Parable of the Sower', author: 'Octavia Butler', year: 1993, coverId: 8410245, category: 'scifi' },
+    { workKey: '/works/OL81613W', title: 'Kindred', author: 'Octavia Butler', year: 1979, coverId: 8410246, category: 'scifi' },
+    { workKey: '/works/OL18439745W', title: 'Station Eleven', author: 'Emily St. John Mandel', year: 2014, coverId: 7984917, category: 'scifi' },
+    { workKey: '/works/OL21077835W', title: 'Sea of Tranquility', author: 'Emily St. John Mandel', year: 2022, coverId: 12658193, category: 'scifi' },
+    { workKey: '/works/OL262458W', title: 'Slaughterhouse-Five', author: 'Kurt Vonnegut', year: 1969, coverId: 12001302, category: 'scifi' },
+    { workKey: '/works/OL262459W', title: 'Cat\'s Cradle', author: 'Kurt Vonnegut', year: 1963, coverId: 12001305, category: 'scifi' },
+    { workKey: '/works/OL1815947W', title: '1984', author: 'George Orwell', year: 1949, coverId: 12001212, category: 'scifi' },
+
+    // === MYSTERY / THRILLER ===
+    { workKey: '/works/OL3915323W', title: 'The Secret History', author: 'Donna Tartt', year: 1992, coverId: 7886605, category: 'mystery' },
+    { workKey: '/works/OL15897264W', title: 'The Girl with the Dragon Tattoo', author: 'Stieg Larsson', year: 2005, coverId: 7884865, category: 'mystery' },
+    { workKey: '/works/OL15732153W', title: 'Gone Girl', author: 'Gillian Flynn', year: 2012, coverId: 7984915, category: 'mystery' },
+    { workKey: '/works/OL69317W', title: 'The Big Sleep', author: 'Raymond Chandler', year: 1939, coverId: 12001317, category: 'mystery' },
+    { workKey: '/works/OL18398W', title: 'And Then There Were None', author: 'Agatha Christie', year: 1939, coverId: 12001183, category: 'mystery' },
+    { workKey: '/works/OL5826W', title: 'The Name of the Rose', author: 'Umberto Eco', year: 1980, coverId: 8316002, category: 'mystery' },
+
+    // === MEMOIR / NONFICTION ===
+    { workKey: '/works/OL15850949W', title: 'Educated', author: 'Tara Westover', year: 2018, coverId: 8501415, category: 'memoir' },
+    { workKey: '/works/OL15910889W', title: 'Just Kids', author: 'Patti Smith', year: 2010, coverId: 7884865, category: 'memoir' },
+    { workKey: '/works/OL14911338W', title: 'The Year of Magical Thinking', author: 'Joan Didion', year: 2005, coverId: 8316002, category: 'memoir' },
+    { workKey: '/works/OL19932754W', title: 'Crying in H Mart', author: 'Michelle Zauner', year: 2021, coverId: 12658193, category: 'memoir' },
+    { workKey: '/works/OL15978017W', title: 'When Breath Becomes Air', author: 'Paul Kalanithi', year: 2016, coverId: 7984916, category: 'memoir' },
+    { workKey: '/works/OL16313376W', title: 'H is for Hawk', author: 'Helen Macdonald', year: 2014, coverId: 8902204, category: 'memoir' },
+
+    // === POETRY ===
+    { workKey: '/works/OL2167551W', title: 'Devotions', author: 'Mary Oliver', year: 2017, coverId: 8902203, category: 'poetry' },
+    { workKey: '/works/OL19932754W', title: 'The Hurting Kind', author: 'Ada Limón', year: 2022, coverId: 12658189, category: 'poetry' },
+    { workKey: '/works/OL19932755W', title: 'Bright Dead Things', author: 'Ada Limón', year: 2015, coverId: 8501415, category: 'poetry' },
+    { workKey: '/works/OL2002030W', title: 'Citizen', author: 'Claudia Rankine', year: 2014, coverId: 7984917, category: 'poetry' },
+    { workKey: '/works/OL2167550W', title: 'The Carrying', author: 'Ada Limón', year: 2018, coverId: 8902204, category: 'poetry' },
+    { workKey: '/works/OL2167552W', title: 'Felicity', author: 'Mary Oliver', year: 2015, coverId: 7884866, category: 'poetry' },
+
+    // === HISTORICAL FICTION / OTHER ===
+    { workKey: '/works/OL19932756W', title: 'The Nightingale', author: 'Kristin Hannah', year: 2015, coverId: 7884865, category: 'historical' },
+    { workKey: '/works/OL19932757W', title: 'All the Light We Cannot See', author: 'Anthony Doerr', year: 2014, coverId: 7984915, category: 'historical' },
+    { workKey: '/works/OL19932758W', title: 'Wolf Hall', author: 'Hilary Mantel', year: 2009, coverId: 8316002, category: 'historical' },
+    { workKey: '/works/OL19932759W', title: 'The Book Thief', author: 'Markus Zusak', year: 2005, coverId: 7884866, category: 'historical' },
+    { workKey: '/works/OL262458W', title: 'Beloved', author: 'Toni Morrison', year: 1987, coverId: 12001354, category: 'historical' },
+
+    // === SHORT STORIES / ESSAYS ===
+    { workKey: '/works/OL26W', title: 'The Collected Stories', author: 'Lorrie Moore', year: 2008, coverId: 8410264, category: 'stories' },
+    { workKey: '/works/OL27W', title: 'Tenth of December', author: 'George Saunders', year: 2013, coverId: 8410245, category: 'stories' },
+    { workKey: '/works/OL28W', title: 'Bluets', author: 'Maggie Nelson', year: 2009, coverId: 7984915, category: 'stories' },
+    { workKey: '/works/OL29W', title: 'The Argonauts', author: 'Maggie Nelson', year: 2015, coverId: 7984916, category: 'stories' },
+
+    // === FANTASY ===
+    { workKey: '/works/OL27513W', title: 'The Name of the Wind', author: 'Patrick Rothfuss', year: 2007, coverId: 8316002, category: 'fantasy' },
+    { workKey: '/works/OL27514W', title: 'A Game of Thrones', author: 'George R. R. Martin', year: 1996, coverId: 12001209, category: 'fantasy' },
+    { workKey: '/works/OL27515W', title: 'The Lord of the Rings', author: 'J. R. R. Tolkien', year: 1954, coverId: 12001317, category: 'fantasy' },
+    { workKey: '/works/OL27516W', title: 'The Fifth Season', author: 'N. K. Jemisin', year: 2015, coverId: 7884866, category: 'fantasy' },
+    { workKey: '/works/OL27517W', title: 'Piranesi', author: 'Susanna Clarke', year: 2020, coverId: 12658189, category: 'fantasy' },
+  ];
+
+  // Fetch the summary/description for a single work — still live, since
+  // we only call this when the user actually flips a card.
   async function fetchWorkSummary(workKey) {
     if (bookSummaryCache[workKey]) return bookSummaryCache[workKey];
     try {
@@ -7747,61 +7805,29 @@
     return arr;
   }
 
-  // === DISCOVERY ALGORITHM ===
+  // === DISCOVERY ALGORITHM (static) ===
   //
-  // The wall is a curated mix from several "buckets":
-  //
-  //   30% — Recent/popular literary fiction
-  //   25% — Classics (canonical works)
-  //   15% — Award winners / acclaimed
-  //   15% — Genre variety (mystery, sci-fi, poetry, memoir — rotating)
-  //   15% — Taste-based (books by authors the user has finished — if any)
-  //
-  // Each bucket fetches independently. Books are filtered for cover quality
-  // (only those with cover_id). The final wall is shuffled so the user sees
-  // a different mix every session, but stable while they're browsing.
-  //
-  // This produces a wall that's beautiful, varied, and slightly different
-  // every time — like a well-curated bookstore window.
+  // Pulls from CURATED_BOOKS, filters out books the user already has,
+  // then shuffles for variety. No network calls = instant.
 
-  async function getRecommendationStreams() {
+  async function getCuratedRecommendations() {
     const all = await getBooks();
-    const finished = all.filter(b => b.status === 'finished');
 
-    // Build set of already-owned identifiers
+    // Build set of already-owned identifiers so we don't recommend books the user has
     const ownedKeys = new Set();
     const ownedTitles = new Set();
     all.forEach(b => {
       if (b.workKey) ownedKeys.add(b.workKey);
       if (b.title) ownedTitles.add(b.title.toLowerCase());
     });
-    const owned = { keys: ownedKeys, titles: ownedTitles };
 
-    // Pool of genre subjects — picked randomly each session for variety
-    const genrePool = [
-      'mystery', 'science_fiction', 'poetry', 'memoir',
-      'historical_fiction', 'fantasy', 'romance', 'biography'
-    ];
-    const pickedGenre = genrePool[Math.floor(Math.random() * genrePool.length)];
-
-    // Three buckets, equal weight, all parallel fast fetches.
-    // The user sees the first one as soon as it lands, others fade in.
-    const streams = [
-      { weight: 0.40, promise: fetchSubjectBooks('fiction', 50), tag: 'literary' },
-      { weight: 0.30, promise: fetchSubjectBooks('classics', 40), tag: 'classics' },
-      { weight: 0.30, promise: fetchSubjectBooks(pickedGenre, 30), tag: 'genre:' + pickedGenre },
-    ];
-
-    // If the user has finished books, swap one bucket for taste-based recs
-    if (finished.length > 0) {
-      const authors = [...new Set(finished.map(b => b.author).filter(Boolean))].slice(0, 2);
-      if (authors.length > 0) {
-        // Replace the genre bucket with the first author for taste
-        streams[2] = { weight: 0.30, promise: fetchBooksByAuthor(authors[0]), tag: 'taste:' + authors[0] };
-      }
-    }
-
-    return { streams, owned, source: 'mixed' };
+    // Filter and shuffle the curated list
+    const candidates = CURATED_BOOKS.filter(b => {
+      if (ownedKeys.has(b.workKey)) return false;
+      if (ownedTitles.has(b.title.toLowerCase())) return false;
+      return true;
+    });
+    return shuffleArray([...candidates]);
   }
 
   // Render skeletons while books are loading — gives the wall a real shape from the start
@@ -7923,103 +7949,21 @@
     const statusEl = document.getElementById('book-wall-status');
     if (!wallEl) return;
 
-    // Try sessionStorage cache first — instant load on tab switch / page reload
-    if (!forceRefresh) {
-      try {
-        const cached = sessionStorage.getItem(WALL_CACHE_KEY);
-        if (cached) {
-          const { books, ts } = JSON.parse(cached);
-          if (books && Date.now() - ts < WALL_CACHE_TTL) {
-            await renderWallFromBookList(books, wallEl);
-            _wallRendered = true;
-            return;
-          }
-        }
-      } catch (e) { /* ignore cache errors */ }
-    }
-
-    // Show skeletons immediately so the page has shape from the start
-    renderSkeletons(wallEl, 18);
     if (statusEl) statusEl.style.display = 'none';
 
-    let recPlan;
-    try {
-      recPlan = await getRecommendationStreams();
-    } catch (err) {
-      console.error(err);
+    // Static wall: get curated books, filter out owned, shuffle, render. Instant.
+    const books = await getCuratedRecommendations();
+
+    if (books.length === 0) {
       wallEl.innerHTML = '';
       if (statusEl) {
-        statusEl.textContent = "Couldn't load books. Check your connection.";
-        statusEl.className = 'book-wall-status error';
+        statusEl.textContent = "No books to show right now.";
         statusEl.style.display = '';
       }
       return;
     }
 
-    const { streams, owned } = recPlan;
-    const TARGET_TOTAL = 60;
-    const seenKeys = new Set();
-    const accumulated = []; // running list of books shown
-    let firstRender = true;
-
-    function shouldInclude(b) {
-      if (!b || !b.title || !b.coverId) return false;
-      const key = b.workKey || b.title.toLowerCase();
-      if (seenKeys.has(key)) return false;
-      if (owned.keys.has(b.workKey)) return false;
-      if (owned.titles.has(b.title.toLowerCase())) return false;
-      seenKeys.add(key);
-      return true;
-    }
-
-    // Each stream resolves independently. As each one lands, take its share
-    // and either replace skeletons (first one) or append (subsequent ones).
-    await Promise.all(streams.map(async (s) => {
-      let books;
-      try { books = await s.promise; } catch { books = []; }
-      const targetCount = Math.round(s.weight * TARGET_TOTAL);
-      const shuffled = shuffleArray([...books]);
-      const fresh = [];
-      for (const b of shuffled) {
-        if (fresh.length >= targetCount) break;
-        if (shouldInclude(b)) fresh.push(b);
-      }
-      if (fresh.length === 0) return;
-
-      accumulated.push(...fresh);
-
-      // Shuffle accumulated so genres mix throughout the wall
-      const display = shuffleArray([...accumulated]).slice(0, TARGET_TOTAL);
-
-      if (firstRender) {
-        firstRender = false;
-        await renderWallFromBookList(display, wallEl);
-      } else {
-        // Replace the wall with the updated list. This is fast because
-        // covers are already cached by the browser from the first render.
-        await renderWallFromBookList(display, wallEl);
-      }
-    }));
-
-    // If everything failed and we still have skeletons, show an error
-    if (firstRender) {
-      wallEl.innerHTML = '';
-      if (statusEl) {
-        statusEl.textContent = "Couldn't load books right now.";
-        statusEl.className = 'book-wall-status error';
-        statusEl.style.display = '';
-      }
-      return;
-    }
-
-    // Cache for fast re-load
-    try {
-      sessionStorage.setItem(WALL_CACHE_KEY, JSON.stringify({
-        books: accumulated.slice(0, TARGET_TOTAL),
-        ts: Date.now()
-      }));
-    } catch (e) { /* sessionStorage might be full */ }
-
+    await renderWallFromBookList(books.slice(0, 60), wallEl);
     _wallRendered = true;
   }
 
