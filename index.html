@@ -6217,8 +6217,20 @@
       olKey: d.key || null
     }));
   }
-  function coverImageUrl(coverId, size) {
-    return `https://covers.openlibrary.org/b/id/${coverId}-${size || 'M'}.jpg`;
+  // Build the URL for a book cover. Accepts either:
+  //   - a numeric cover_id (Open Library), or
+  //   - an ISBN string (preferred for translated works — pins to an English edition)
+  function coverImageUrl(coverIdOrIsbn, size) {
+    if (!coverIdOrIsbn) return '';
+    const sz = size || 'M';
+    // If it looks like an ISBN (starts with 9 or has a dash, length 10–13)
+    const s = String(coverIdOrIsbn);
+    const isIsbn = /^[0-9-]{10,17}$/.test(s) && /^[97]/.test(s.replace(/-/g, ''));
+    if (isIsbn) {
+      const isbn = s.replace(/-/g, '');
+      return `https://covers.openlibrary.org/b/isbn/${isbn}-${sz}.jpg`;
+    }
+    return `https://covers.openlibrary.org/b/id/${s}-${sz}.jpg`;
   }
 
   // === ADD-BOOK MODAL (search-based) ===
@@ -7983,102 +7995,103 @@
 
   const CURATED_BOOKS = [
     // === LITERARY FICTION ===
-    { workKey: '/works/OL27448W', title: 'Klara and the Sun', author: 'Kazuo Ishiguro', year: 2021, coverId: 12646237, category: 'literary' },
-    { workKey: '/works/OL27258W', title: 'Never Let Me Go', author: 'Kazuo Ishiguro', year: 2005, coverId: 8410264, category: 'literary' },
-    { workKey: '/works/OL16622748W', title: 'The Remains of the Day', author: 'Kazuo Ishiguro', year: 1989, coverId: 8316308, category: 'literary' },
-    { workKey: '/works/OL15828039W', title: 'Beloved', author: 'Toni Morrison', year: 1987, coverId: 12001354, category: 'literary' },
-    { workKey: '/works/OL81613W', title: 'Song of Solomon', author: 'Toni Morrison', year: 1977, coverId: 8315311, category: 'literary' },
-    { workKey: '/works/OL17052688W', title: 'A Little Life', author: 'Hanya Yanagihara', year: 2015, coverId: 8231856, category: 'literary' },
-    { workKey: '/works/OL20019829W', title: 'Pachinko', author: 'Min Jin Lee', year: 2017, coverId: 8231807, category: 'literary' },
-    { workKey: '/works/OL21105229W', title: 'The Overstory', author: 'Richard Powers', year: 2018, coverId: 8902203, category: 'literary' },
-    { workKey: '/works/OL5826W', title: 'The Road', author: 'Cormac McCarthy', year: 2006, coverId: 12001260, category: 'literary' },
-    { workKey: '/works/OL262758W', title: 'Blood Meridian', author: 'Cormac McCarthy', year: 1985, coverId: 8228815, category: 'literary' },
-    { workKey: '/works/OL16313376W', title: 'Lincoln in the Bardo', author: 'George Saunders', year: 2017, coverId: 8902204, category: 'literary' },
-    { workKey: '/works/OL19726603W', title: 'Normal People', author: 'Sally Rooney', year: 2018, coverId: 9314725, category: 'literary' },
-    { workKey: '/works/OL24211390W', title: 'Conversations with Friends', author: 'Sally Rooney', year: 2017, coverId: 8501415, category: 'literary' },
-    { workKey: '/works/OL27479W', title: 'A Visit from the Goon Squad', author: 'Jennifer Egan', year: 2010, coverId: 8231833, category: 'literary' },
-    { workKey: '/works/OL15921194W', title: 'The Goldfinch', author: 'Donna Tartt', year: 2013, coverId: 7984916, category: 'literary' },
-    { workKey: '/works/OL40985W', title: 'The Secret History', author: 'Donna Tartt', year: 1992, coverId: 7886605, category: 'literary' },
-    { workKey: '/works/OL20933007W', title: 'Trust', author: 'Hernan Diaz', year: 2022, coverId: 12658189, category: 'literary' },
-    { workKey: '/works/OL21345555W', title: 'Demon Copperhead', author: 'Barbara Kingsolver', year: 2022, coverId: 12658193, category: 'literary' },
+    { workKey: '/works/OL27448W', title: 'Klara and the Sun', author: 'Kazuo Ishiguro', year: 2021, coverIsbn: '9780593318171', category: 'literary' },
+    { workKey: '/works/OL27258W', title: 'Never Let Me Go', author: 'Kazuo Ishiguro', year: 2005, coverIsbn: '9781400078776', category: 'literary' },
+    { workKey: '/works/OL16622748W', title: 'The Remains of the Day', author: 'Kazuo Ishiguro', year: 1989, coverIsbn: '9780679731726', category: 'literary' },
+    { workKey: '/works/OL15828039W', title: 'Beloved', author: 'Toni Morrison', year: 1987, coverIsbn: '9781400033416', category: 'literary' },
+    { workKey: '/works/OL81613W', title: 'Song of Solomon', author: 'Toni Morrison', year: 1977, coverIsbn: '9781400033423', category: 'literary' },
+    { workKey: '/works/OL17052688W', title: 'A Little Life', author: 'Hanya Yanagihara', year: 2015, coverIsbn: '9780804172707', category: 'literary' },
+    { workKey: '/works/OL20019829W', title: 'Pachinko', author: 'Min Jin Lee', year: 2017, coverIsbn: '9781455563937', category: 'literary' },
+    { workKey: '/works/OL21105229W', title: 'The Overstory', author: 'Richard Powers', year: 2018, coverIsbn: '9780393356687', category: 'literary' },
+    { workKey: '/works/OL5826W', title: 'The Road', author: 'Cormac McCarthy', year: 2006, coverIsbn: '9780307387899', category: 'literary' },
+    { workKey: '/works/OL262758W', title: 'Blood Meridian', author: 'Cormac McCarthy', year: 1985, coverIsbn: '9780679728757', category: 'literary' },
+    { workKey: '/works/OL16313376W', title: 'Lincoln in the Bardo', author: 'George Saunders', year: 2017, coverIsbn: '9780812985405', category: 'literary' },
+    { workKey: '/works/OL19726603W', title: 'Normal People', author: 'Sally Rooney', year: 2018, coverIsbn: '9781984822185', category: 'literary' },
+    { workKey: '/works/OL24211390W', title: 'Conversations with Friends', author: 'Sally Rooney', year: 2017, coverIsbn: '9780451499066', category: 'literary' },
+    { workKey: '/works/OL27479W', title: 'A Visit from the Goon Squad', author: 'Jennifer Egan', year: 2010, coverIsbn: '9780307477477', category: 'literary' },
+    { workKey: '/works/OL15921194W', title: 'The Goldfinch', author: 'Donna Tartt', year: 2013, coverIsbn: '9780316055437', category: 'literary' },
+    { workKey: '/works/OL40985W', title: 'The Secret History', author: 'Donna Tartt', year: 1992, coverIsbn: '9781400031702', category: 'literary' },
+    { workKey: '/works/OL20933007W', title: 'Trust', author: 'Hernan Diaz', year: 2022, coverIsbn: '9780593420317', category: 'literary' },
+    { workKey: '/works/OL21345555W', title: 'Demon Copperhead', author: 'Barbara Kingsolver', year: 2022, coverIsbn: '9780063251922', category: 'literary' },
+    { workKey: '/works/OL26W', title: 'James', author: 'Percival Everett', year: 2024, coverIsbn: '9780385550369', category: 'literary' },
 
-    // === CLASSICS ===
-    { workKey: '/works/OL66554W', title: 'Pride and Prejudice', author: 'Jane Austen', year: 1813, coverId: 12645114, category: 'classics' },
-    { workKey: '/works/OL45804W', title: 'Anna Karenina', author: 'Leo Tolstoy', year: 1877, coverId: 8231856, category: 'classics' },
-    { workKey: '/works/OL15333W', title: 'Crime and Punishment', author: 'Fyodor Dostoevsky', year: 1866, coverId: 8231996, category: 'classics' },
-    { workKey: '/works/OL18420W', title: 'The Brothers Karamazov', author: 'Fyodor Dostoevsky', year: 1880, coverId: 12001209, category: 'classics' },
-    { workKey: '/works/OL151515W', title: 'Wuthering Heights', author: 'Emily Brontë', year: 1847, coverId: 12000962, category: 'classics' },
-    { workKey: '/works/OL76837W', title: 'Jane Eyre', author: 'Charlotte Brontë', year: 1847, coverId: 12000891, category: 'classics' },
-    { workKey: '/works/OL3140822W', title: 'Frankenstein', author: 'Mary Shelley', year: 1818, coverId: 12001270, category: 'classics' },
-    { workKey: '/works/OL17061W', title: 'Middlemarch', author: 'George Eliot', year: 1871, coverId: 8231996, category: 'classics' },
-    { workKey: '/works/OL103123W', title: 'Moby-Dick', author: 'Herman Melville', year: 1851, coverId: 12000821, category: 'classics' },
-    { workKey: '/works/OL455017W', title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', year: 1925, coverId: 12001351, category: 'classics' },
-    { workKey: '/works/OL3335245W', title: 'To Kill a Mockingbird', author: 'Harper Lee', year: 1960, coverId: 12001231, category: 'classics' },
-    { workKey: '/works/OL59023W', title: 'One Hundred Years of Solitude', author: 'Gabriel García Márquez', year: 1967, coverId: 12001183, category: 'classics' },
-    { workKey: '/works/OL27482W', title: 'Beloved', author: 'Toni Morrison', year: 1987, coverId: 12001354, category: 'classics' },
-    { workKey: '/works/OL498073W', title: 'Things Fall Apart', author: 'Chinua Achebe', year: 1958, coverId: 8316002, category: 'classics' },
-    { workKey: '/works/OL262460W', title: 'Mrs Dalloway', author: 'Virginia Woolf', year: 1925, coverId: 12001317, category: 'classics' },
-    { workKey: '/works/OL262466W', title: 'To the Lighthouse', author: 'Virginia Woolf', year: 1927, coverId: 12001268, category: 'classics' },
-    { workKey: '/works/OL66534W', title: 'A Room with a View', author: 'E. M. Forster', year: 1908, coverId: 8231720, category: 'classics' },
-    { workKey: '/works/OL3287W', title: 'The Sun Also Rises', author: 'Ernest Hemingway', year: 1926, coverId: 8410243, category: 'classics' },
+    // === CLASSICS (English-edition ISBNs for translated works) ===
+    { workKey: '/works/OL66554W', title: 'Pride and Prejudice', author: 'Jane Austen', year: 1813, coverIsbn: '9780141439518', category: 'classics' },
+    { workKey: '/works/OL45804W', title: 'Anna Karenina', author: 'Leo Tolstoy', year: 1877, coverIsbn: '9780143035008', category: 'classics' },
+    { workKey: '/works/OL26266W', title: 'War and Peace', author: 'Leo Tolstoy', year: 1869, coverIsbn: '9781400079988', category: 'classics' },
+    { workKey: '/works/OL15333W', title: 'Crime and Punishment', author: 'Fyodor Dostoevsky', year: 1866, coverIsbn: '9780679734505', category: 'classics' },
+    { workKey: '/works/OL18420W', title: 'The Brothers Karamazov', author: 'Fyodor Dostoevsky', year: 1880, coverIsbn: '9780374528379', category: 'classics' },
+    { workKey: '/works/OL151515W', title: 'Wuthering Heights', author: 'Emily Brontë', year: 1847, coverIsbn: '9780141439556', category: 'classics' },
+    { workKey: '/works/OL76837W', title: 'Jane Eyre', author: 'Charlotte Brontë', year: 1847, coverIsbn: '9780141441146', category: 'classics' },
+    { workKey: '/works/OL3140822W', title: 'Frankenstein', author: 'Mary Shelley', year: 1818, coverIsbn: '9780141439471', category: 'classics' },
+    { workKey: '/works/OL17061W', title: 'Middlemarch', author: 'George Eliot', year: 1871, coverIsbn: '9780141439549', category: 'classics' },
+    { workKey: '/works/OL103123W', title: 'Moby-Dick', author: 'Herman Melville', year: 1851, coverIsbn: '9780142437247', category: 'classics' },
+    { workKey: '/works/OL455017W', title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', year: 1925, coverIsbn: '9780743273565', category: 'classics' },
+    { workKey: '/works/OL3335245W', title: 'To Kill a Mockingbird', author: 'Harper Lee', year: 1960, coverIsbn: '9780446310789', category: 'classics' },
+    { workKey: '/works/OL59023W', title: 'One Hundred Years of Solitude', author: 'Gabriel García Márquez', year: 1967, coverIsbn: '9780060883287', category: 'classics' },
+    { workKey: '/works/OL13639W', title: 'Madame Bovary', author: 'Gustave Flaubert', year: 1856, coverIsbn: '9780140449129', category: 'classics' },
+    { workKey: '/works/OL498073W', title: 'Things Fall Apart', author: 'Chinua Achebe', year: 1958, coverIsbn: '9780385474542', category: 'classics' },
+    { workKey: '/works/OL262460W', title: 'Mrs Dalloway', author: 'Virginia Woolf', year: 1925, coverIsbn: '9780156628709', category: 'classics' },
+    { workKey: '/works/OL262466W', title: 'To the Lighthouse', author: 'Virginia Woolf', year: 1927, coverIsbn: '9780156907392', category: 'classics' },
+    { workKey: '/works/OL66534W', title: 'A Room with a View', author: 'E. M. Forster', year: 1908, coverIsbn: '9780486424491', category: 'classics' },
+    { workKey: '/works/OL3287W', title: 'The Sun Also Rises', author: 'Ernest Hemingway', year: 1926, coverIsbn: '9780743297332', category: 'classics' },
+    { workKey: '/works/OL27W', title: 'The Stranger', author: 'Albert Camus', year: 1942, coverIsbn: '9780679720201', category: 'classics' },
 
     // === SCI-FI / SPECULATIVE ===
-    { workKey: '/works/OL15012127W', title: 'A Memory Called Empire', author: 'Arkady Martine', year: 2019, coverId: 8902203, category: 'scifi' },
-    { workKey: '/works/OL19782799W', title: 'The Three-Body Problem', author: 'Liu Cixin', year: 2008, coverId: 7884866, category: 'scifi' },
-    { workKey: '/works/OL2010030W', title: 'The Left Hand of Darkness', author: 'Ursula K. Le Guin', year: 1969, coverId: 8231740, category: 'scifi' },
-    { workKey: '/works/OL2010059W', title: 'The Dispossessed', author: 'Ursula K. Le Guin', year: 1974, coverId: 8231742, category: 'scifi' },
-    { workKey: '/works/OL21038W', title: 'Dune', author: 'Frank Herbert', year: 1965, coverId: 12001324, category: 'scifi' },
-    { workKey: '/works/OL81630W', title: 'Parable of the Sower', author: 'Octavia Butler', year: 1993, coverId: 8410245, category: 'scifi' },
-    { workKey: '/works/OL81613W', title: 'Kindred', author: 'Octavia Butler', year: 1979, coverId: 8410246, category: 'scifi' },
-    { workKey: '/works/OL18439745W', title: 'Station Eleven', author: 'Emily St. John Mandel', year: 2014, coverId: 7984917, category: 'scifi' },
-    { workKey: '/works/OL21077835W', title: 'Sea of Tranquility', author: 'Emily St. John Mandel', year: 2022, coverId: 12658193, category: 'scifi' },
-    { workKey: '/works/OL262458W', title: 'Slaughterhouse-Five', author: 'Kurt Vonnegut', year: 1969, coverId: 12001302, category: 'scifi' },
-    { workKey: '/works/OL262459W', title: 'Cat\'s Cradle', author: 'Kurt Vonnegut', year: 1963, coverId: 12001305, category: 'scifi' },
-    { workKey: '/works/OL1815947W', title: '1984', author: 'George Orwell', year: 1949, coverId: 12001212, category: 'scifi' },
+    { workKey: '/works/OL15012127W', title: 'A Memory Called Empire', author: 'Arkady Martine', year: 2019, coverIsbn: '9781250186430', category: 'scifi' },
+    { workKey: '/works/OL19782799W', title: 'The Three-Body Problem', author: 'Liu Cixin', year: 2008, coverIsbn: '9780765382030', category: 'scifi' },
+    { workKey: '/works/OL2010030W', title: 'The Left Hand of Darkness', author: 'Ursula K. Le Guin', year: 1969, coverIsbn: '9780441478125', category: 'scifi' },
+    { workKey: '/works/OL2010059W', title: 'The Dispossessed', author: 'Ursula K. Le Guin', year: 1974, coverIsbn: '9780061054884', category: 'scifi' },
+    { workKey: '/works/OL21038W', title: 'Dune', author: 'Frank Herbert', year: 1965, coverIsbn: '9780441172719', category: 'scifi' },
+    { workKey: '/works/OL81630W', title: 'Parable of the Sower', author: 'Octavia Butler', year: 1993, coverIsbn: '9781538732182', category: 'scifi' },
+    { workKey: '/works/OL81614W', title: 'Kindred', author: 'Octavia Butler', year: 1979, coverIsbn: '9780807083697', category: 'scifi' },
+    { workKey: '/works/OL18439745W', title: 'Station Eleven', author: 'Emily St. John Mandel', year: 2014, coverIsbn: '9780804172448', category: 'scifi' },
+    { workKey: '/works/OL21077835W', title: 'Sea of Tranquility', author: 'Emily St. John Mandel', year: 2022, coverIsbn: '9780593321447', category: 'scifi' },
+    { workKey: '/works/OL262458W', title: 'Slaughterhouse-Five', author: 'Kurt Vonnegut', year: 1969, coverIsbn: '9780385333849', category: 'scifi' },
+    { workKey: '/works/OL262459W', title: 'Cat\'s Cradle', author: 'Kurt Vonnegut', year: 1963, coverIsbn: '9780385333481', category: 'scifi' },
+    { workKey: '/works/OL1815947W', title: '1984', author: 'George Orwell', year: 1949, coverIsbn: '9780451524935', category: 'scifi' },
+    { workKey: '/works/OL27517W', title: 'Piranesi', author: 'Susanna Clarke', year: 2020, coverIsbn: '9781635575637', category: 'scifi' },
+    { workKey: '/works/OL27516W', title: 'The Fifth Season', author: 'N. K. Jemisin', year: 2015, coverIsbn: '9780316229296', category: 'scifi' },
 
     // === MYSTERY / THRILLER ===
-    { workKey: '/works/OL3915323W', title: 'The Secret History', author: 'Donna Tartt', year: 1992, coverId: 7886605, category: 'mystery' },
-    { workKey: '/works/OL15897264W', title: 'The Girl with the Dragon Tattoo', author: 'Stieg Larsson', year: 2005, coverId: 7884865, category: 'mystery' },
-    { workKey: '/works/OL15732153W', title: 'Gone Girl', author: 'Gillian Flynn', year: 2012, coverId: 7984915, category: 'mystery' },
-    { workKey: '/works/OL69317W', title: 'The Big Sleep', author: 'Raymond Chandler', year: 1939, coverId: 12001317, category: 'mystery' },
-    { workKey: '/works/OL18398W', title: 'And Then There Were None', author: 'Agatha Christie', year: 1939, coverId: 12001183, category: 'mystery' },
-    { workKey: '/works/OL5826W', title: 'The Name of the Rose', author: 'Umberto Eco', year: 1980, coverId: 8316002, category: 'mystery' },
+    { workKey: '/works/OL15897264W', title: 'The Girl with the Dragon Tattoo', author: 'Stieg Larsson', year: 2005, coverIsbn: '9780307454546', category: 'mystery' },
+    { workKey: '/works/OL15732153W', title: 'Gone Girl', author: 'Gillian Flynn', year: 2012, coverIsbn: '9780307588371', category: 'mystery' },
+    { workKey: '/works/OL69317W', title: 'The Big Sleep', author: 'Raymond Chandler', year: 1939, coverIsbn: '9780394758282', category: 'mystery' },
+    { workKey: '/works/OL18398W', title: 'And Then There Were None', author: 'Agatha Christie', year: 1939, coverIsbn: '9780062073488', category: 'mystery' },
+    { workKey: '/works/OL52938W', title: 'The Name of the Rose', author: 'Umberto Eco', year: 1980, coverIsbn: '9780544176560', category: 'mystery' },
 
     // === MEMOIR / NONFICTION ===
-    { workKey: '/works/OL15850949W', title: 'Educated', author: 'Tara Westover', year: 2018, coverId: 8501415, category: 'memoir' },
-    { workKey: '/works/OL15910889W', title: 'Just Kids', author: 'Patti Smith', year: 2010, coverId: 7884865, category: 'memoir' },
-    { workKey: '/works/OL14911338W', title: 'The Year of Magical Thinking', author: 'Joan Didion', year: 2005, coverId: 8316002, category: 'memoir' },
-    { workKey: '/works/OL19932754W', title: 'Crying in H Mart', author: 'Michelle Zauner', year: 2021, coverId: 12658193, category: 'memoir' },
-    { workKey: '/works/OL15978017W', title: 'When Breath Becomes Air', author: 'Paul Kalanithi', year: 2016, coverId: 7984916, category: 'memoir' },
-    { workKey: '/works/OL16313376W', title: 'H is for Hawk', author: 'Helen Macdonald', year: 2014, coverId: 8902204, category: 'memoir' },
+    { workKey: '/works/OL15850949W', title: 'Educated', author: 'Tara Westover', year: 2018, coverIsbn: '9780399590504', category: 'memoir' },
+    { workKey: '/works/OL15910889W', title: 'Just Kids', author: 'Patti Smith', year: 2010, coverIsbn: '9780060936228', category: 'memoir' },
+    { workKey: '/works/OL14911338W', title: 'The Year of Magical Thinking', author: 'Joan Didion', year: 2005, coverIsbn: '9781400078431', category: 'memoir' },
+    { workKey: '/works/OL19932754W', title: 'Crying in H Mart', author: 'Michelle Zauner', year: 2021, coverIsbn: '9780525657743', category: 'memoir' },
+    { workKey: '/works/OL15978017W', title: 'When Breath Becomes Air', author: 'Paul Kalanithi', year: 2016, coverIsbn: '9780812988406', category: 'memoir' },
+    { workKey: '/works/OL16313377W', title: 'H is for Hawk', author: 'Helen Macdonald', year: 2014, coverIsbn: '9780802123411', category: 'memoir' },
 
     // === POETRY ===
-    { workKey: '/works/OL2167551W', title: 'Devotions', author: 'Mary Oliver', year: 2017, coverId: 8902203, category: 'poetry' },
-    { workKey: '/works/OL19932754W', title: 'The Hurting Kind', author: 'Ada Limón', year: 2022, coverId: 12658189, category: 'poetry' },
-    { workKey: '/works/OL19932755W', title: 'Bright Dead Things', author: 'Ada Limón', year: 2015, coverId: 8501415, category: 'poetry' },
-    { workKey: '/works/OL2002030W', title: 'Citizen', author: 'Claudia Rankine', year: 2014, coverId: 7984917, category: 'poetry' },
-    { workKey: '/works/OL2167550W', title: 'The Carrying', author: 'Ada Limón', year: 2018, coverId: 8902204, category: 'poetry' },
-    { workKey: '/works/OL2167552W', title: 'Felicity', author: 'Mary Oliver', year: 2015, coverId: 7884866, category: 'poetry' },
+    { workKey: '/works/OL2167551W', title: 'Devotions', author: 'Mary Oliver', year: 2017, coverIsbn: '9780399563249', category: 'poetry' },
+    { workKey: '/works/OL19932755W', title: 'The Hurting Kind', author: 'Ada Limón', year: 2022, coverIsbn: '9781571315373', category: 'poetry' },
+    { workKey: '/works/OL19932756W', title: 'Bright Dead Things', author: 'Ada Limón', year: 2015, coverIsbn: '9781571314710', category: 'poetry' },
+    { workKey: '/works/OL2002030W', title: 'Citizen', author: 'Claudia Rankine', year: 2014, coverIsbn: '9781555976903', category: 'poetry' },
+    { workKey: '/works/OL2167550W', title: 'The Carrying', author: 'Ada Limón', year: 2018, coverIsbn: '9781571315120', category: 'poetry' },
+    { workKey: '/works/OL2167552W', title: 'Felicity', author: 'Mary Oliver', year: 2015, coverIsbn: '9781594206764', category: 'poetry' },
 
-    // === HISTORICAL FICTION / OTHER ===
-    { workKey: '/works/OL19932756W', title: 'The Nightingale', author: 'Kristin Hannah', year: 2015, coverId: 7884865, category: 'historical' },
-    { workKey: '/works/OL19932757W', title: 'All the Light We Cannot See', author: 'Anthony Doerr', year: 2014, coverId: 7984915, category: 'historical' },
-    { workKey: '/works/OL19932758W', title: 'Wolf Hall', author: 'Hilary Mantel', year: 2009, coverId: 8316002, category: 'historical' },
-    { workKey: '/works/OL19932759W', title: 'The Book Thief', author: 'Markus Zusak', year: 2005, coverId: 7884866, category: 'historical' },
-    { workKey: '/works/OL262458W', title: 'Beloved', author: 'Toni Morrison', year: 1987, coverId: 12001354, category: 'historical' },
+    // === HISTORICAL FICTION ===
+    { workKey: '/works/OL19932757W', title: 'The Nightingale', author: 'Kristin Hannah', year: 2015, coverIsbn: '9780312577223', category: 'historical' },
+    { workKey: '/works/OL19932758W', title: 'All the Light We Cannot See', author: 'Anthony Doerr', year: 2014, coverIsbn: '9781501173219', category: 'historical' },
+    { workKey: '/works/OL19932759W', title: 'Wolf Hall', author: 'Hilary Mantel', year: 2009, coverIsbn: '9780312429980', category: 'historical' },
+    { workKey: '/works/OL19932760W', title: 'The Book Thief', author: 'Markus Zusak', year: 2005, coverIsbn: '9780375842207', category: 'historical' },
 
     // === SHORT STORIES / ESSAYS ===
-    { workKey: '/works/OL26W', title: 'The Collected Stories', author: 'Lorrie Moore', year: 2008, coverId: 8410264, category: 'stories' },
-    { workKey: '/works/OL27W', title: 'Tenth of December', author: 'George Saunders', year: 2013, coverId: 8410245, category: 'stories' },
-    { workKey: '/works/OL28W', title: 'Bluets', author: 'Maggie Nelson', year: 2009, coverId: 7984915, category: 'stories' },
-    { workKey: '/works/OL29W', title: 'The Argonauts', author: 'Maggie Nelson', year: 2015, coverId: 7984916, category: 'stories' },
+    { workKey: '/works/OL26222W', title: 'Tenth of December', author: 'George Saunders', year: 2013, coverIsbn: '9780812984255', category: 'stories' },
+    { workKey: '/works/OL26223W', title: 'Bluets', author: 'Maggie Nelson', year: 2009, coverIsbn: '9781933517407', category: 'stories' },
+    { workKey: '/works/OL26224W', title: 'The Argonauts', author: 'Maggie Nelson', year: 2015, coverIsbn: '9781555977351', category: 'stories' },
+    { workKey: '/works/OL26225W', title: 'Interpreter of Maladies', author: 'Jhumpa Lahiri', year: 1999, coverIsbn: '9780395927205', category: 'stories' },
 
     // === FANTASY ===
-    { workKey: '/works/OL27513W', title: 'The Name of the Wind', author: 'Patrick Rothfuss', year: 2007, coverId: 8316002, category: 'fantasy' },
-    { workKey: '/works/OL27514W', title: 'A Game of Thrones', author: 'George R. R. Martin', year: 1996, coverId: 12001209, category: 'fantasy' },
-    { workKey: '/works/OL27515W', title: 'The Lord of the Rings', author: 'J. R. R. Tolkien', year: 1954, coverId: 12001317, category: 'fantasy' },
-    { workKey: '/works/OL27516W', title: 'The Fifth Season', author: 'N. K. Jemisin', year: 2015, coverId: 7884866, category: 'fantasy' },
-    { workKey: '/works/OL27517W', title: 'Piranesi', author: 'Susanna Clarke', year: 2020, coverId: 12658189, category: 'fantasy' },
+    { workKey: '/works/OL27513W', title: 'The Name of the Wind', author: 'Patrick Rothfuss', year: 2007, coverIsbn: '9780756404741', category: 'fantasy' },
+    { workKey: '/works/OL27514W', title: 'A Game of Thrones', author: 'George R. R. Martin', year: 1996, coverIsbn: '9780553573404', category: 'fantasy' },
+    { workKey: '/works/OL27515W', title: 'The Lord of the Rings', author: 'J. R. R. Tolkien', year: 1954, coverIsbn: '9780544003415', category: 'fantasy' },
   ];
 
   // Fetch the summary/description for a single work — still live, since
@@ -8169,7 +8182,8 @@
   function buildWallCardHtml(b, idx, isSaved) {
     const aspectRatios = [1.5, 1.55, 1.45, 1.6, 1.5];
     const ar = aspectRatios[idx % aspectRatios.length];
-    const coverUrl = b.coverId ? `https://covers.openlibrary.org/b/id/${b.coverId}-L.jpg` : null;
+    const coverKey = b.coverIsbn || b.coverId;
+    const coverUrl = coverKey ? coverImageUrl(coverKey, 'L') : null;
     const frontHtml = coverUrl
       ? `<div class="wall-card-face wall-card-front" style="background-image: url('${coverUrl}');"></div>`
       : `<div class="wall-card-face wall-card-front cv-fallback ${pickCoverClass(b.title)}">
@@ -8227,7 +8241,7 @@
           title: book.title,
           author: book.author || '',
           year: book.year || null,
-          coverId: book.coverId || null,
+          coverId: book.coverIsbn || book.coverId || null,
           coverClass: pickCoverClass(book.title),
           workKey: book.workKey,
           status: 'library',
@@ -8246,7 +8260,7 @@
 
   // Progressive book wall render. Books appear as each fetch completes,
   // not all-at-once after the slowest one.
-  const WALL_CACHE_KEY = 'vronsky_wall_session_v3';
+  const WALL_CACHE_KEY = 'vronsky_wall_session_v4';
   const WALL_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
   let _wallRendered = false;
 
