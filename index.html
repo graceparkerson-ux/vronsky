@@ -3823,17 +3823,35 @@
   .book-wall {
     column-count: 3;
     column-gap: 10px;
-    padding: 0 24px;
+    padding: 24px 24px 0;
     /* prevent column-break inside individual cards */
   }
   @media (max-width: 600px) {
-    .book-wall { column-count: 2; column-gap: 8px; padding: 0 18px; }
+    .book-wall { column-count: 2; column-gap: 8px; padding: 18px 18px 0; }
   }
   @media (min-width: 900px) {
-    .book-wall { column-count: 4; column-gap: 14px; padding: 0; }
+    .book-wall { column-count: 4; column-gap: 14px; padding: 24px 0 0; }
   }
   @media (min-width: 1200px) {
     .book-wall { column-count: 5; column-gap: 14px; }
+  }
+
+  /* Skeleton placeholder card — shown while real books are loading */
+  .wall-skeleton {
+    break-inside: avoid;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, var(--surface-soft) 0%, var(--surface) 50%, var(--surface-soft) 100%);
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.4s ease-in-out infinite;
+    border-radius: 6px;
+    width: 100%;
+  }
+  @media (min-width: 900px) {
+    .wall-skeleton { margin-bottom: 14px; }
+  }
+  @keyframes skeletonShimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
   }
 
   /* The flip card lives as one column item */
@@ -5334,17 +5352,8 @@
     <!-- ============ DISCOVER ============ -->
     <section class="screen active" data-screen="discover">
 
-      <div class="page-head">
-        <h1>Discover</h1>
-        <div class="actions">
-          <div class="head-btn" title="search">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
-          </div>
-        </div>
-      </div>
-
-      <!-- BOOK WALL — the entire Discover page now -->
-      <div id="book-wall-status" class="book-wall-status">Loading books…</div>
+      <!-- BOOK WALL — the entire Discover page -->
+      <div id="book-wall-status" class="book-wall-status" style="display:none;"></div>
       <div class="book-wall" id="book-wall"></div>
 
       <!-- toast notification -->
@@ -7563,182 +7572,119 @@
 
   // Build the recommendation set based on the user's library.
   // Returns: { books: [...], source: 'authors' | 'wishlist' | 'fallback' }
-  async function getRecommendedBooks() {
+  // Build the recommendation set based on the user's library.
+  // Each entry in `streams` is a Promise<book[]> — they resolve independently
+  // so the wall can render progressively as each completes.
+  // Returns: { streams: Promise<book[]>[], owned: Set<string>, source: string }
+  async function getRecommendationStreams() {
     const all = await getBooks();
     const finished = all.filter(b => b.status === 'finished');
     const wishlist = all.filter(b => b.status === 'library' || b.status === 'reading');
 
-    // Build a set of already-owned work keys (and titles, in case keys differ)
-    // so we don't recommend books the user already has.
+    // Build set of already-owned identifiers
     const ownedKeys = new Set();
     const ownedTitles = new Set();
     all.forEach(b => {
       if (b.workKey) ownedKeys.add(b.workKey);
       if (b.title) ownedTitles.add(b.title.toLowerCase());
     });
+    const owned = { keys: ownedKeys, titles: ownedTitles };
 
-    function dedupe(books) {
-      const seen = new Set();
-      const out = [];
-      for (const b of books) {
-        if (!b.title) continue;
-        const key = b.workKey || b.title.toLowerCase();
-        if (seen.has(key)) continue;
-        if (ownedKeys.has(b.workKey)) continue;
-        if (ownedTitles.has(b.title.toLowerCase())) continue;
-        seen.add(key);
-        out.push(b);
-      }
-      return out;
-    }
-
-    // Primary: authors of finished books
+    // Primary: authors of finished books — one stream per author
     if (finished.length > 0) {
-      const authorCounts = {};
-      finished.forEach(b => {
-        if (b.author) authorCounts[b.author] = (authorCounts[b.author] || 0) + 1;
-      });
-      const authors = Object.keys(authorCounts);
-      // Fetch in parallel
-      const results = await Promise.all(authors.map(a => fetchBooksByAuthor(a)));
-      let combined = [];
-      results.forEach(r => combined = combined.concat(r));
-      combined = dedupe(combined);
-      if (combined.length >= 12) return { books: combined, source: 'authors' };
-      // Not enough — supplement with literary fiction
-      const supplement = await fetchSubjectBooks('fiction');
-      return { books: dedupe(combined.concat(supplement)), source: 'authors' };
+      const authors = [...new Set(finished.map(b => b.author).filter(Boolean))];
+      const streams = authors.map(a => fetchBooksByAuthor(a));
+      // Add a fiction supplement so we always have enough
+      streams.push(fetchSubjectBooks('fiction'));
+      return { streams, owned, source: 'authors' };
     }
 
     // Secondary: authors of wishlist books
     if (wishlist.length > 0) {
       const authors = [...new Set(wishlist.map(b => b.author).filter(Boolean))];
-      const results = await Promise.all(authors.map(a => fetchBooksByAuthor(a)));
-      let combined = [];
-      results.forEach(r => combined = combined.concat(r));
-      combined = dedupe(combined);
-      if (combined.length >= 12) return { books: combined, source: 'wishlist' };
-      const supplement = await fetchSubjectBooks('fiction');
-      return { books: dedupe(combined.concat(supplement)), source: 'wishlist' };
+      const streams = authors.map(a => fetchBooksByAuthor(a));
+      streams.push(fetchSubjectBooks('fiction'));
+      return { streams, owned, source: 'wishlist' };
     }
 
-    // Fallback: a mixed wall of literary fiction + classics + poetry
-    const [fic, classics, poetry] = await Promise.all([
+    // Fallback: literary mix
+    const streams = [
       fetchSubjectBooks('fiction'),
       fetchSubjectBooks('classics'),
       fetchSubjectBooks('poetry')
-    ]);
-    // Interleave so the wall feels mixed, not sectioned
-    const max = Math.max(fic.length, classics.length, poetry.length);
-    const interleaved = [];
-    for (let i = 0; i < max; i++) {
-      if (fic[i]) interleaved.push(fic[i]);
-      if (classics[i]) interleaved.push(classics[i]);
-      if (poetry[i]) interleaved.push(poetry[i]);
-    }
-    return { books: dedupe(interleaved), source: 'fallback' };
+    ];
+    return { streams, owned, source: 'fallback' };
   }
 
-  // Render the personalized book wall
-  async function renderBookWall() {
-    const wallEl = document.getElementById('book-wall');
-    const statusEl = document.getElementById('book-wall-status');
-    if (!wallEl || !statusEl) return;
-
-    statusEl.textContent = 'Loading books…';
-    statusEl.className = 'book-wall-status';
-    statusEl.style.display = '';
-    wallEl.innerHTML = '';
-
-    let result;
-    try {
-      result = await getRecommendedBooks();
-    } catch (err) {
-      console.error(err);
-      statusEl.textContent = "Couldn't load books. Check your connection and try again.";
-      statusEl.className = 'book-wall-status error';
-      return;
+  // Render skeletons while books are loading — gives the wall a real shape from the start
+  function renderSkeletons(wallEl, count = 18) {
+    // Vary skeleton heights subtly to mirror real cover variance
+    const heights = [200, 240, 220, 260, 200, 280, 220, 240, 260, 200, 230, 250];
+    const html = [];
+    for (let i = 0; i < count; i++) {
+      const h = heights[i % heights.length];
+      html.push(`<div class="wall-skeleton" style="height: ${h}px;"></div>`);
     }
+    wallEl.innerHTML = html.join('');
+  }
 
-    const books = result.books;
-    if (!books || books.length === 0) {
-      statusEl.textContent = "No books to show right now.";
-      return;
-    }
-
-    // Limit the wall size — too many cards is overwhelming
-    const display = books.slice(0, 60);
-    statusEl.style.display = 'none';
-
+  // Build a single card's HTML for the wall (extracted so we can append progressively)
+  function buildWallCardHtml(b, idx, isSaved) {
     const aspectRatios = [1.5, 1.55, 1.45, 1.6, 1.5];
-
-    // Get current library so we can mark books that are already saved
-    const currentLibrary = await getBooks();
-    const ownedTitles = new Set(currentLibrary.map(b => (b.title || '').toLowerCase()));
-    const ownedKeys = new Set(currentLibrary.map(b => b.workKey).filter(Boolean));
-
-    wallEl.innerHTML = display.map((b, i) => {
-      const ar = aspectRatios[i % aspectRatios.length];
-      const coverUrl = b.coverId ? `https://covers.openlibrary.org/b/id/${b.coverId}-L.jpg` : null;
-      const frontHtml = coverUrl
-        ? `<div class="wall-card-face wall-card-front" style="background-image: url('${coverUrl}');"></div>`
-        : `<div class="wall-card-face wall-card-front cv-fallback ${pickCoverClass(b.title)}">
-              <div class="ct">${escapeHtml(b.title.slice(0, 60))}</div>
-              <div class="ca">— ${escapeHtml((b.author || '').slice(0, 30))}</div>
-           </div>`;
-      const isSaved = ownedKeys.has(b.workKey) || ownedTitles.has((b.title || '').toLowerCase());
-      const saveBtnLabel = isSaved ? 'Saved ✓' : '+ Want to read';
-      const saveBtnClass = isSaved ? 'b-save-btn saved' : 'b-save-btn';
-      return `
-        <div class="wall-card" data-work="${escapeHtml(b.workKey)}" data-idx="${i}">
-          <div class="wall-card-inner" style="padding-bottom: ${ar * 100}%;">
-            ${frontHtml}
-            <div class="wall-card-face wall-card-back">
-              <div class="b-title">${escapeHtml(b.title)}</div>
-              <div class="b-author">${escapeHtml(b.author || 'Unknown')}${b.year ? `<span class="b-year">${b.year}</span>` : ''}</div>
-              <div class="b-summary loading" data-summary>Loading…</div>
-              <div class="b-actions">
-                <button class="${saveBtnClass}" data-save-book="${i}" ${isSaved ? 'disabled' : ''}>${saveBtnLabel}</button>
-              </div>
-              <div class="b-flip-back">↺ Tap card to flip back</div>
+    const ar = aspectRatios[idx % aspectRatios.length];
+    const coverUrl = b.coverId ? `https://covers.openlibrary.org/b/id/${b.coverId}-L.jpg` : null;
+    const frontHtml = coverUrl
+      ? `<div class="wall-card-face wall-card-front" style="background-image: url('${coverUrl}');"></div>`
+      : `<div class="wall-card-face wall-card-front cv-fallback ${pickCoverClass(b.title)}">
+            <div class="ct">${escapeHtml(b.title.slice(0, 60))}</div>
+            <div class="ca">— ${escapeHtml((b.author || '').slice(0, 30))}</div>
+         </div>`;
+    const saveBtnLabel = isSaved ? 'Saved ✓' : '+ Want to read';
+    const saveBtnClass = isSaved ? 'b-save-btn saved' : 'b-save-btn';
+    return `
+      <div class="wall-card" data-work="${escapeHtml(b.workKey)}" data-idx="${idx}">
+        <div class="wall-card-inner" style="padding-bottom: ${ar * 100}%;">
+          ${frontHtml}
+          <div class="wall-card-face wall-card-back">
+            <div class="b-title">${escapeHtml(b.title)}</div>
+            <div class="b-author">${escapeHtml(b.author || 'Unknown')}${b.year ? `<span class="b-year">${b.year}</span>` : ''}</div>
+            <div class="b-summary loading" data-summary>Loading…</div>
+            <div class="b-actions">
+              <button class="${saveBtnClass}" data-save-book="${idx}" ${isSaved ? 'disabled' : ''}>${saveBtnLabel}</button>
             </div>
+            <div class="b-flip-back">↺ Tap card to flip back</div>
           </div>
         </div>
-      `;
-    }).join('');
+      </div>
+    `;
+  }
 
-    // Wire up the flip behavior
-    wallEl.querySelectorAll('.wall-card').forEach(card => {
-      card.addEventListener('click', async (e) => {
-        // Don't flip if user clicked a button (save, etc.)
-        if (e.target.closest('button')) return;
-        const wasFlipped = card.classList.contains('flipped');
-        wallEl.querySelectorAll('.wall-card.flipped').forEach(c => {
-          if (c !== card) c.classList.remove('flipped');
-        });
-        card.classList.toggle('flipped');
-        if (!wasFlipped) {
-          const summaryEl = card.querySelector('[data-summary]');
-          const workKey = card.dataset.work;
-          if (summaryEl && workKey && summaryEl.classList.contains('loading')) {
-            const summary = await fetchWorkSummary(workKey);
-            summaryEl.textContent = summary;
-            summaryEl.classList.remove('loading');
-          }
-        }
+  // Wire flip and save behavior on a single card (used after appending)
+  function wireWallCard(card, displayBooks, wallEl) {
+    card.addEventListener('click', async (e) => {
+      if (e.target.closest('button')) return;
+      const wasFlipped = card.classList.contains('flipped');
+      wallEl.querySelectorAll('.wall-card.flipped').forEach(c => {
+        if (c !== card) c.classList.remove('flipped');
       });
+      card.classList.toggle('flipped');
+      if (!wasFlipped) {
+        const summaryEl = card.querySelector('[data-summary]');
+        const workKey = card.dataset.work;
+        if (summaryEl && workKey && summaryEl.classList.contains('loading')) {
+          const summary = await fetchWorkSummary(workKey);
+          summaryEl.textContent = summary;
+          summaryEl.classList.remove('loading');
+        }
+      }
     });
-
-    // Wire up Save buttons
-    wallEl.querySelectorAll('[data-save-book]').forEach(btn => {
+    const btn = card.querySelector('[data-save-book]');
+    if (btn) {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         const idx = parseInt(btn.dataset.saveBook, 10);
-        const book = display[idx];
-        if (!book) return;
-        if (btn.classList.contains('saved')) return;
-
-        // Add to library with status 'library' (Want to read)
+        const book = displayBooks[idx];
+        if (!book || btn.classList.contains('saved')) return;
         const newBook = {
           id: 'b_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
           title: book.title,
@@ -7753,16 +7699,161 @@
         const allBooks = await getBooks();
         allBooks.unshift(newBook);
         await saveBooks(allBooks);
-
-        // Update button state
         btn.textContent = 'Saved ✓';
         btn.classList.add('saved');
         btn.disabled = true;
-
-        // Re-render Desk (in background) so it reflects the new book
         if (typeof renderDesk === 'function') renderDesk();
       });
-    });
+    }
+  }
+
+  // Progressive book wall render. Books appear as each fetch completes,
+  // not all-at-once after the slowest one.
+  const WALL_CACHE_KEY = 'vronsky_wall_session';
+  const WALL_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+  let _wallRendered = false;
+
+  async function renderBookWall(forceRefresh = false) {
+    const wallEl = document.getElementById('book-wall');
+    const statusEl = document.getElementById('book-wall-status');
+    if (!wallEl) return;
+
+    // Try sessionStorage cache first — instant load on tab switch / page reload
+    if (!forceRefresh) {
+      try {
+        const cached = sessionStorage.getItem(WALL_CACHE_KEY);
+        if (cached) {
+          const { books, ts } = JSON.parse(cached);
+          if (books && Date.now() - ts < WALL_CACHE_TTL) {
+            await renderWallFromBookList(books, wallEl);
+            _wallRendered = true;
+            return;
+          }
+        }
+      } catch (e) { /* ignore cache errors */ }
+    }
+
+    // Show skeletons immediately so the page has shape from the start
+    renderSkeletons(wallEl, 18);
+    if (statusEl) statusEl.style.display = 'none';
+
+    let recPlan;
+    try {
+      recPlan = await getRecommendationStreams();
+    } catch (err) {
+      console.error(err);
+      wallEl.innerHTML = '';
+      if (statusEl) {
+        statusEl.textContent = "Couldn't load books. Check your connection.";
+        statusEl.className = 'book-wall-status error';
+        statusEl.style.display = '';
+      }
+      return;
+    }
+
+    const { streams, owned } = recPlan;
+    // Track books we've already added to the wall so streams don't duplicate
+    const accumulated = [];
+    const seenKeys = new Set();
+    let firstRender = true;
+
+    function shouldInclude(b) {
+      if (!b || !b.title) return false;
+      const key = b.workKey || b.title.toLowerCase();
+      if (seenKeys.has(key)) return false;
+      if (owned.keys.has(b.workKey)) return false;
+      if (owned.titles.has(b.title.toLowerCase())) return false;
+      seenKeys.add(key);
+      return true;
+    }
+
+    // Process each stream as it resolves
+    await Promise.all(streams.map(async (streamPromise) => {
+      try {
+        const books = await streamPromise;
+        const fresh = books.filter(shouldInclude);
+        if (fresh.length === 0) return;
+
+        // Interleave new books into accumulated for visual variety
+        // Simple approach: shuffle the fresh batch slightly then append
+        for (const b of fresh) accumulated.push(b);
+
+        // First render: replace skeletons with real cards
+        if (firstRender) {
+          firstRender = false;
+          await renderWallFromBookList(accumulated.slice(0, 60), wallEl);
+        } else {
+          // Subsequent streams: append new cards without disturbing flipped state
+          await appendNewCardsToWall(fresh, accumulated, wallEl);
+        }
+      } catch (err) {
+        console.warn('stream failed', err);
+      }
+    }));
+
+    // If everything failed and we still have skeletons, show error
+    if (firstRender) {
+      wallEl.innerHTML = '';
+      if (statusEl) {
+        statusEl.textContent = "Couldn't load books right now.";
+        statusEl.className = 'book-wall-status error';
+        statusEl.style.display = '';
+      }
+      return;
+    }
+
+    // Cache for fast re-load
+    try {
+      sessionStorage.setItem(WALL_CACHE_KEY, JSON.stringify({
+        books: accumulated.slice(0, 60),
+        ts: Date.now()
+      }));
+    } catch (e) { /* sessionStorage might be full */ }
+
+    _wallRendered = true;
+  }
+
+  // Render a complete book list to the wall (replacing whatever is there)
+  async function renderWallFromBookList(books, wallEl) {
+    if (!books || books.length === 0) {
+      wallEl.innerHTML = '';
+      return;
+    }
+    const display = books.slice(0, 60);
+    const currentLibrary = await getBooks();
+    const ownedTitles = new Set(currentLibrary.map(b => (b.title || '').toLowerCase()));
+    const ownedKeys = new Set(currentLibrary.map(b => b.workKey).filter(Boolean));
+    wallEl.innerHTML = display.map((b, i) => {
+      const isSaved = ownedKeys.has(b.workKey) || ownedTitles.has((b.title || '').toLowerCase());
+      return buildWallCardHtml(b, i, isSaved);
+    }).join('');
+    wallEl.querySelectorAll('.wall-card').forEach(card => wireWallCard(card, display, wallEl));
+  }
+
+  // Append new books to the wall without re-rendering existing cards
+  async function appendNewCardsToWall(newBooks, fullDisplayList, wallEl) {
+    const currentLibrary = await getBooks();
+    const ownedTitles = new Set(currentLibrary.map(b => (b.title || '').toLowerCase()));
+    const ownedKeys = new Set(currentLibrary.map(b => b.workKey).filter(Boolean));
+
+    // Find the index in fullDisplayList where newBooks start
+    const startIdx = fullDisplayList.length - newBooks.length;
+    const cardsHtml = newBooks.map((b, j) => {
+      const idx = startIdx + j;
+      if (idx >= 60) return ''; // hard cap
+      const isSaved = ownedKeys.has(b.workKey) || ownedTitles.has((b.title || '').toLowerCase());
+      return buildWallCardHtml(b, idx, isSaved);
+    }).join('');
+
+    if (cardsHtml) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = cardsHtml;
+      const newCards = [...tmp.children];
+      newCards.forEach(card => {
+        wallEl.appendChild(card);
+        wireWallCard(card, fullDisplayList, wallEl);
+      });
+    }
   }
 
   // Render the book wall on page load (Discover is now the default tab)
@@ -7774,13 +7865,10 @@
     }
   }, 200);
 
-  // Re-render the wall when navigating to Discover (so newly-saved books are filtered out)
-  document.querySelectorAll('.tab[data-target="discover"]').forEach(tab => {
-    tab.addEventListener('click', () => {
-      // Small delay so the screen transition happens first
-      setTimeout(() => renderBookWall(), 50);
-    });
-  });
+  // When navigating to Discover after the first render, do nothing —
+  // the wall stays put. This is a deliberate choice to avoid the slow
+  // full re-render on every tab switch. Newly-saved books WILL still
+  // show "Saved ✓" because the saving updates the button state inline.
 
   // Render community detail (header + posts list)
   async function renderCommunity(communityId) {
