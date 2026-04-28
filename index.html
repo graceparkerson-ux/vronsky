@@ -8595,18 +8595,19 @@
   const ACTIVE_TAB_KEY = 'vronsky_active_tab';
 
   function activateTab(target, scrollToTop = true) {
-    let found = false;
+    // Guard: don't proceed if no matching screen exists — would leave page blank
+    const targetScreen = [...screens].find(s => s.dataset.screen === target);
+    if (!targetScreen) return false;
+
     tabs.forEach(t => {
-      const match = t.dataset.target === target;
-      t.classList.toggle('active', match);
-      if (match) found = true;
+      t.classList.toggle('active', t.dataset.target === target);
     });
     screens.forEach(s => {
-      const isTarget = s.dataset.screen === target;
+      const isTarget = s === targetScreen;
       s.classList.toggle('active', isTarget);
       if (isTarget && scrollToTop) s.scrollTop = 0;
     });
-    return found;
+    return true;
   }
 
   tabs.forEach(tab => {
@@ -8622,7 +8623,15 @@
   try {
     const savedTab = localStorage.getItem(ACTIVE_TAB_KEY);
     if (savedTab) {
-      activateTab(savedTab, false);
+      // Only restore if that tab actually exists — otherwise leave the default
+      const tabExists = [...tabs].some(t => t.dataset.target === savedTab);
+      const screenExists = [...screens].some(s => s.dataset.screen === savedTab);
+      if (tabExists && screenExists) {
+        activateTab(savedTab, false);
+      } else {
+        // Stale value — clear it and stay on default
+        localStorage.removeItem(ACTIVE_TAB_KEY);
+      }
     }
   } catch (e) { /* ignore */ }
 
