@@ -906,17 +906,6 @@
     background: var(--surface);
   }
 
-  /* Ambient quiet state (used on Home — minimal, poetic) */
-  .home-quiet {
-    text-align: center;
-    padding: 80px 24px;
-    font-family: Georgia, 'Times New Roman', serif;
-    font-style: italic;
-    font-size: 16px;
-    color: var(--accent);
-    opacity: 0.6;
-    letter-spacing: 0.01em;
-  }
   .rec-empty .em-mark {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
@@ -5321,10 +5310,6 @@
         </div>
 
         <div class="feed-list" data-active="all">
-          <!-- Quiet ambient empty state -->
-          <div class="home-quiet" id="home-feed-empty">
-            Quiet for now.
-          </div>
         </div>
 
       </div> <!-- /dv-home -->
@@ -8607,17 +8592,39 @@
   // tab switching
   const tabs = document.querySelectorAll('.tab');
   const screens = document.querySelectorAll('.screen');
+  const ACTIVE_TAB_KEY = 'vronsky_active_tab';
+
+  function activateTab(target, scrollToTop = true) {
+    let found = false;
+    tabs.forEach(t => {
+      const match = t.dataset.target === target;
+      t.classList.toggle('active', match);
+      if (match) found = true;
+    });
+    screens.forEach(s => {
+      const isTarget = s.dataset.screen === target;
+      s.classList.toggle('active', isTarget);
+      if (isTarget && scrollToTop) s.scrollTop = 0;
+    });
+    return found;
+  }
+
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
       const target = tab.dataset.target;
-      tabs.forEach(t => t.classList.toggle('active', t === tab));
-      screens.forEach(s => {
-        const isTarget = s.dataset.screen === target;
-        s.classList.toggle('active', isTarget);
-        if (isTarget) s.scrollTop = 0;
-      });
+      activateTab(target);
+      // Remember the current tab so a refresh keeps you here
+      try { localStorage.setItem(ACTIVE_TAB_KEY, target); } catch (e) {}
     });
   });
+
+  // On page load: restore the last active tab if there is one
+  try {
+    const savedTab = localStorage.getItem(ACTIVE_TAB_KEY);
+    if (savedTab) {
+      activateTab(savedTab, false);
+    }
+  } catch (e) { /* ignore */ }
 
   // chip filter switching — actually filters the feed
   const feedList = document.querySelector('.feed-list');
