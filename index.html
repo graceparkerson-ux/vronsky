@@ -225,6 +225,29 @@
   }
   .new-btn svg { width: 14px; height: 14px; }
 
+  /* Smaller new button (inline next to a section label) */
+  .new-btn-sm {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px 5px 8px;
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent-soft);
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 11px;
+    font-variation-settings: "opsz" 14, "wght" 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .new-btn-sm:hover {
+    background: var(--accent-soft);
+    color: var(--accent-deep);
+  }
+  .new-btn-sm svg { width: 11px; height: 11px; }
+
   /* === FILTER CHIPS === */
   .filter-bar {
     display: flex;
@@ -2672,7 +2695,7 @@
     padding: 0 24px 14px;
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
   }
   .threads-preview .label {
     font-size: 10px;
@@ -5454,6 +5477,35 @@
     </div>
   </div>
 
+  <!-- New Community modal -->
+  <div class="modal-overlay" id="new-community-modal">
+    <div class="modal" role="dialog" aria-labelledby="new-community-title">
+      <div class="modal-head">
+        <h3 id="new-community-title">Create a community</h3>
+        <button class="modal-close" id="ncom-close-btn" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <form id="new-community-form">
+        <div class="modal-body">
+          <div class="form-row">
+            <label for="ncom-name">Community name</label>
+            <input id="ncom-name" type="text" name="name" required maxlength="60" placeholder="e.g., Slow Reading Club" />
+            <div id="ncom-slug-preview" style="font-size: 11px; color: var(--text-3); margin-top: 6px; min-height: 14px;"></div>
+          </div>
+          <div class="form-row">
+            <label for="ncom-desc">What's it about?</label>
+            <textarea id="ncom-desc" name="desc" maxlength="280" placeholder="A short description so people know if they'd want to join." style="min-height: 80px;"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="modal-btn" id="ncom-cancel-btn">Cancel</button>
+          <button type="submit" class="modal-btn primary">Create community</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- New Club modal -->
   <div class="modal-overlay" id="new-club-modal">
     <div class="modal" role="dialog" aria-labelledby="new-club-title">
@@ -5754,6 +5806,10 @@
         <div class="threads-preview" id="feed-communities-section">
           <div class="label-row">
             <span class="label">Communities</span>
+            <button class="new-btn-sm" id="new-community-btn" title="Create a community">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              New
+            </button>
           </div>
           <div id="threads-list"></div>
         </div>
@@ -6315,6 +6371,7 @@
           if (typeof loadUserVotes === 'function') await loadUserVotes();
           if (typeof renderDesk === 'function') await renderDesk();
           if (typeof renderTrail === 'function') await renderTrail();
+          if (typeof renderCommunityList === 'function') await renderCommunityList();
           if (typeof renderHomeFollowedPosts === 'function') await renderHomeFollowedPosts();
           if (typeof renderUserClubs === 'function') await renderUserClubs();
           if (typeof renderBrowseClubs === 'function') await renderBrowseClubs();
@@ -6357,6 +6414,7 @@
         if (typeof loadUserVotes === 'function') await loadUserVotes();
         if (typeof renderDesk === 'function') await renderDesk();
         if (typeof renderTrail === 'function') await renderTrail();
+        if (typeof renderCommunityList === 'function') await renderCommunityList();
         if (typeof renderHomeFollowedPosts === 'function') await renderHomeFollowedPosts();
         if (typeof renderUserClubs === 'function') await renderUserClubs();
         if (typeof renderBrowseClubs === 'function') await renderBrowseClubs();
@@ -6385,6 +6443,7 @@
       if (typeof loadUserVotes === 'function') await loadUserVotes();
       if (typeof renderDesk === 'function') await renderDesk();
       if (typeof renderTrail === 'function') await renderTrail();
+      if (typeof renderCommunityList === 'function') await renderCommunityList();
       if (typeof renderHomeFollowedPosts === 'function') await renderHomeFollowedPosts();
       if (typeof renderUserClubs === 'function') await renderUserClubs();
       if (typeof renderBrowseClubs === 'function') await renderBrowseClubs();
@@ -6423,6 +6482,7 @@
     _allClubsCacheUser = null;
     _postsCache = null;
     _commentsCache = null;
+    _dbCommunitiesCache = null;
     userVotes = {};
     location.reload();
   });
@@ -7749,6 +7809,115 @@
     if (e.key === 'Escape' && newClubModal.classList.contains('show')) closeNewClubModal();
   });
 
+  // === New Community modal ===
+  const newCommunityModal = document.getElementById('new-community-modal');
+  const newCommunityForm = document.getElementById('new-community-form');
+  const newCommunityBtn = document.getElementById('new-community-btn');
+  const ncomCloseBtn = document.getElementById('ncom-close-btn');
+  const ncomCancelBtn = document.getElementById('ncom-cancel-btn');
+  const ncomNameInput = document.getElementById('ncom-name');
+  const ncomDescInput = document.getElementById('ncom-desc');
+  const ncomSlugPreview = document.getElementById('ncom-slug-preview');
+
+  function openNewCommunityModal() {
+    if (ncomNameInput) ncomNameInput.value = '';
+    if (ncomDescInput) ncomDescInput.value = '';
+    if (ncomSlugPreview) ncomSlugPreview.textContent = '';
+    newCommunityModal.classList.add('show');
+    setTimeout(() => ncomNameInput && ncomNameInput.focus(), 200);
+  }
+  function closeNewCommunityModal() { newCommunityModal.classList.remove('show'); }
+
+  if (newCommunityBtn) newCommunityBtn.addEventListener('click', openNewCommunityModal);
+  if (ncomCloseBtn) ncomCloseBtn.addEventListener('click', closeNewCommunityModal);
+  if (ncomCancelBtn) ncomCancelBtn.addEventListener('click', closeNewCommunityModal);
+  if (newCommunityModal) {
+    newCommunityModal.addEventListener('click', (e) => {
+      if (e.target === newCommunityModal) closeNewCommunityModal();
+    });
+  }
+
+  // Live slug preview as the user types
+  if (ncomNameInput) {
+    ncomNameInput.addEventListener('input', () => {
+      const name = ncomNameInput.value.trim();
+      if (name) {
+        const slug = slugify(name);
+        ncomSlugPreview.textContent = slug ? `Will appear as v/${slug}` : '';
+      } else {
+        ncomSlugPreview.textContent = '';
+      }
+    });
+  }
+
+  // Submit new community
+  if (newCommunityForm) {
+    newCommunityForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const originalText = submitBtn ? submitBtn.textContent : '';
+
+      try {
+        const name = ncomNameInput.value.trim();
+        if (!name) return;
+        const desc = ncomDescInput.value.trim();
+        const slug = slugify(name);
+        if (!slug) {
+          alert('That name needs at least one letter or number.');
+          return;
+        }
+
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Creating…';
+        }
+
+        const me = await getUser();
+        if (!me || !me.id) {
+          alert('Please sign in to create a community.');
+          return;
+        }
+
+        // Make sure the slug isn't already taken
+        const all = await getAllCommunities();
+        const existing = all.find(c => c.slug === 'v/' + slug);
+        if (existing) {
+          alert(`A community at v/${slug} already exists. Try a different name.`);
+          return;
+        }
+
+        const newCommunity = {
+          id: 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          name,
+          slug: 'v/' + slug,
+          desc,
+          type: 'topic',
+          members: 1,
+          createdBy: me.username
+        };
+
+        await saveCommunity(newCommunity);
+        closeNewCommunityModal();
+        // Refresh the community list (now includes the new one)
+        await renderCommunityList();
+        // Navigate into the newly created community
+        navigateDiscover('community', newCommunity.id);
+      } catch (err) {
+        console.error('[Vronsky/communities] Create failed:', err);
+        alert('Could not create community: ' + (err.message || 'Unknown error') + '\n\nCheck the browser console for details.');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText || 'Create community';
+        }
+      }
+    });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && newCommunityModal && newCommunityModal.classList.contains('show')) closeNewCommunityModal();
+  });
+
   // === CLUB OWNERSHIP / NAVIGATION / DETAIL PAGE ===
 
   async function isClubOwner(club) {
@@ -8335,6 +8504,76 @@
     { id: 'mary_oliver', type: 'author', name: 'Mary Oliver', slug: 'v/mary_oliver', members: 1208, desc: 'For readers of the late American poet. Wild Geese, Devotions, A Thousand Mornings — all welcome.' }
   ];
 
+  // === USER-CREATED COMMUNITIES ===
+  // Stored in the `communities` table on Supabase. Anyone authenticated can read;
+  // only creators can edit/delete. Merged with hardcoded COMMUNITIES at read time.
+
+  let _dbCommunitiesCache = null;
+
+  async function getDbCommunities() {
+    if (_dbCommunitiesCache !== null) return _dbCommunitiesCache;
+    if (!sb) return [];
+
+    const { data, error } = await sb
+      .from('communities')
+      .select('id, creator_id, data, created_at')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('[Vronsky/communities] fetch failed:', error);
+      return [];
+    }
+
+    const communities = (data || []).map(row => ({
+      ...(row.data || {}),
+      id: row.id,
+      creatorId: row.creator_id,
+      createdAt: row.created_at,
+      isUserCreated: true
+    }));
+
+    _dbCommunitiesCache = communities;
+    return communities;
+  }
+
+  // Returns the merged list: user-created communities (newest first) + hardcoded.
+  async function getAllCommunities() {
+    const dbCommunities = await getDbCommunities();
+    return [...dbCommunities, ...COMMUNITIES];
+  }
+
+  // Save a new community to Supabase.
+  async function saveCommunity(community) {
+    const user = await getUser();
+    if (!user || !user.id || !sb) {
+      throw new Error('You must be signed in to create a community.');
+    }
+    const { id, creatorId, createdAt, isUserCreated, ...rest } = community;
+    const row = {
+      id: community.id,
+      creator_id: user.id,
+      data: rest
+    };
+    const { error } = await sb.from('communities').insert(row);
+    if (error) {
+      console.error('[Vronsky/communities] insert failed:', error);
+      throw error;
+    }
+    _dbCommunitiesCache = null;
+  }
+
+  // Helper for converting "Slow Reading Club" → "slow_reading_club"
+  function slugify(text) {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s_-]/g, '')
+      .replace(/[\s-]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 40);
+  }
+
+
   // Seeded users — fictional readers who appear in posts/comments + are searchable
   // These match the @handles used in SEED_POSTS / SEED_COMMENTS. Real users (you)
   // are stored separately and merged with these in search results.
@@ -8891,9 +9130,10 @@
 
     // Gather posts from all followed communities
     const userPosts = await getUserPosts();
+    const allCommunities = await getAllCommunities();
     const allPosts = [];
     followedIds.forEach(cid => {
-      const community = COMMUNITIES.find(c => c.id === cid);
+      const community = allCommunities.find(c => c.id === cid);
       if (!community) return;
       const userInThis = userPosts.filter(p => p.communityId === cid);
       const seedInThis = SEED_POSTS.filter(p => p.communityId === cid);
@@ -8976,17 +9216,18 @@
   }
 
   // Render the threads list on Discover home
-  function renderCommunityList() {
+  async function renderCommunityList() {
     const list = document.getElementById('threads-list');
     if (!list) return;
-    list.innerHTML = COMMUNITIES.map(c => `
+    const all = await getAllCommunities();
+    list.innerHTML = all.map(c => `
       <div class="thread-card" data-community="${c.id}">
         <div class="icon ${c.type}">${escapeHtml(communityIconText(c.name))}</div>
         <div class="info">
           <div class="name">${escapeHtml(c.name)}</div>
           <div class="slug">${escapeHtml(c.slug)}</div>
           <div class="stats">
-            <span class="v">${fmtCount(c.members)}</span> members
+            <span class="v">${fmtCount(c.members || 1)}</span> member${(c.members || 1) === 1 ? '' : 's'}
           </div>
         </div>
         <span class="arrow">→</span>
@@ -9447,7 +9688,8 @@
 
   // Render community detail (header + posts list)
   async function renderCommunity(communityId) {
-    const c = COMMUNITIES.find(x => x.id === communityId);
+    const all = await getAllCommunities();
+    const c = all.find(x => x.id === communityId);
     if (!c) return;
     const container = document.getElementById('community-detail');
     const posts = await postsForCommunity(communityId);
@@ -9533,7 +9775,8 @@
   async function renderPost(postId) {
     const post = await findPost(postId);
     if (!post) return;
-    const community = COMMUNITIES.find(c => c.id === post.communityId);
+    const allCommunities = await getAllCommunities();
+    const community = allCommunities.find(c => c.id === post.communityId);
     const comments = await commentsForPost(postId);
     const container = document.getElementById('post-detail');
     const mine = await isMyPost(post);
@@ -9900,9 +10143,11 @@
   let npActiveCommunity = null;
   let npActiveType = 'discussion';
 
-  function openNewPostModal(communityId) {
+  async function openNewPostModal(communityId) {
     npActiveCommunity = communityId;
-    const c = COMMUNITIES.find(x => x.id === communityId);
+    const all = await getAllCommunities();
+    const c = all.find(x => x.id === communityId);
+    if (!c) return;
     document.getElementById('np-community-display').value = c.slug;
     npActiveType = 'discussion';
     // reset chips
@@ -10096,7 +10341,8 @@
     }).slice(0, 6);
 
     // Match communities (by name or slug)
-    const matchingCommunities = COMMUNITIES.filter(c => {
+    const allCommunities = await getAllCommunities();
+    const matchingCommunities = allCommunities.filter(c => {
       return (c.name || '').toLowerCase().includes(q) ||
              (c.slug || '').toLowerCase().includes(q);
     }).slice(0, 6);
@@ -10203,13 +10449,14 @@
 
     // Threads followed list
     const threadsContainer = document.getElementById('prof-threads');
+    const allCommunities = await getAllCommunities();
     document.getElementById('prof-following-ct').textContent =
       followedIds.length === 0 ? '' : `${followedIds.length} thread${followedIds.length === 1 ? '' : 's'}`;
     if (followedIds.length === 0) {
       threadsContainer.innerHTML = '<div class="empty-mini">You\'re not following any threads yet.</div>';
     } else {
       threadsContainer.innerHTML = followedIds.map(cid => {
-        const c = COMMUNITIES.find(x => x.id === cid);
+        const c = allCommunities.find(x => x.id === cid);
         if (!c) return '';
         return `
           <div class="thread-card" data-prof-go-community="${c.id}">
@@ -10242,7 +10489,7 @@
       // newest first
       const sorted = [...userPosts].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
       postsContainer.innerHTML = sorted.map(p => {
-        const community = COMMUNITIES.find(c => c.id === p.communityId);
+        const community = allCommunities.find(c => c.id === p.communityId);
         return `
           <div class="post-card" data-prof-go-post="${p.id}">
             <div class="post-head">
