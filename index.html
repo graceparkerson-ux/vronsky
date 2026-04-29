@@ -6071,6 +6071,7 @@
           authScreen.classList.add('hidden');
           if (typeof renderDesk === 'function') await renderDesk();
           if (typeof renderTrail === 'function') await renderTrail();
+          if (typeof renderHomeFollowedPosts === 'function') await renderHomeFollowedPosts();
         }
       } else {
         // Email confirmation required
@@ -6109,6 +6110,7 @@
         authScreen.classList.add('hidden');
         if (typeof renderDesk === 'function') await renderDesk();
         if (typeof renderTrail === 'function') await renderTrail();
+        if (typeof renderHomeFollowedPosts === 'function') await renderHomeFollowedPosts();
       }
     } catch (err) {
       console.error(err);
@@ -6130,9 +6132,10 @@
     if (user) {
       authScreen.classList.add('hidden');
       renderUser(user);
-      // Render Desk/Trail now that we have the real books from Supabase
+      // Render anything that depends on user data now that we have a session
       if (typeof renderDesk === 'function') await renderDesk();
       if (typeof renderTrail === 'function') await renderTrail();
+      if (typeof renderHomeFollowedPosts === 'function') await renderHomeFollowedPosts();
     }
     // Otherwise the auth screen is shown by default
   })();
@@ -6158,11 +6161,13 @@
     currentUser = null;
     _booksCache = null;
     _booksCacheUser = null;
+    _followedCommunitiesCache = null;
+    _followedCommunitiesUser = null;
+    _followedUsersCache = null;
+    _followedUsersUser = null;
     location.reload();
   });
 
-  // Sync books — manually re-attempts the migration. Useful if the auto-sync failed
-  // silently (network issue, schema mismatch, etc.).
   // Diagnose button — runs a deep check on the books pipeline and shows the result.
   // Useful when "sync says success but new browser shows nothing" type problems hit.
   async function diagnoseBooks() {
@@ -7884,47 +7889,141 @@
   }
 
   // === FOLLOW MANAGEMENT ===
-  const FOLLOWED_KEY = 'vronsky_followed_threads';
+  //
+  // Two Supabase tables: followed_communities and followed_users.
+  // Each row is a single follow relationship. The composite primary key on
+  // (user_id, community_id) prevents double-follows at the database level.
+  // No localStorage — Supabase is the only source of truth.
+
+  // In-memory caches so we don't re-fetch on every render.
+  let _followedCommunitiesCache = null;
+  let _followedCommunitiesUser = null;
+  let _followedUsersCache = null;
+  let _followedUsersUser = null;
 
   async function getFollowedThreads() {
-    const raw = await Store.get(FOLLOWED_KEY);
-    if (!raw) return [];
-    try { return JSON.parse(raw) || []; } catch { return []; }
+    const user = await getUser();
+    if (!user || !user.id || !sb) return [];
+
+    if (_followedCommunitiesCache !== null && _followedCommunitiesUser === user.id) {
+      return _followedCommunitiesCache;
+    }
+
+    const { data, error } = await sb
+      .from('followed_communities')
+      .select('community_id')
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('[Vronsky/follows] communities fetch failed:', error);
+      return [];
+    }
+
+    const ids = (data || []).map(r => r.community_id);
+    _followedCommunitiesCache = ids;
+    _followedCommunitiesUser = user.id;
+    return ids;
   }
+
   async function isFollowing(communityId) {
     const followed = await getFollowedThreads();
     return followed.includes(communityId);
   }
+
   async function toggleFollow(communityId) {
+    const user = await getUser();
+    if (!user || !user.id || !sb) return false;
+
     const followed = await getFollowedThreads();
-    const idx = followed.indexOf(communityId);
-    if (idx === -1) followed.push(communityId);
-    else followed.splice(idx, 1);
-    await Store.set(FOLLOWED_KEY, JSON.stringify(followed));
-    return idx === -1; // true = newly followed
+    const isCurrentlyFollowed = followed.includes(communityId);
+
+    if (isCurrentlyFollowed) {
+      const { error } = await sb
+        .from('followed_communities')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('community_id', communityId);
+      if (error) {
+        console.error('[Vronsky/follows] community unfollow failed:', error);
+        throw error;
+      }
+      _followedCommunitiesCache = followed.filter(id => id !== communityId);
+      return false; // now unfollowed
+    } else {
+      const { error } = await sb
+        .from('followed_communities')
+        .insert({ user_id: user.id, community_id: communityId });
+      if (error) {
+        console.error('[Vronsky/follows] community follow failed:', error);
+        throw error;
+      }
+      _followedCommunitiesCache = [...followed, communityId];
+      return true; // newly followed
+    }
   }
 
   // === USER FOLLOWING ===
-  const FOLLOWED_USERS_KEY = 'vronsky_followed_users';
-
   async function getFollowedUsers() {
-    const raw = await Store.get(FOLLOWED_USERS_KEY);
-    if (!raw) return [];
-    try { return JSON.parse(raw) || []; } catch { return []; }
+    const user = await getUser();
+    if (!user || !user.id || !sb) return [];
+
+    if (_followedUsersCache !== null && _followedUsersUser === user.id) {
+      return _followedUsersCache;
+    }
+
+    const { data, error } = await sb
+      .from('followed_users')
+      .select('followed_username')
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('[Vronsky/follows] users fetch failed:', error);
+      return [];
+    }
+
+    const names = (data || []).map(r => r.followed_username);
+    _followedUsersCache = names;
+    _followedUsersUser = user.id;
+    return names;
   }
+
   async function isFollowingUser(username) {
     if (!username) return false;
     const followed = await getFollowedUsers();
     return followed.includes(username);
   }
+
   async function toggleFollowUser(username) {
     if (!username) return false;
+    const user = await getUser();
+    if (!user || !user.id || !sb) return false;
+
     const followed = await getFollowedUsers();
-    const idx = followed.indexOf(username);
-    if (idx === -1) followed.push(username);
-    else followed.splice(idx, 1);
-    await Store.set(FOLLOWED_USERS_KEY, JSON.stringify(followed));
-    return idx === -1;
+    const isCurrentlyFollowed = followed.includes(username);
+
+    if (isCurrentlyFollowed) {
+      const { error } = await sb
+        .from('followed_users')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('followed_username', username);
+      if (error) {
+        console.error('[Vronsky/follows] user unfollow failed:', error);
+        throw error;
+      }
+      _followedUsersCache = followed.filter(u => u !== username);
+      return false;
+    } else {
+      const { error } = await sb
+        .from('followed_users')
+        .insert({ user_id: user.id, followed_username: username });
+      if (error) {
+        console.error('[Vronsky/follows] user follow failed:', error);
+        throw error;
+      }
+      _followedUsersCache = [...followed, username];
+      return true;
+    }
   }
 
   // === VOTING ===
@@ -8995,12 +9094,11 @@
     await renderHomeFollowedPosts();
   });
 
-  // initial render of the threads list
+  // initial render of the threads list (this works without auth)
   renderCommunityList();
-  // Load votes from storage, then render the home threads (which uses votes)
+  // Votes load + Home followed posts happen in the auth-restore IIFE
   (async () => {
     await loadUserVotes();
-    await renderHomeFollowedPosts();
   })();
 
   // Update Home chip behavior: All vs Following
