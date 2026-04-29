@@ -9010,15 +9010,28 @@
     wallEl.innerHTML = html.join('');
   }
 
-  // Set each card's grid-row span based on its actual rendered height.
-  // Called after a batch of cards is added to the DOM.
-  function setCardSpans(wallEl) {
+  // Compute the grid-row span for a card with the given aspect ratio,
+  // BEFORE it's added to the DOM. Reads the grid container's actual column
+  // layout to get accurate column width.
+  function computeCardSpan(wallEl, aspectRatio) {
     const ROW_HEIGHT = 10; // matches grid-auto-rows: 10px
+    const cs = getComputedStyle(wallEl);
+    const GAP = parseFloat(cs.rowGap) || 10;
+    // Get column width from grid-template-columns (already computed to px values)
+    const cols = cs.gridTemplateColumns.split(' ').map(parseFloat).filter(n => !isNaN(n));
+    const colWidth = cols.length > 0 ? cols[0] : 200; // fallback
+    const cardHeight = colWidth * aspectRatio;
+    return Math.ceil((cardHeight + GAP) / (ROW_HEIGHT + GAP));
+  }
+
+  // Re-measure after render in case our pre-computed span was off
+  // (handles fonts loading, image dimensions, etc.)
+  function setCardSpans(wallEl) {
+    const ROW_HEIGHT = 10;
     const GAP = parseFloat(getComputedStyle(wallEl).rowGap) || 10;
     wallEl.querySelectorAll('.wall-card').forEach(card => {
       const inner = card.querySelector('.wall-card-inner');
       if (!inner) return;
-      // Get the rendered height of the inner (which has the aspect ratio padding)
       const h = inner.getBoundingClientRect().height;
       if (h > 0) {
         const span = Math.ceil((h + GAP) / (ROW_HEIGHT + GAP));
@@ -9027,8 +9040,10 @@
     });
   }
 
-  // Build a single card's HTML for the wall (extracted so we can append progressively)
-  function buildWallCardHtml(b, idx, isSaved) {
+  // Build a single card's HTML for the wall.
+  // The `span` parameter is the grid-row span (computed by computeCardSpan).
+  // Setting it inline at build time prevents the "stacked at top" flash.
+  function buildWallCardHtml(b, idx, isSaved, span) {
     const aspectRatios = [1.5, 1.55, 1.45, 1.6, 1.5];
     const ar = aspectRatios[idx % aspectRatios.length];
     const coverKey = b.coverIsbn || b.coverId;
@@ -9041,8 +9056,9 @@
          </div>`;
     const saveBtnLabel = isSaved ? 'Saved ✓' : '+ Want to read';
     const saveBtnClass = isSaved ? 'b-save-btn saved' : 'b-save-btn';
+    const spanStyle = span ? `grid-row: span ${span};` : '';
     return `
-      <div class="wall-card" data-work="${escapeHtml(b.workKey)}" data-idx="${idx}">
+      <div class="wall-card" data-work="${escapeHtml(b.workKey)}" data-idx="${idx}" style="${spanStyle}">
         <div class="wall-card-inner" style="padding-bottom: ${ar * 100}%;">
           ${frontHtml}
           <div class="wall-card-face wall-card-back">
@@ -9146,12 +9162,19 @@
     const currentLibrary = await getBooks();
     const ownedTitles = new Set(currentLibrary.map(b => (b.title || '').toLowerCase()));
     const ownedKeys = new Set(currentLibrary.map(b => b.workKey).filter(Boolean));
+
+    // Pre-compute spans based on the wall's actual column width
+    // so cards land in their correct grid rows on first paint
+    const aspectRatios = [1.5, 1.55, 1.45, 1.6, 1.5];
+
     wallEl.innerHTML = display.map((b, i) => {
       const isSaved = ownedKeys.has(b.workKey) || ownedTitles.has((b.title || '').toLowerCase());
-      return buildWallCardHtml(b, i, isSaved);
+      const ar = aspectRatios[i % aspectRatios.length];
+      const span = computeCardSpan(wallEl, ar);
+      return buildWallCardHtml(b, i, isSaved, span);
     }).join('');
     wallEl.querySelectorAll('.wall-card').forEach(card => wireWallCard(card, display, wallEl));
-    // Compute grid spans now (cards have their aspect-ratio padding applied immediately)
+    // Re-measure after a frame to catch any sub-pixel rounding diffs
     requestAnimationFrame(() => setCardSpans(wallEl));
   }
 
@@ -9161,13 +9184,17 @@
     const ownedTitles = new Set(currentLibrary.map(b => (b.title || '').toLowerCase()));
     const ownedKeys = new Set(currentLibrary.map(b => b.workKey).filter(Boolean));
 
+    const aspectRatios = [1.5, 1.55, 1.45, 1.6, 1.5];
+
     // Find the index in fullDisplayList where newBooks start
     const startIdx = fullDisplayList.length - newBooks.length;
     const cardsHtml = newBooks.map((b, j) => {
       const idx = startIdx + j;
       if (idx >= 60) return ''; // hard cap
       const isSaved = ownedKeys.has(b.workKey) || ownedTitles.has((b.title || '').toLowerCase());
-      return buildWallCardHtml(b, idx, isSaved);
+      const ar = aspectRatios[idx % aspectRatios.length];
+      const span = computeCardSpan(wallEl, ar);
+      return buildWallCardHtml(b, idx, isSaved, span);
     }).join('');
 
     if (cardsHtml) {
