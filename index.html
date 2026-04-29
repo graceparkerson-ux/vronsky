@@ -6071,6 +6071,8 @@
           await migrateBooksToSupabase();
           renderUser(currentUser);
           authScreen.classList.add('hidden');
+          if (typeof renderDesk === 'function') await renderDesk();
+          if (typeof renderTrail === 'function') await renderTrail();
         }
       } else {
         // Email confirmation required
@@ -6108,6 +6110,8 @@
         await migrateBooksToSupabase();
         renderUser(currentUser);
         authScreen.classList.add('hidden');
+        if (typeof renderDesk === 'function') await renderDesk();
+        if (typeof renderTrail === 'function') await renderTrail();
       }
     } catch (err) {
       console.error(err);
@@ -6130,6 +6134,9 @@
       await migrateBooksToSupabase();
       authScreen.classList.add('hidden');
       renderUser(user);
+      // Render Desk/Trail now that we have the real books from Supabase
+      if (typeof renderDesk === 'function') await renderDesk();
+      if (typeof renderTrail === 'function') await renderTrail();
     }
     // Otherwise the auth screen is shown by default
   })();
@@ -7169,9 +7176,8 @@
     if (statusSheet.classList.contains('show')) closeStatusSheet();
   });
 
-  // Initial render of Desk + Trail on page load
-  renderDesk();
-  renderTrail();
+  // Initial Desk + Trail render happens in the auth-restore IIFE above,
+  // after the user's session is loaded and books are fetched from Supabase.
 
   // === CLUBS (user-created) ===
   // Each club: { id, name, description, privacy: 'public'|'private', currentBook?, members: 1, createdAt }
