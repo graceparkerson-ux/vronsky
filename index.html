@@ -6175,6 +6175,8 @@
     _userClubsCacheUser = null;
     _allClubsCache = null;
     _allClubsCacheUser = null;
+    _postsCache = null;
+    _commentsCache = null;
     location.reload();
   });
 
@@ -7865,19 +7867,31 @@
   }
 
   async function deleteUserPost(postId) {
-    const posts = await getUserPosts();
-    const updated = posts.filter(p => p.id !== postId);
-    await Store.set(POSTS_KEY, JSON.stringify(updated));
-    // also remove all comments on that post
-    const comments = await getUserComments();
-    const updatedComments = comments.filter(c => c.postId !== postId);
-    await Store.set(COMMENTS_KEY, JSON.stringify(updatedComments));
+    if (!sb) return;
+    // Delete the post (RLS ensures only the author can do this)
+    const { error: delPostErr } = await sb.from('posts').delete().eq('id', postId);
+    if (delPostErr) {
+      console.error('[Vronsky/posts] delete failed:', delPostErr);
+      throw delPostErr;
+    }
+    // Also delete this user's comments on the post (RLS only allows own anyway)
+    const { error: delCmtErr } = await sb.from('comments').delete().eq('post_id', postId);
+    if (delCmtErr) {
+      console.error('[Vronsky/comments] cascade delete failed:', delCmtErr);
+      // Not fatal — the post is gone; orphan comments will just hide
+    }
+    _postsCache = null;
+    _commentsCache = null;
   }
 
   async function deleteUserComment(commentId) {
-    const comments = await getUserComments();
-    const updated = comments.filter(c => c.id !== commentId);
-    await Store.set(COMMENTS_KEY, JSON.stringify(updated));
+    if (!sb) return;
+    const { error } = await sb.from('comments').delete().eq('id', commentId);
+    if (error) {
+      console.error('[Vronsky/comments] delete failed:', error);
+      throw error;
+    }
+    _commentsCache = null;
   }
 
 
@@ -8009,29 +8023,121 @@
     { id: 'sc_p1b', postId: 'sp_p1', author: '@vesna_t', body: 'Larkin\'s "The Whitsun Weddings" ruined every train poem for me, in the best way.', ts: '4h', score: 18 }
   ];
 
-  // Storage keys for user-created posts and comments
-  const POSTS_KEY = 'vronsky_user_posts';
-  const COMMENTS_KEY = 'vronsky_user_comments';
+  // === POSTS & COMMENTS STORAGE ===
+  //
+  // Supabase tables:
+  //   posts: id (text), author_id (uuid), community_id (text), data (jsonb), created_at
+  //   comments: id (text), author_id (uuid), post_id (text), data (jsonb), created_at
+  //
+  // RLS:
+  //   SELECT — anyone authenticated can read all posts/comments (public bulletin board)
+  //   INSERT/UPDATE/DELETE — only the author
+  //
+  // The `data` jsonb holds: author handle (display string like '@miranda_h'),
+  // type, title, body, rating, ts (display timestamp), score, commentCount.
+  //
+  // NOTE: getUserPosts/getUserComments returns ALL posts/comments from every user,
+  // not just the current user's. The legacy name is kept to minimize churn at call sites.
+  // Functions return the merged set of seeded + database posts.
+
+  // In-memory caches
+  let _postsCache = null;
+  let _commentsCache = null;
+
+  // Map a Supabase row → the post shape the UI expects
+  function postRowToObject(row) {
+    return {
+      ...(row.data || {}),
+      id: row.id,
+      communityId: row.community_id,
+      authorId: row.author_id,
+      createdAt: row.created_at
+    };
+  }
+  function commentRowToObject(row) {
+    return {
+      ...(row.data || {}),
+      id: row.id,
+      postId: row.post_id,
+      authorId: row.author_id,
+      createdAt: row.created_at
+    };
+  }
 
   async function getUserPosts() {
-    const raw = await Store.get(POSTS_KEY);
-    if (!raw) return [];
-    try { return JSON.parse(raw) || []; } catch { return []; }
+    if (_postsCache !== null) return _postsCache;
+    if (!sb) return [];
+    const { data, error } = await sb
+      .from('posts')
+      .select('id, author_id, community_id, data, created_at')
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('[Vronsky/posts] fetch failed:', error);
+      return [];
+    }
+    const posts = (data || []).map(postRowToObject);
+    _postsCache = posts;
+    return posts;
   }
-  async function saveUserPost(post) {
-    const posts = await getUserPosts();
-    posts.push(post);
-    await Store.set(POSTS_KEY, JSON.stringify(posts));
-  }
+
   async function getUserComments() {
-    const raw = await Store.get(COMMENTS_KEY);
-    if (!raw) return [];
-    try { return JSON.parse(raw) || []; } catch { return []; }
+    if (_commentsCache !== null) return _commentsCache;
+    if (!sb) return [];
+    const { data, error } = await sb
+      .from('comments')
+      .select('id, author_id, post_id, data, created_at')
+      .order('created_at', { ascending: true });
+    if (error) {
+      console.error('[Vronsky/comments] fetch failed:', error);
+      return [];
+    }
+    const comments = (data || []).map(commentRowToObject);
+    _commentsCache = comments;
+    return comments;
   }
+
+  async function saveUserPost(post) {
+    const user = await getUser();
+    if (!user || !user.id || !sb) {
+      console.warn('[Vronsky/posts] saveUserPost without signed-in user');
+      throw new Error('You must be signed in to post.');
+    }
+    // Strip fields that live as their own columns; everything else goes in data
+    const { id, communityId, authorId, createdAt, ...rest } = post;
+    const row = {
+      id: post.id,
+      author_id: user.id,
+      community_id: post.communityId,
+      data: rest
+    };
+    const { error } = await sb.from('posts').insert(row);
+    if (error) {
+      console.error('[Vronsky/posts] insert failed:', error);
+      throw error;
+    }
+    // Invalidate cache so next read picks up the new post
+    _postsCache = null;
+  }
+
   async function saveUserComment(comment) {
-    const comments = await getUserComments();
-    comments.push(comment);
-    await Store.set(COMMENTS_KEY, JSON.stringify(comments));
+    const user = await getUser();
+    if (!user || !user.id || !sb) {
+      console.warn('[Vronsky/comments] saveUserComment without signed-in user');
+      throw new Error('You must be signed in to comment.');
+    }
+    const { id, postId, authorId, createdAt, ...rest } = comment;
+    const row = {
+      id: comment.id,
+      author_id: user.id,
+      post_id: comment.postId,
+      data: rest
+    };
+    const { error } = await sb.from('comments').insert(row);
+    if (error) {
+      console.error('[Vronsky/comments] insert failed:', error);
+      throw error;
+    }
+    _commentsCache = null;
   }
 
   // Get all posts in a community (seeded + user-created), newest first
@@ -8978,22 +9084,34 @@
       const body = textarea.value.trim();
       if (!body) return;
       const me = await getUser();
-      if (!me) return;
-      const newComment = {
-        id: 'uc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-        postId,
-        author: '@' + me.username,
-        body,
-        ts: 'just now',
-        score: 1,
-        isNew: true,
-        createdAt: new Date().toISOString()
-      };
-      await saveUserComment(newComment);
-      textarea.value = '';
+      if (!me) {
+        alert('Please sign in to comment.');
+        return;
+      }
+      const originalText = submit.textContent;
       submit.disabled = true;
-      // re-render the post detail
-      await renderPost(postId);
+      submit.textContent = 'Posting…';
+      try {
+        const newComment = {
+          id: 'uc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          postId,
+          author: '@' + me.username,
+          body,
+          ts: 'just now',
+          score: 1,
+          isNew: true,
+          createdAt: new Date().toISOString()
+        };
+        await saveUserComment(newComment);
+        textarea.value = '';
+        // re-render the post detail
+        await renderPost(postId);
+      } catch (err) {
+        console.error('[Vronsky/comments] post failed:', err);
+        alert('Could not post comment: ' + (err.message || 'Unknown error'));
+        submit.disabled = false;
+        submit.textContent = originalText || 'Post';
+      }
     });
     wireVotePills(container);
   }
@@ -9238,32 +9356,53 @@
   // submit new post
   npForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const title = document.getElementById('np-title').value.trim();
-    const body = document.getElementById('np-body').value.trim();
-    if (!title) return;
-    const me = await getUser();
-    if (!me) return;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn ? submitBtn.textContent : '';
 
-    const newPost = {
-      id: 'up_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-      communityId: npActiveCommunity,
-      author: '@' + me.username,
-      type: npActiveType,
-      title,
-      body,
-      rating: npActiveType === 'review' ? parseInt(npRating.dataset.rating || '0', 10) : null,
-      ts: 'just now',
-      commentCount: 0,
-      score: 1,
-      isNew: true,
-      createdAt: new Date().toISOString()
-    };
-    await saveUserPost(newPost);
-    closeNewPostModal();
-    // re-render the community we just posted in
-    await renderCommunity(npActiveCommunity);
-    // also refresh Home, in case this thread is followed
-    await renderHomeFollowedPosts();
+    try {
+      const title = document.getElementById('np-title').value.trim();
+      const body = document.getElementById('np-body').value.trim();
+      if (!title) return;
+      const me = await getUser();
+      if (!me) {
+        alert('Please sign in to post.');
+        return;
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Posting…';
+      }
+
+      const newPost = {
+        id: 'up_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        communityId: npActiveCommunity,
+        author: '@' + me.username,
+        type: npActiveType,
+        title,
+        body,
+        rating: npActiveType === 'review' ? parseInt(npRating.dataset.rating || '0', 10) : null,
+        ts: 'just now',
+        commentCount: 0,
+        score: 1,
+        isNew: true,
+        createdAt: new Date().toISOString()
+      };
+      await saveUserPost(newPost);
+      closeNewPostModal();
+      // re-render the community we just posted in
+      await renderCommunity(npActiveCommunity);
+      // also refresh Home, in case this thread is followed
+      await renderHomeFollowedPosts();
+    } catch (err) {
+      console.error('[Vronsky/posts] Create post failed:', err);
+      alert('Could not post: ' + (err.message || 'Unknown error') + '\n\nCheck the browser console for details.');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText || 'Post';
+      }
+    }
   });
 
   // initial render of the threads list (this works without auth)
