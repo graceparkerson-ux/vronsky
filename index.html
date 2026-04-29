@@ -6069,6 +6069,7 @@
         if (currentUser) {
           renderUser(currentUser);
           authScreen.classList.add('hidden');
+          if (typeof loadUserVotes === 'function') await loadUserVotes();
           if (typeof renderDesk === 'function') await renderDesk();
           if (typeof renderTrail === 'function') await renderTrail();
           if (typeof renderHomeFollowedPosts === 'function') await renderHomeFollowedPosts();
@@ -6110,6 +6111,7 @@
       if (currentUser) {
         renderUser(currentUser);
         authScreen.classList.add('hidden');
+        if (typeof loadUserVotes === 'function') await loadUserVotes();
         if (typeof renderDesk === 'function') await renderDesk();
         if (typeof renderTrail === 'function') await renderTrail();
         if (typeof renderHomeFollowedPosts === 'function') await renderHomeFollowedPosts();
@@ -6136,7 +6138,8 @@
     if (user) {
       authScreen.classList.add('hidden');
       renderUser(user);
-      // Render anything that depends on user data now that we have a session
+      // Load user data first (votes), then render
+      if (typeof loadUserVotes === 'function') await loadUserVotes();
       if (typeof renderDesk === 'function') await renderDesk();
       if (typeof renderTrail === 'function') await renderTrail();
       if (typeof renderHomeFollowedPosts === 'function') await renderHomeFollowedPosts();
@@ -6177,6 +6180,7 @@
     _allClubsCacheUser = null;
     _postsCache = null;
     _commentsCache = null;
+    userVotes = {};
     location.reload();
   });
 
@@ -8308,15 +8312,57 @@
   // Tracks the user's vote on each post/comment by id. Object form: { sp1: 1, sc3: -1 }
   // 1 = upvote, -1 = downvote, missing = no vote.
   // Display score = baseScore + userVote (so the world reflects your vote).
-  const VOTES_KEY = 'vronsky_user_votes';
-  let userVotes = {}; // cached, refreshed from storage on load
+  //
+  // Stored in Supabase under the `votes` table (composite PK on user_id+target_id).
+  // We hold an in-memory copy (`userVotes`) so render functions can read votes
+  // synchronously — `loadUserVotes()` populates it once after sign-in, and every
+  // toggleVote both updates the in-memory copy and writes through to Supabase.
+  let userVotes = {};
 
   async function loadUserVotes() {
-    const raw = await Store.get(VOTES_KEY);
-    try { userVotes = raw ? JSON.parse(raw) : {}; } catch { userVotes = {}; }
+    if (!sb) { userVotes = {}; return; }
+    const user = await getUser();
+    if (!user || !user.id) { userVotes = {}; return; }
+
+    const { data, error } = await sb
+      .from('votes')
+      .select('target_id, value')
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('[Vronsky/votes] fetch failed:', error);
+      userVotes = {};
+      return;
+    }
+
+    const map = {};
+    (data || []).forEach(row => { map[row.target_id] = row.value; });
+    userVotes = map;
   }
-  async function saveUserVotes() {
-    await Store.set(VOTES_KEY, JSON.stringify(userVotes));
+
+  // Set or clear a single vote. Pass dir = 1 / -1 to set, or 0 to clear.
+  async function setVoteRemote(targetId, dir) {
+    const user = await getUser();
+    if (!user || !user.id || !sb) {
+      console.warn('[Vronsky/votes] setVoteRemote without signed-in user');
+      return;
+    }
+    if (dir === 0) {
+      const { error } = await sb
+        .from('votes')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('target_id', targetId);
+      if (error) console.error('[Vronsky/votes] clear failed:', error);
+    } else {
+      const { error } = await sb
+        .from('votes')
+        .upsert(
+          { user_id: user.id, target_id: targetId, value: dir },
+          { onConflict: 'user_id,target_id' }
+        );
+      if (error) console.error('[Vronsky/votes] set failed:', error);
+    }
   }
 
   function userVoteFor(id) { return userVotes[id] || 0; }
@@ -8351,13 +8397,16 @@
           e.stopPropagation(); // don't bubble to card click
           const dir = parseInt(btn.dataset.voteDir, 10);
           const current = userVoteFor(id);
+          let newDir;
           if (current === dir) {
-            delete userVotes[id]; // toggle off
+            // Toggle off
+            delete userVotes[id];
+            newDir = 0;
           } else {
             userVotes[id] = dir;
+            newDir = dir;
           }
-          await saveUserVotes();
-          // Update this pill in place (no need to re-render)
+          // Update visuals immediately (optimistic)
           const newVote = userVoteFor(id);
           const newScore = baseScore + newVote;
           const upBtn = pill.querySelector('.vote-btn.up');
@@ -8368,6 +8417,8 @@
           scoreEl.textContent = newScore;
           scoreEl.classList.toggle('up', newVote === 1);
           scoreEl.classList.toggle('down', newVote === -1);
+          // Write through to Supabase (background)
+          await setVoteRemote(id, newDir);
         });
       });
     });
@@ -9407,10 +9458,7 @@
 
   // initial render of the threads list (this works without auth)
   renderCommunityList();
-  // Votes load + Home followed posts happen in the auth-restore IIFE
-  (async () => {
-    await loadUserVotes();
-  })();
+  // Votes are loaded in the auth-restore IIFE
 
   // Update Home chip behavior: All vs Following
   // (override the generic chip handler we set up earlier)
