@@ -5127,6 +5127,7 @@
     </div>
     <div class="item">View profile <span class="arrow">→</span></div>
     <div class="item">Settings <span class="arrow">→</span></div>
+    <div class="item" id="sync-books-btn">Sync books from this browser <span class="arrow">↻</span></div>
     <div class="item danger" id="signout-btn">Sign out</div>
   </div>
 
@@ -6157,6 +6158,47 @@
     location.reload();
   });
 
+  // Sync books — manually re-attempts the migration. Useful if the auto-sync failed
+  // silently (network issue, schema mismatch, etc.).
+  const syncBtn = document.getElementById('sync-books-btn');
+  if (syncBtn) {
+    syncBtn.addEventListener('click', async () => {
+      const original = syncBtn.innerHTML;
+      syncBtn.innerHTML = 'Syncing…';
+
+      const result = await migrateBooksToSupabase(true);
+      let message;
+      if (result.ok) {
+        if (result.reason === 'migrated') {
+          message = `✓ Synced ${result.count} book${result.count === 1 ? '' : 's'} to your account.`;
+        } else if (result.reason === 'no-local-books') {
+          message = 'No books in this browser to sync.';
+        } else if (result.reason === 'remote-already-has-books') {
+          message = 'Your account already has books — nothing to sync.';
+        } else {
+          message = '✓ Done.';
+        }
+      } else {
+        if (result.reason === 'not-signed-in') {
+          message = 'You need to be signed in.';
+        } else {
+          message = `✗ Sync failed: ${result.error || result.reason}. Open the browser console for details.`;
+        }
+      }
+
+      // Show a temporary alert (cheap but works)
+      alert(message);
+
+      syncBtn.innerHTML = original;
+
+      // Refresh the Desk view to show any newly-synced books
+      if (typeof renderDesk === 'function') await renderDesk();
+      if (typeof renderTrail === 'function') await renderTrail();
+      // Close the menu
+      document.getElementById('user-menu')?.classList.remove('show');
+    });
+  }
+
   // === BOOKS LIBRARY (search-based, with statuses) ===
   // The user's books — each has a status: 'library' (want to read), 'reading', or 'finished'.
   // Stored as a single JSON array under vronsky_books.
@@ -6332,33 +6374,43 @@
 
   // Migrate localStorage books to Supabase on first sign-in.
   // Runs at most once per user (tracked by a flag in localStorage).
-  async function migrateBooksToSupabase() {
+  // Returns a status object: { ok, count, reason, error? }
+  async function migrateBooksToSupabase(force) {
     const user = await getUser();
-    if (!user || !user.id || !sb) return;
+    if (!user || !user.id || !sb) {
+      return { ok: false, reason: 'not-signed-in' };
+    }
 
     const flagKey = MIGRATED_FLAG_KEY + '_' + user.id;
-    const alreadyMigrated = await Store.get(flagKey);
-    if (alreadyMigrated === 'true') return;
+    if (!force) {
+      const alreadyMigrated = await Store.get(flagKey);
+      if (alreadyMigrated === 'true') return { ok: true, reason: 'already-migrated', count: 0 };
+    }
 
     // Read whatever's in localStorage
     const localBooks = await getBooksFromLocalStorage();
     if (!localBooks || localBooks.length === 0) {
       await Store.set(flagKey, 'true');
-      return;
+      return { ok: true, reason: 'no-local-books', count: 0 };
     }
 
-    // Check Supabase — if user already has books there, don't overwrite
+    // Check Supabase — if user already has books there, don't overwrite (unless forced)
     try {
-      const { data: existing, error } = await sb
+      const { data: existing, error: existErr } = await sb
         .from('books')
         .select('id')
         .eq('user_id', user.id)
         .limit(1);
-      if (!error && existing && existing.length > 0) {
+
+      if (existErr) {
+        console.error('Migration: failed to check existing books:', existErr);
+        return { ok: false, reason: 'db-error', error: existErr.message };
+      }
+
+      if (!force && existing && existing.length > 0) {
         // User already has Supabase books — skip migration to avoid clobbering
-        console.log('User already has books in Supabase, skipping migration');
         await Store.set(flagKey, 'true');
-        return;
+        return { ok: true, reason: 'remote-already-has-books', count: 0 };
       }
 
       // Upload all local books
@@ -6371,18 +6423,20 @@
         };
       });
 
-      const { error: insErr } = await sb.from('books').insert(rows);
+      const { error: insErr } = await sb.from('books').upsert(rows, { onConflict: 'id' });
       if (insErr) {
-        console.warn('Migration insert failed:', insErr.message);
-        return;
+        console.error('Migration: upsert failed:', insErr);
+        return { ok: false, reason: 'upsert-failed', error: insErr.message };
       }
 
       console.log(`Migrated ${rows.length} books to Supabase for ${user.username}`);
       await Store.set(flagKey, 'true');
       // Invalidate cache so next read fetches from Supabase
       _booksCache = null;
+      return { ok: true, reason: 'migrated', count: rows.length };
     } catch (err) {
-      console.warn('Migration error:', err);
+      console.error('Migration error:', err);
+      return { ok: false, reason: 'exception', error: err.message };
     }
   }
   // Backward-compat shim used by the profile screen
