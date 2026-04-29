@@ -4629,6 +4629,102 @@
   .add-milestone .add-btn-mile:hover { background: var(--accent-deep); }
   .add-milestone .add-btn-mile:disabled { opacity: 0.4; cursor: not-allowed; }
 
+  /* === Club cover banner === */
+  .club-cover-banner {
+    width: 100%;
+    height: 160px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 14px 14px 0 0;
+    margin-bottom: 16px;
+    background-color: var(--surface-soft);
+  }
+
+  /* === Upcoming meetings === */
+  .meetings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .meeting-item {
+    padding: 12px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .meeting-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .meeting-date {
+    font-size: 13px;
+    font-variation-settings: "opsz" 14, "wght" 600;
+    color: var(--accent);
+  }
+  .meeting-location {
+    font-size: 12px;
+    color: var(--text-2);
+    margin-top: 2px;
+  }
+  .meeting-desc {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+  .add-meeting {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    background: var(--surface-soft);
+    border-radius: 10px;
+    margin-top: 10px;
+  }
+  .add-meeting .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .add-meeting input[type="date"],
+  .add-meeting input[type="time"],
+  .add-meeting input[type="text"],
+  .add-meeting textarea {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text);
+    box-sizing: border-box;
+    width: 100%;
+  }
+  .add-meeting textarea {
+    resize: vertical;
+    line-height: 1.4;
+    font-family: inherit;
+  }
+  .add-meeting input:focus,
+  .add-meeting textarea:focus { border-color: var(--accent); outline: none; }
+  .add-meeting .add-btn-mile {
+    padding: 10px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    font-variation-settings: "opsz" 14, "wght" 600;
+    cursor: pointer;
+  }
+  .add-meeting .add-btn-mile:hover { background: var(--accent-deep); }
+  .add-meeting .add-btn-mile:disabled { opacity: 0.4; cursor: not-allowed; }
+
   /* Club book picker (reused with status picker pattern) */
   .pick-book-btn {
     padding: 8px 14px;
@@ -5431,6 +5527,13 @@
           <div class="form-row">
             <label for="ec-description">Description</label>
             <textarea id="ec-description" name="description" maxlength="280" style="min-height: 80px;"></textarea>
+          </div>
+          <div class="form-row">
+            <label for="ec-cover-url">Cover image URL <span style="color: var(--text-3); font-weight: 400;">(optional)</span></label>
+            <input id="ec-cover-url" type="text" placeholder="https://… (paste a link to any image)" maxlength="500" />
+            <div style="font-size: 11px; color: var(--text-3); margin-top: 4px; line-height: 1.4;">
+              A photograph or illustration that represents your club. Leave blank to use the current book's cover.
+            </div>
           </div>
           <div class="form-row">
             <label>Privacy</label>
@@ -7479,16 +7582,22 @@
     const titlePart = b ? b.title : '';
     const authorPart = b && b.author ? b.author : '';
 
-    const coverHtml = b
-      ? (b.coverId
-          ? `<div class="cv" style="background-image: url(${coverImageUrl(b.coverId, 'M')}); background-size: cover; background-position: center;"></div>`
-          : `<div class="cv ${pickClubCoverClass(b.title)}">
-                <div class="ct">${escapeHtml(titlePart.slice(0, 28))}</div>
-                ${authorPart ? `<div class="ca">— ${escapeHtml(authorPart.slice(0, 24))}</div>` : ''}
-             </div>`)
-      : `<div class="cv" style="background: var(--surface-soft); border: 1px dashed var(--border-strong); display: grid; place-items: center; color: var(--text-3);">
+    // Cover priority: club's own coverUrl, then current book cover, then placeholder
+    let coverHtml;
+    if (club.coverUrl) {
+      coverHtml = `<div class="cv" style="background-image: url('${escapeHtml(club.coverUrl)}'); background-size: cover; background-position: center;"></div>`;
+    } else if (b) {
+      coverHtml = b.coverId
+        ? `<div class="cv" style="background-image: url(${coverImageUrl(b.coverId, 'M')}); background-size: cover; background-position: center;"></div>`
+        : `<div class="cv ${pickClubCoverClass(b.title)}">
+              <div class="ct">${escapeHtml(titlePart.slice(0, 28))}</div>
+              ${authorPart ? `<div class="ca">— ${escapeHtml(authorPart.slice(0, 24))}</div>` : ''}
+           </div>`;
+    } else {
+      coverHtml = `<div class="cv" style="background: var(--surface-soft); border: 1px dashed var(--border-strong); display: grid; place-items: center; color: var(--text-3);">
             <div style="font-size: 9px; text-align: center; padding: 6px;">No book yet</div>
          </div>`;
+    }
 
     const privacyHtml = club.privacy === 'private'
       ? `<div class="privacy private" title="Private club">
@@ -7739,6 +7848,52 @@
       </div>
     ` : '';
 
+    // === MEETINGS SECTION ===
+    // Each meeting: { id, date, time?, location?, description? }
+    const meetings = (club.meetings || []).slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    const upcomingMeetings = meetings.filter(m => (m.date || '') >= today);
+    const meetingsListHtml = upcomingMeetings.length > 0
+      ? upcomingMeetings.map(m => {
+          const dateLabel = formatScheduleDate(m.date);
+          const timeLabel = m.time ? ' · ' + escapeHtml(m.time) : '';
+          const deleteBtn = owner
+            ? `<button class="delete-mile" data-del-meeting="${m.id}" aria-label="Remove meeting">×</button>`
+            : '<span></span>';
+          return `
+            <div class="meeting-item">
+              <div class="meeting-head">
+                <div class="meeting-date">${escapeHtml(dateLabel)}${timeLabel}</div>
+                ${deleteBtn}
+              </div>
+              ${m.location ? `<div class="meeting-location">${escapeHtml(m.location)}</div>` : ''}
+              ${m.description ? `<div class="meeting-desc">${escapeHtml(m.description)}</div>` : ''}
+            </div>
+          `;
+        }).join('')
+      : '<div class="schedule-empty">No upcoming meetings.</div>';
+
+    const addMeetingForm = owner ? `
+      <div class="add-meeting">
+        <div class="row">
+          <input type="date" id="add-meeting-date" min="${today}" />
+          <input type="time" id="add-meeting-time" />
+        </div>
+        <input type="text" id="add-meeting-location" placeholder="Location (e.g., Bluestockings, NYC, or Zoom)" maxlength="120" />
+        <textarea id="add-meeting-desc" placeholder="Notes (optional) — what to bring, who's hosting…" maxlength="280" rows="2"></textarea>
+        <button class="add-btn-mile" id="add-meeting-btn" disabled>Add meeting</button>
+      </div>
+    ` : '';
+
+    const meetingsSection = `
+      <div class="club-section">
+        <div class="label-row">
+          <span class="label">Upcoming meetings</span>
+        </div>
+        <div class="meetings-list">${meetingsListHtml}</div>
+        ${addMeetingForm}
+      </div>
+    `;
+
     // Owner controls in header
     const editControls = owner ? `
       <div class="edit-row">
@@ -7758,7 +7913,13 @@
       </button>
     ` : '';
 
+    // Cover banner (if club has a coverUrl)
+    const coverBanner = club.coverUrl
+      ? `<div class="club-cover-banner" style="background-image: url('${escapeHtml(club.coverUrl)}');"></div>`
+      : '';
+
     container.innerHTML = `
+      ${coverBanner}
       <div class="club-header">
         <div class="top-row">
           ${privacyBadge}
@@ -7782,6 +7943,8 @@
         </div>
         ${currentReadingBlock}
       </div>
+
+      ${meetingsSection}
 
       <div class="club-section">
         <div class="label-row">
@@ -7822,6 +7985,51 @@
         btn.addEventListener('click', async () => {
           await removeMilestone(club.id, btn.dataset.delMile);
           await renderClubDetail(club.id);
+        });
+      });
+
+      // === Add-meeting wiring ===
+      const addMeetingBtn = container.querySelector('#add-meeting-btn');
+      const meetingDate = container.querySelector('#add-meeting-date');
+      const meetingTime = container.querySelector('#add-meeting-time');
+      const meetingLocation = container.querySelector('#add-meeting-location');
+      const meetingDesc = container.querySelector('#add-meeting-desc');
+      function checkAddMeetingEnabled() {
+        // Require at least a date — everything else is optional
+        if (addMeetingBtn) addMeetingBtn.disabled = !meetingDate.value;
+      }
+      if (meetingDate) meetingDate.addEventListener('input', checkAddMeetingEnabled);
+      if (addMeetingBtn) addMeetingBtn.addEventListener('click', async () => {
+        if (!meetingDate.value) return;
+        const newMeeting = {
+          id: 'mtg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          date: meetingDate.value,
+          time: meetingTime.value || null,
+          location: meetingLocation.value.trim() || null,
+          description: meetingDesc.value.trim() || null
+        };
+        const existingMeetings = club.meetings || [];
+        try {
+          await updateClubMeta(club.id, { meetings: [...existingMeetings, newMeeting] });
+          await renderClubDetail(club.id);
+        } catch (err) {
+          console.error('[Vronsky/clubs] add meeting failed:', err);
+          alert('Could not save meeting: ' + (err.message || 'Unknown error'));
+        }
+      });
+
+      // Delete-meeting buttons
+      container.querySelectorAll('[data-del-meeting]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const meetingId = btn.dataset.delMeeting;
+          const remaining = (club.meetings || []).filter(m => m.id !== meetingId);
+          try {
+            await updateClubMeta(club.id, { meetings: remaining });
+            await renderClubDetail(club.id);
+          } catch (err) {
+            console.error('[Vronsky/clubs] delete meeting failed:', err);
+            alert('Could not delete meeting: ' + (err.message || 'Unknown error'));
+          }
         });
       });
     }
@@ -7892,6 +8100,7 @@
     ecEditingClubId = clubId;
     document.getElementById('ec-name').value = club.name;
     document.getElementById('ec-description').value = club.description || '';
+    document.getElementById('ec-cover-url').value = club.coverUrl || '';
     ecActivePrivacy = club.privacy;
     ecPrivacyPicker.querySelectorAll('.privacy-opt').forEach(opt => {
       opt.classList.toggle('active', opt.dataset.privacy === ecActivePrivacy);
@@ -7924,7 +8133,8 @@
     await updateClubMeta(ecEditingClubId, {
       name,
       description: document.getElementById('ec-description').value.trim(),
-      privacy: ecActivePrivacy
+      privacy: ecActivePrivacy,
+      coverUrl: document.getElementById('ec-cover-url').value.trim() || null
     });
     const id = ecEditingClubId;
     closeEditClubModal();
@@ -8117,12 +8327,12 @@
 
   // Seeded communities — these are baked into the app
   const COMMUNITIES = [
-    { id: 'lit_fic', type: 'topic', name: 'Literary Fiction', slug: 'r/literary_fiction', members: 18324, desc: 'A space for readers of contemporary literary fiction. Recommendations, reviews, conversations about the books that move us.' },
-    { id: 'klara', type: 'book', name: 'Klara and the Sun', slug: 'r/klara_and_the_sun', members: 891, desc: "Discussion of Kazuo Ishiguro's 2021 novel about an Artificial Friend and the family that takes her in. Spoilers welcome — flag posts that contain them." },
-    { id: 'ishiguro', type: 'author', name: 'Kazuo Ishiguro', slug: 'r/ishiguro', members: 2412, desc: 'For readers of the Nobel Prize-winning author. Novels, interviews, the rare short story.' },
-    { id: 'sci_fi', type: 'topic', name: 'Sci-Fi Readers', slug: 'r/sci_fi_readers', members: 23107, desc: 'Speculative fiction, soft and hard. Le Guin to Liu Cixin and everything in between.' },
-    { id: 'poetry', type: 'topic', name: 'Poetry Corner', slug: 'r/poetry_corner', members: 4691, desc: 'Daily poems, recommendations, line-by-line readings. Bring something you love or something that\'s confusing you.' },
-    { id: 'mary_oliver', type: 'author', name: 'Mary Oliver', slug: 'r/mary_oliver', members: 1208, desc: 'For readers of the late American poet. Wild Geese, Devotions, A Thousand Mornings — all welcome.' }
+    { id: 'lit_fic', type: 'topic', name: 'Literary Fiction', slug: 'v/literary_fiction', members: 18324, desc: 'A space for readers of contemporary literary fiction. Recommendations, reviews, conversations about the books that move us.' },
+    { id: 'klara', type: 'book', name: 'Klara and the Sun', slug: 'v/klara_and_the_sun', members: 891, desc: "Discussion of Kazuo Ishiguro's 2021 novel about an Artificial Friend and the family that takes her in. Spoilers welcome — flag posts that contain them." },
+    { id: 'ishiguro', type: 'author', name: 'Kazuo Ishiguro', slug: 'v/ishiguro', members: 2412, desc: 'For readers of the Nobel Prize-winning author. Novels, interviews, the rare short story.' },
+    { id: 'sci_fi', type: 'topic', name: 'Sci-Fi Readers', slug: 'v/sci_fi_readers', members: 23107, desc: 'Speculative fiction, soft and hard. Le Guin to Liu Cixin and everything in between.' },
+    { id: 'poetry', type: 'topic', name: 'Poetry Corner', slug: 'v/poetry_corner', members: 4691, desc: 'Daily poems, recommendations, line-by-line readings. Bring something you love or something that\'s confusing you.' },
+    { id: 'mary_oliver', type: 'author', name: 'Mary Oliver', slug: 'v/mary_oliver', members: 1208, desc: 'For readers of the late American poet. Wild Geese, Devotions, A Thousand Mornings — all welcome.' }
   ];
 
   // Seeded users — fictional readers who appear in posts/comments + are searchable
