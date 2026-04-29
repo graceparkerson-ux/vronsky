@@ -6072,6 +6072,8 @@
           if (typeof renderDesk === 'function') await renderDesk();
           if (typeof renderTrail === 'function') await renderTrail();
           if (typeof renderHomeFollowedPosts === 'function') await renderHomeFollowedPosts();
+          if (typeof renderUserClubs === 'function') await renderUserClubs();
+          if (typeof renderBrowseClubs === 'function') await renderBrowseClubs();
         }
       } else {
         // Email confirmation required
@@ -6111,6 +6113,8 @@
         if (typeof renderDesk === 'function') await renderDesk();
         if (typeof renderTrail === 'function') await renderTrail();
         if (typeof renderHomeFollowedPosts === 'function') await renderHomeFollowedPosts();
+        if (typeof renderUserClubs === 'function') await renderUserClubs();
+        if (typeof renderBrowseClubs === 'function') await renderBrowseClubs();
       }
     } catch (err) {
       console.error(err);
@@ -6136,6 +6140,8 @@
       if (typeof renderDesk === 'function') await renderDesk();
       if (typeof renderTrail === 'function') await renderTrail();
       if (typeof renderHomeFollowedPosts === 'function') await renderHomeFollowedPosts();
+      if (typeof renderUserClubs === 'function') await renderUserClubs();
+      if (typeof renderBrowseClubs === 'function') await renderBrowseClubs();
     }
     // Otherwise the auth screen is shown by default
   })();
@@ -6165,6 +6171,10 @@
     _followedCommunitiesUser = null;
     _followedUsersCache = null;
     _followedUsersUser = null;
+    _userClubsCache = null;
+    _userClubsCacheUser = null;
+    _allClubsCache = null;
+    _allClubsCacheUser = null;
     location.reload();
   });
 
@@ -7022,7 +7032,6 @@
 
   // === CLUBS (user-created) ===
   // Each club: { id, name, description, privacy: 'public'|'private', currentBook?, members: 1, createdAt }
-  const CLUBS_KEY = 'vronsky_clubs';
 
   // Seeded clubs — demo content, all public. Owned by fictional users so the
   // current user discovers them via "Browse" but can't edit/delete them.
@@ -7083,18 +7092,156 @@
     }
   ];
 
+  // === CLUBS STORAGE ===
+  //
+  // Supabase `clubs` table:
+  //   id (text primary key)
+  //   owner_id (uuid, references auth.users)
+  //   privacy ('public' | 'private') — top-level so RLS can filter on it
+  //   data (jsonb) — name, description, currentBook, schedule, members, createdAt
+  //   created_at (timestamp)
+  //
+  // RLS:
+  //   SELECT — anyone can read public clubs; owners can read their own (incl. private)
+  //   INSERT/UPDATE/DELETE — only the owner
+
+  // In-memory caches.
+  // Two separate caches: user's own clubs (small) and "all visible" clubs (own + public).
+  let _userClubsCache = null;
+  let _userClubsCacheUser = null;
+  let _allClubsCache = null;
+  let _allClubsCacheUser = null;
+
+  // Map a Supabase row → the club shape the UI expects
+  function clubRowToObject(row) {
+    return {
+      ...(row.data || {}),
+      id: row.id,
+      ownerId: row.owner_id,
+      privacy: row.privacy,
+      // createdAt may live in data; row's created_at is the canonical timestamp
+      createdAt: row.created_at || (row.data && row.data.createdAt) || null
+    };
+  }
+
+  // Get just the current user's own clubs.
   async function getClubs() {
-    const raw = await Store.get(CLUBS_KEY);
-    if (!raw) return [];
-    try { return JSON.parse(raw) || []; } catch { return []; }
+    const user = await getUser();
+    if (!user || !user.id || !sb) return [];
+
+    if (_userClubsCache !== null && _userClubsCacheUser === user.id) {
+      return _userClubsCache;
+    }
+
+    const { data, error } = await sb
+      .from('clubs')
+      .select('id, owner_id, privacy, data, created_at')
+      .eq('owner_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('[Vronsky/clubs] own clubs fetch failed:', error);
+      return [];
+    }
+
+    const clubs = (data || []).map(clubRowToObject);
+    _userClubsCache = clubs;
+    _userClubsCacheUser = user.id;
+    return clubs;
   }
-  // Get user clubs + seeded ones merged together (used for lookups by id)
+
+  // Get all clubs visible to this user: their own + every public club + seeded.
+  // RLS does the filtering on the server side — we just trust what we get back.
   async function getAllClubs() {
-    const userClubs = await getClubs();
-    return [...userClubs, ...SEED_CLUBS];
+    const user = await getUser();
+    if (!user || !user.id || !sb) {
+      // Not signed in — only seeded clubs are visible
+      return [...SEED_CLUBS];
+    }
+
+    if (_allClubsCache !== null && _allClubsCacheUser === user.id) {
+      return _allClubsCache;
+    }
+
+    // No filter — RLS returns: own clubs (any privacy) + public clubs from anyone.
+    const { data, error } = await sb
+      .from('clubs')
+      .select('id, owner_id, privacy, data, created_at')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('[Vronsky/clubs] all clubs fetch failed:', error);
+      return [...SEED_CLUBS];
+    }
+
+    const dbClubs = (data || []).map(clubRowToObject);
+    const merged = [...dbClubs, ...SEED_CLUBS];
+    _allClubsCache = merged;
+    _allClubsCacheUser = user.id;
+    return merged;
   }
+
+  // Write the user's full clubs array. Diffs against existing to figure out
+  // inserts, updates, and deletes — same pattern as books.
   async function saveClubs(clubs) {
-    await Store.set(CLUBS_KEY, JSON.stringify(clubs));
+    const user = await getUser();
+    if (!user || !user.id || !sb) {
+      console.warn('[Vronsky/clubs] saveClubs called without a signed-in user');
+      return;
+    }
+
+    // Get current state for this user
+    const { data: existing, error: fetchErr } = await sb
+      .from('clubs')
+      .select('id')
+      .eq('owner_id', user.id);
+
+    if (fetchErr) {
+      console.error('[Vronsky/clubs] could not fetch existing clubs:', fetchErr);
+      throw fetchErr;
+    }
+
+    const existingIds = new Set((existing || []).map(r => r.id));
+    const targetIds = new Set(clubs.map(c => c.id));
+
+    const toDelete = [...existingIds].filter(id => !targetIds.has(id));
+    const toUpsert = clubs.map(c => {
+      // Strip the fields that live as their own columns; everything else goes in data
+      const { id, ownerId, privacy, createdAt, ...rest } = c;
+      return {
+        id: c.id,
+        owner_id: user.id,
+        privacy: c.privacy || 'public',
+        data: { ...rest, createdAt: c.createdAt }
+      };
+    });
+
+    if (toDelete.length > 0) {
+      const { error: delErr } = await sb
+        .from('clubs')
+        .delete()
+        .in('id', toDelete);
+      if (delErr) {
+        console.error('[Vronsky/clubs] delete failed:', delErr);
+        throw delErr;
+      }
+    }
+
+    if (toUpsert.length > 0) {
+      const { error: upErr } = await sb
+        .from('clubs')
+        .upsert(toUpsert, { onConflict: 'id' });
+      if (upErr) {
+        console.error('[Vronsky/clubs] upsert failed:', upErr);
+        throw upErr;
+      }
+    }
+
+    // Invalidate caches — both user clubs and all clubs need a refresh
+    _userClubsCache = null;
+    _userClubsCacheUser = null;
+    _allClubsCache = null;
+    _allClubsCacheUser = null;
   }
 
   // Stable cover-color picker for the club's current book preview
@@ -7213,7 +7360,8 @@
     const description = document.getElementById('nc-description').value.trim();
     const currentBook = document.getElementById('nc-current-book').value.trim();
     const me = await getUser();
-    const ownerId = me ? me.username : null;
+    if (!me || !me.id) return;
+    const ownerId = me.id;
 
     // Parse "Title — Author" into a structured currentBook (so it can render with a cover)
     let bookObj = null;
@@ -7256,7 +7404,10 @@
   async function isClubOwner(club) {
     if (!club || !club.ownerId) return false;
     const me = await getUser();
-    return me && me.username === club.ownerId;
+    if (!me) return false;
+    // ownerId can be either a UUID (from Supabase, for clubs the user created)
+    // or a username string (from SEED_CLUBS, fictional owners — never the user).
+    return me.id === club.ownerId || me.username === club.ownerId;
   }
 
   function navigateClubs(view, clubId) {
@@ -7642,12 +7793,12 @@
     if (e.key === 'Escape' && pickBookModal.classList.contains('show')) closePickBookModal();
   });
 
-  // === Browse public clubs (everyone's public clubs) ===
+  // === Browse public clubs (everyone's public clubs + seeded) ===
   async function renderBrowseClubs() {
-    const userClubs = await getClubs();
-    const userPublicClubs = userClubs.filter(c => c.privacy === 'public');
-    // Merge user-created public clubs with seeded ones; user's own first
-    const publicClubs = [...userPublicClubs, ...SEED_CLUBS];
+    // getAllClubs returns: my clubs (any privacy) + everyone else's public clubs + SEED_CLUBS
+    // Filter to public for browse
+    const all = await getAllClubs();
+    const publicClubs = all.filter(c => c.privacy === 'public');
     const list = document.getElementById('browse-clubs-list');
     const empty = document.getElementById('browse-clubs-empty');
     const count = document.getElementById('browse-clubs-count');
@@ -7674,8 +7825,7 @@
     if (card) navigateClubs('detail', card.dataset.clubId);
   });
 
-  // Initial render of browse section too
-  renderBrowseClubs();
+  // Browse clubs render happens in auth-restore IIFE — needs Supabase.
 
   // === DELETE OWN POSTS / COMMENTS ===
 
@@ -7708,8 +7858,7 @@
   }
 
 
-  // Initial render
-  renderUserClubs();
+  // User clubs render happens in auth-restore IIFE — needs Supabase.
 
   // === THREADS (Reddit-style, inside Discover) ===
 
