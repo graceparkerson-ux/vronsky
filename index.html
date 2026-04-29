@@ -6199,6 +6199,92 @@
     });
   }
 
+  // Diagnose button — runs a deep check on the books pipeline and shows the result.
+  // Useful when "sync says success but new browser shows nothing" type problems hit.
+  async function diagnoseBooks() {
+    const lines = [];
+    const log = (s) => { lines.push(s); console.log('[Diagnose]', s); };
+
+    log('=== Vronsky books diagnostic ===');
+
+    if (!sb) {
+      log('❌ Supabase client not loaded');
+      return lines.join('\n');
+    }
+    log('✓ Supabase client loaded');
+
+    // Auth
+    const { data: { session }, error: sErr } = await sb.auth.getSession();
+    if (sErr) { log('❌ getSession error: ' + sErr.message); return lines.join('\n'); }
+    if (!session) { log('❌ No session'); return lines.join('\n'); }
+    log('✓ Session active');
+    log('   auth.uid() = ' + session.user.id);
+    log('   email = ' + session.user.email);
+
+    // Profile
+    const { data: profile, error: pErr } = await sb
+      .from('profiles')
+      .select('id, username')
+      .eq('id', session.user.id)
+      .single();
+    if (pErr) { log('❌ Profile fetch error: ' + pErr.message); return lines.join('\n'); }
+    log('✓ Profile loaded: @' + profile.username);
+
+    // Direct read of books for this user
+    const { data: books, error: bErr } = await sb
+      .from('books')
+      .select('id, user_id, data, created_at')
+      .eq('user_id', session.user.id);
+    if (bErr) {
+      log('❌ Books read error: ' + bErr.message);
+      log('   error details: ' + JSON.stringify(bErr));
+      return lines.join('\n');
+    }
+    log('✓ Books query succeeded (no error)');
+    log('   rows returned: ' + (books || []).length);
+
+    if (books && books.length > 0) {
+      log('   first book: ' + (books[0].data?.title || '(no title)'));
+      log('   first book user_id: ' + books[0].user_id);
+    }
+
+    // Also try without the user_id filter — if RLS works, this should return same count
+    const { data: allBooks, error: aErr } = await sb
+      .from('books')
+      .select('id, user_id, data');
+    if (aErr) {
+      log('❌ Books-no-filter read error: ' + aErr.message);
+    } else {
+      log('   rows visible without filter (via RLS): ' + (allBooks || []).length);
+      if (allBooks && allBooks.length > 0) {
+        // Show distinct user_ids visible
+        const ids = [...new Set(allBooks.map(b => b.user_id))];
+        log('   distinct user_ids visible: ' + ids.join(', '));
+      }
+    }
+
+    // localStorage state
+    const localRaw = await Store.get(BOOKS_KEY);
+    const local = localRaw ? (JSON.parse(localRaw) || []) : [];
+    log('   localStorage book count: ' + local.length);
+
+    return lines.join('\n');
+  }
+
+  // Wire diagnose to a triple-tap on the avatar (hidden gesture for now)
+  let _diagTaps = 0;
+  let _diagTimer = null;
+  document.getElementById('user-avatar')?.addEventListener('click', () => {
+    _diagTaps++;
+    clearTimeout(_diagTimer);
+    if (_diagTaps >= 3) {
+      _diagTaps = 0;
+      diagnoseBooks().then(report => alert(report));
+    } else {
+      _diagTimer = setTimeout(() => { _diagTaps = 0; }, 600);
+    }
+  });
+
   // === BOOKS LIBRARY (search-based, with statuses) ===
   // The user's books — each has a status: 'library' (want to read), 'reading', or 'finished'.
   // Stored as a single JSON array under vronsky_books.
@@ -6246,6 +6332,7 @@
 
     // Not signed in — fall back to localStorage
     if (!user || !user.id || !sb) {
+      console.log('[Vronsky/books] Not signed in, using localStorage');
       return await getBooksFromLocalStorage();
     }
 
@@ -6255,6 +6342,7 @@
     }
 
     try {
+      console.log('[Vronsky/books] Fetching from Supabase for user', user.id);
       const { data, error } = await sb
         .from('books')
         .select('id, data, created_at')
@@ -6262,9 +6350,12 @@
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.warn('Supabase books fetch failed, falling back to localStorage:', error.message);
+        console.error('[Vronsky/books] Supabase fetch FAILED:', error);
+        console.warn('[Vronsky/books] Falling back to localStorage');
         return await getBooksFromLocalStorage();
       }
+
+      console.log(`[Vronsky/books] Supabase returned ${(data || []).length} rows`);
 
       // Each row's `data` field contains the full book object. We use the row's
       // id as the canonical id (overwriting any stale `id` in `data`).
@@ -6278,7 +6369,8 @@
       _booksCacheUser = user.id;
       return books;
     } catch (err) {
-      console.warn('Supabase books fetch error, falling back to localStorage:', err);
+      console.error('[Vronsky/books] Supabase fetch threw:', err);
+      console.warn('[Vronsky/books] Falling back to localStorage');
       return await getBooksFromLocalStorage();
     }
   }
