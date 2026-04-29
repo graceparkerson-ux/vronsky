@@ -1090,6 +1090,15 @@
     flex: 0 0 auto;
     box-shadow: 0 4px 10px rgba(0,0,0,0.15);
   }
+  /* When the cover is rendered as an <img> (custom URL or book cover), make it
+     fill the .cv slot the same way the colored fallback does. */
+  .club-card .body .cv-img {
+    width: 50px;
+    height: 74px;
+    object-fit: cover;
+    display: block;
+    background: var(--surface-soft);
+  }
   .club-card .body .cv .ct { font-size: 8px; }
   .club-card .body .cv .ca { font-size: 7px; }
   .club-card .reading-info { min-width: 0; }
@@ -4953,11 +4962,12 @@
   .club-cover-banner {
     width: 100%;
     height: 160px;
-    background-size: cover;
-    background-position: center;
+    object-fit: cover;
+    object-position: center;
     border-radius: 14px 14px 0 0;
     margin-bottom: 16px;
     background-color: var(--surface-soft);
+    display: block;
   }
 
   /* === Upcoming meetings === */
@@ -5061,10 +5071,13 @@
   .pick-book-btn:hover { background: var(--accent); }
 
   /* === Invite member UI (in Edit Club modal) === */
+  .invite-row-wrap {
+    position: relative;
+    margin-bottom: 8px;
+  }
   .invite-row {
     display: flex;
     gap: 8px;
-    margin-bottom: 8px;
   }
   .invite-row input {
     flex: 1;
@@ -5078,6 +5091,77 @@
     box-sizing: border-box;
   }
   .invite-row input:focus { border-color: var(--accent); outline: none; }
+  .invite-suggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 80px; /* leave room for the Invite button column */
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 10;
+  }
+  .invite-suggestion {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text);
+    transition: background 0.1s;
+  }
+  .invite-suggestion:hover,
+  .invite-suggestion.active {
+    background: var(--surface-soft);
+  }
+  .invite-suggestion .sg-avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    display: grid;
+    place-items: center;
+    font-size: 10px;
+    font-variation-settings: "wght" 600;
+    flex-shrink: 0;
+  }
+  .invite-suggestion .sg-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .invite-suggestion .sg-handle {
+    color: var(--accent-deep);
+    font-variation-settings: "wght" 600;
+    font-size: 12px;
+  }
+  .invite-suggestion .sg-name {
+    color: var(--text-3);
+    font-size: 11px;
+  }
+  .invite-suggestion .sg-tag {
+    font-size: 10px;
+    color: var(--text-3);
+    padding: 2px 8px;
+    background: var(--surface-soft);
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .invite-suggestions-empty {
+    padding: 12px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
   .invite-btn {
     padding: 8px 14px;
     background: var(--accent);
@@ -6040,9 +6124,12 @@
           <!-- Members section: only shown when club is private -->
           <div class="form-row" id="ec-members-row" style="display: none;">
             <label>Members</label>
-            <div class="invite-row">
-              <input id="ec-invite-input" type="text" placeholder="@username" maxlength="40" autocomplete="off" />
-              <button type="button" class="invite-btn" id="ec-invite-btn">Invite</button>
+            <div class="invite-row-wrap">
+              <div class="invite-row">
+                <input id="ec-invite-input" type="text" placeholder="Type a username" maxlength="40" autocomplete="off" spellcheck="false" />
+                <button type="button" class="invite-btn" id="ec-invite-btn">Invite</button>
+              </div>
+              <div class="invite-suggestions" id="ec-invite-suggestions" style="display: none;"></div>
             </div>
             <div id="ec-invite-error" class="invite-error" style="display: none;"></div>
             <div id="ec-members-list" class="members-list"></div>
@@ -8417,21 +8504,29 @@
     const titlePart = b ? b.title : '';
     const authorPart = b && b.author ? b.author : '';
 
-    // Cover priority: club's own coverUrl, then current book cover, then placeholder
+    // Cover priority: club's own coverUrl, then current book cover, then placeholder.
+    // We render <img> rather than CSS background-image — this gives us:
+    //   - Native onerror handling for broken/blocked URLs
+    //   - Proper image loading lifecycle (lazy loading)
     let coverHtml;
-    if (club.coverUrl) {
-      coverHtml = `<div class="cv" style="background-image: url('${escapeHtml(club.coverUrl)}'); background-size: cover; background-position: center;"></div>`;
-    } else if (b) {
-      coverHtml = b.coverId
-        ? `<div class="cv" style="background-image: url(${coverImageUrl(b.coverId, 'M')}); background-size: cover; background-position: center;"></div>`
-        : `<div class="cv ${pickClubCoverClass(b.title)}">
-              <div class="ct">${escapeHtml(titlePart.slice(0, 28))}</div>
-              ${authorPart ? `<div class="ca">— ${escapeHtml(authorPart.slice(0, 24))}</div>` : ''}
-           </div>`;
-    } else {
-      coverHtml = `<div class="cv" style="background: var(--surface-soft); border: 1px dashed var(--border-strong); display: grid; place-items: center; color: var(--text-3);">
+    const placeholderHtml = b
+      ? `<div class="cv ${pickClubCoverClass(b.title)}">
+            <div class="ct">${escapeHtml(titlePart.slice(0, 28))}</div>
+            ${authorPart ? `<div class="ca">— ${escapeHtml(authorPart.slice(0, 24))}</div>` : ''}
+         </div>`
+      : `<div class="cv" style="background: var(--surface-soft); border: 1px dashed var(--border-strong); display: grid; place-items: center; color: var(--text-3);">
             <div style="font-size: 9px; text-align: center; padding: 6px;">No book yet</div>
          </div>`;
+
+    if (club.coverUrl) {
+      // Custom URL: <img> with onerror fallback to placeholder
+      const safeUrl = String(club.coverUrl).replace(/"/g, '%22');
+      coverHtml = `<img class="cv cv-img" src="${escapeHtml(safeUrl)}" loading="lazy" alt="" onerror="this.outerHTML=this.dataset.fb" data-fb="${escapeHtml(placeholderHtml)}" />`;
+    } else if (b && b.coverId) {
+      const url = coverImageUrl(b.coverId, 'M');
+      coverHtml = `<img class="cv cv-img" src="${escapeHtml(url)}" loading="lazy" alt="" onerror="this.outerHTML=this.dataset.fb" data-fb="${escapeHtml(placeholderHtml)}" />`;
+    } else {
+      coverHtml = placeholderHtml;
     }
 
     const privacyHtml = club.privacy === 'private'
@@ -8916,9 +9011,10 @@
       </button>
     ` : '';
 
-    // Cover banner (if club has a coverUrl)
+    // Cover banner (if club has a coverUrl). Uses <img> with onerror fallback
+    // so a broken URL gracefully degrades to no banner instead of a blank box.
     const coverBanner = club.coverUrl
-      ? `<div class="club-cover-banner" style="background-image: url('${escapeHtml(club.coverUrl)}');"></div>`
+      ? `<img class="club-cover-banner" src="${escapeHtml(String(club.coverUrl).replace(/"/g, '%22'))}" alt="" onerror="this.style.display='none'" />`
       : '';
 
     container.innerHTML = `
@@ -9234,11 +9330,86 @@
   const ecInviteBtn = document.getElementById('ec-invite-btn');
   const ecInviteInput = document.getElementById('ec-invite-input');
   const ecInviteError = document.getElementById('ec-invite-error');
+  const ecInviteSuggestions = document.getElementById('ec-invite-suggestions');
+  let _inviteSuggestionsList = []; // current set of suggestions
+  let _inviteActiveIdx = -1;       // currently highlighted index
+
+  // Filter users for autocomplete: real users only, exclude self + existing members
+  async function getInviteCandidates(query) {
+    const q = query.toLowerCase().trim();
+    if (!q || !ecEditingClubId) return [];
+    const me = await getUser();
+    if (!me) return [];
+    // Exclude self + current members
+    const existingMembers = await getClubMembers(ecEditingClubId);
+    const excludeIds = new Set([me.id, ...existingMembers.map(m => m.userId)]);
+    const real = await fetchAllRealUsers();
+    return real
+      .filter(u => !excludeIds.has(u.id))
+      .filter(u => {
+        const handle = (u.username || '').toLowerCase();
+        const name = (u.name || '').toLowerCase();
+        return handle.includes(q) || name.includes(q);
+      })
+      .slice(0, 6);
+  }
+
+  function renderInviteSuggestions() {
+    if (!ecInviteSuggestions) return;
+    if (_inviteSuggestionsList.length === 0) {
+      ecInviteSuggestions.style.display = 'none';
+      ecInviteSuggestions.innerHTML = '';
+      return;
+    }
+    ecInviteSuggestions.innerHTML = _inviteSuggestionsList.map((u, i) => {
+      const initial = (u.name || u.username || '?').charAt(0).toUpperCase();
+      return `
+        <div class="invite-suggestion ${i === _inviteActiveIdx ? 'active' : ''}" data-username="${escapeHtml(u.username)}">
+          <div class="sg-avatar">${escapeHtml(initial)}</div>
+          <div class="sg-info">
+            <div class="sg-handle">@${escapeHtml(u.username)}</div>
+            ${u.name && u.name !== u.username ? `<div class="sg-name">${escapeHtml(u.name)}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+    ecInviteSuggestions.style.display = 'block';
+    // Wire click on each suggestion
+    ecInviteSuggestions.querySelectorAll('[data-username]').forEach((el, i) => {
+      el.addEventListener('mousedown', (e) => {
+        // Use mousedown so we trigger before the input's blur
+        e.preventDefault();
+        const handle = el.dataset.username;
+        ecInviteInput.value = handle;
+        hideInviteSuggestions();
+        // Trigger the invite immediately
+        if (ecInviteBtn) ecInviteBtn.click();
+      });
+      el.addEventListener('mouseenter', () => {
+        _inviteActiveIdx = i;
+        // Update active class
+        ecInviteSuggestions.querySelectorAll('.invite-suggestion').forEach((n, j) => {
+          n.classList.toggle('active', j === _inviteActiveIdx);
+        });
+      });
+    });
+  }
+
+  function hideInviteSuggestions() {
+    _inviteSuggestionsList = [];
+    _inviteActiveIdx = -1;
+    if (ecInviteSuggestions) {
+      ecInviteSuggestions.style.display = 'none';
+      ecInviteSuggestions.innerHTML = '';
+    }
+  }
+
   if (ecInviteBtn) {
     ecInviteBtn.addEventListener('click', async () => {
       if (!ecEditingClubId) return;
       const username = ecInviteInput.value.trim();
       if (!username) return;
+      hideInviteSuggestions();
       ecInviteError.style.display = 'none';
       const original = ecInviteBtn.textContent;
       ecInviteBtn.disabled = true;
@@ -9258,12 +9429,51 @@
       }
     });
   }
+
   if (ecInviteInput) {
+    let inviteSearchToken = 0;
+    ecInviteInput.addEventListener('input', async () => {
+      const q = ecInviteInput.value.trim().replace(/^@/, '');
+      const myToken = ++inviteSearchToken;
+      if (!q) {
+        hideInviteSuggestions();
+        return;
+      }
+      const results = await getInviteCandidates(q);
+      // Race guard: if user has typed more, ignore stale results
+      if (myToken !== inviteSearchToken) return;
+      _inviteSuggestionsList = results;
+      _inviteActiveIdx = results.length > 0 ? 0 : -1;
+      renderInviteSuggestions();
+    });
+
     ecInviteInput.addEventListener('keydown', (e) => {
+      if (_inviteSuggestionsList.length > 0 && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+        e.preventDefault();
+        if (e.key === 'ArrowDown') {
+          _inviteActiveIdx = (_inviteActiveIdx + 1) % _inviteSuggestionsList.length;
+        } else {
+          _inviteActiveIdx = (_inviteActiveIdx - 1 + _inviteSuggestionsList.length) % _inviteSuggestionsList.length;
+        }
+        renderInviteSuggestions();
+        return;
+      }
       if (e.key === 'Enter') {
         e.preventDefault();
+        // If there's a highlighted suggestion, use it; otherwise just submit
+        if (_inviteSuggestionsList.length > 0 && _inviteActiveIdx >= 0) {
+          ecInviteInput.value = _inviteSuggestionsList[_inviteActiveIdx].username;
+        }
+        hideInviteSuggestions();
         ecInviteBtn.click();
+      } else if (e.key === 'Escape') {
+        hideInviteSuggestions();
       }
+    });
+
+    // Hide suggestions when input loses focus (with a small delay so clicks register)
+    ecInviteInput.addEventListener('blur', () => {
+      setTimeout(hideInviteSuggestions, 150);
     });
   }
 
