@@ -2654,13 +2654,18 @@
     font-size: 12px;
   }
 
-  /* === ADD-BOOK MODAL === */
+  /* === MODAL OVERLAY ===
+     We use `position: fixed` (not absolute) so the overlay covers the entire
+     viewport regardless of where it's mounted. The phone-frame app shell is
+     only ~440px wide on desktop, so an absolutely-positioned overlay would
+     sit inside that narrow frame. Fixed lets the modal center on the whole
+     desktop screen. */
   .modal-overlay {
-    position: absolute;
+    position: fixed;
     inset: 0;
     background: rgba(20, 16, 12, 0.45);
     backdrop-filter: blur(4px);
-    z-index: 95;
+    z-index: 200;
     display: grid;
     place-items: center;
     padding: 20px;
@@ -2675,7 +2680,7 @@
   .modal {
     width: 100%;
     max-width: 380px;
-    max-height: calc(100% - 40px);
+    max-height: calc(100vh - 40px);
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 18px;
@@ -2683,6 +2688,10 @@
     transform: translateY(12px) scale(0.98);
     transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
     box-shadow: 0 30px 80px -20px rgba(20, 16, 12, 0.4);
+  }
+  /* On wider screens, allow modals to grow a bit so they don't feel cramped */
+  @media (min-width: 700px) {
+    .modal { max-width: 480px; }
   }
   .modal-overlay.show .modal {
     transform: translateY(0) scale(1);
@@ -7276,6 +7285,7 @@
           if (typeof loadUserVotes === 'function') await loadUserVotes();
           if (typeof renderDesk === 'function') await renderDesk();
           if (typeof renderTrail === 'function') await renderTrail();
+          if (typeof backfillBookCoverIds === 'function') await backfillBookCoverIds();
           if (typeof backfillReviewPosts === 'function') await backfillReviewPosts();
           if (typeof renderCommunityList === 'function') await renderCommunityList();
           if (typeof renderFeed === 'function') await renderFeed();
@@ -7320,6 +7330,7 @@
         if (typeof loadUserVotes === 'function') await loadUserVotes();
         if (typeof renderDesk === 'function') await renderDesk();
         if (typeof renderTrail === 'function') await renderTrail();
+        if (typeof backfillBookCoverIds === 'function') await backfillBookCoverIds();
         if (typeof backfillReviewPosts === 'function') await backfillReviewPosts();
         if (typeof renderCommunityList === 'function') await renderCommunityList();
         if (typeof renderFeed === 'function') await renderFeed();
@@ -7350,6 +7361,7 @@
       if (typeof loadUserVotes === 'function') await loadUserVotes();
       if (typeof renderDesk === 'function') await renderDesk();
       if (typeof renderTrail === 'function') await renderTrail();
+      if (typeof backfillBookCoverIds === 'function') await backfillBookCoverIds();
       if (typeof backfillReviewPosts === 'function') await backfillReviewPosts();
       if (typeof renderCommunityList === 'function') await renderCommunityList();
       if (typeof renderFeed === 'function') await renderFeed();
@@ -7833,6 +7845,33 @@
     }
     _postsCache = null;
   }
+
+  // One-time migration: any book with a coverIsbn but no coverId (e.g. older
+  // Goodreads imports from before the fix) gets coverId backfilled from coverIsbn.
+  // Safe to call repeatedly — it's a no-op once books are clean.
+  async function backfillBookCoverIds() {
+    const user = await getUser();
+    if (!user || !user.id || !sb) return;
+    const books = await getBooks();
+    if (!books || books.length === 0) return;
+
+    const needsFix = books.filter(b => !b.coverId && b.coverIsbn);
+    if (needsFix.length === 0) return;
+
+    console.log(`[Vronsky/migrate] backfilling coverId for ${needsFix.length} books`);
+    const updated = books.map(b => {
+      if (!b.coverId && b.coverIsbn) {
+        return { ...b, coverId: b.coverIsbn };
+      }
+      return b;
+    });
+    try {
+      await saveBooks(updated);
+    } catch (err) {
+      console.error('[Vronsky/migrate] coverId backfill failed:', err);
+    }
+  }
+
   // Backward-compat shim used by the profile screen
   async function getReadBooks() {
     const all = await getBooks();
@@ -9268,14 +9307,15 @@
     const year = (yearRaw && yearRaw > 0) ? yearRaw : null;
 
     // Build a Vronsky-shaped book. The id is generated like other manually-added
-    // books; coverIsbn lets the cover image lookup find an Open Library cover.
+    // books. coverImageUrl() detects ISBNs in coverId and routes to Open Library's
+    // /b/isbn/ endpoint, so we just store the ISBN there for cover lookups.
     return {
       id: 'gr_' + (Math.random().toString(36).slice(2, 10)) + '_' + Date.now(),
       title,
       author: author || 'Unknown',
       year,
       coverIsbn: isbn,
-      coverId: null,
+      coverId: isbn,
       status,
       rating,
       review,
