@@ -7355,43 +7355,66 @@
   // Submit
   newClubForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const name = document.getElementById('nc-name').value.trim();
-    if (!name) return;
-    const description = document.getElementById('nc-description').value.trim();
-    const currentBook = document.getElementById('nc-current-book').value.trim();
-    const me = await getUser();
-    if (!me || !me.id) return;
-    const ownerId = me.id;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn ? submitBtn.textContent : '';
 
-    // Parse "Title — Author" into a structured currentBook (so it can render with a cover)
-    let bookObj = null;
-    if (currentBook) {
-      const parts = currentBook.split(/\s*[—-]\s*/);
-      bookObj = {
-        title: parts[0] || currentBook,
-        author: parts.slice(1).join(' — ') || '',
-        year: null,
-        coverId: null
+    try {
+      const name = document.getElementById('nc-name').value.trim();
+      if (!name) return;
+      const description = document.getElementById('nc-description').value.trim();
+      const currentBook = document.getElementById('nc-current-book').value.trim();
+      const me = await getUser();
+      if (!me || !me.id) {
+        alert('Please sign in to create a club.');
+        return;
+      }
+      const ownerId = me.id;
+
+      // Parse "Title — Author" into a structured currentBook (so it can render with a cover)
+      let bookObj = null;
+      if (currentBook) {
+        const parts = currentBook.split(/\s*[—-]\s*/);
+        bookObj = {
+          title: parts[0] || currentBook,
+          author: parts.slice(1).join(' — ') || '',
+          year: null,
+          coverId: null
+        };
+      }
+
+      const newClub = {
+        id: 'club_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        name,
+        description,
+        privacy: ncActivePrivacy,
+        currentBook: bookObj,
+        schedule: [], // array of { id, date, milestone }
+        members: 1, // creator
+        ownerId,
+        createdAt: new Date().toISOString()
       };
-    }
 
-    const newClub = {
-      id: 'club_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-      name,
-      description,
-      privacy: ncActivePrivacy,
-      currentBook: bookObj,
-      schedule: [], // array of { id, date, milestone }
-      members: 1, // creator
-      ownerId,
-      createdAt: new Date().toISOString()
-    };
-    const clubs = await getClubs();
-    clubs.unshift(newClub);
-    await saveClubs(clubs);
-    closeNewClubModal();
-    await renderUserClubs();
-    await renderBrowseClubs();
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Creating…';
+      }
+
+      const clubs = await getClubs();
+      clubs.unshift(newClub);
+      await saveClubs(clubs);
+      closeNewClubModal();
+      await renderUserClubs();
+      await renderBrowseClubs();
+    } catch (err) {
+      console.error('[Vronsky/clubs] Create club failed:', err);
+      const msg = err && err.message ? err.message : 'Unknown error';
+      alert('Could not create club: ' + msg + '\n\nCheck the browser console for details.');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText || 'Create club';
+      }
+    }
   });
 
   // Add ESC support
