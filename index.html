@@ -5060,6 +5060,120 @@
   }
   .pick-book-btn:hover { background: var(--accent); }
 
+  /* === Invite member UI (in Edit Club modal) === */
+  .invite-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .invite-row input {
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text);
+    box-sizing: border-box;
+  }
+  .invite-row input:focus { border-color: var(--accent); outline: none; }
+  .invite-btn {
+    padding: 8px 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 12px;
+    font-variation-settings: "opsz" 14, "wght" 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .invite-btn:hover { background: var(--accent-deep); }
+  .invite-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .invite-error {
+    font-size: 11px;
+    color: #b6493a;
+    margin-bottom: 8px;
+    padding: 6px 10px;
+    background: #fdf0ec;
+    border-radius: 6px;
+  }
+  .members-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .member-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: var(--surface-soft);
+    border-radius: 6px;
+    font-size: 13px;
+  }
+  .member-row .handle {
+    flex: 1;
+    color: var(--text);
+    font-variation-settings: "wght" 500;
+  }
+  .member-row .role-tag {
+    font-size: 10px;
+    color: var(--text-3);
+    padding: 2px 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .member-row .remove-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-3);
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.12s;
+  }
+  .member-row .remove-btn:hover {
+    color: #b6493a;
+    background: #fdf0ec;
+  }
+  .member-row .remove-btn svg {
+    width: 14px;
+    height: 14px;
+    display: block;
+  }
+  .members-empty {
+    font-size: 12px;
+    color: var(--text-3);
+    padding: 10px;
+    text-align: center;
+    background: var(--surface-soft);
+    border-radius: 6px;
+  }
+
+  /* Leave club button on detail view */
+  .leave-club-btn {
+    padding: 8px 14px;
+    background: transparent;
+    color: var(--text-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .leave-club-btn:hover {
+    color: #b6493a;
+    border-color: #b6493a;
+  }
+
   /* Privacy picker — same style as status picker */
   .privacy-picker {
     display: grid;
@@ -5921,6 +6035,17 @@
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- Members section: only shown when club is private -->
+          <div class="form-row" id="ec-members-row" style="display: none;">
+            <label>Members</label>
+            <div class="invite-row">
+              <input id="ec-invite-input" type="text" placeholder="@username" maxlength="40" autocomplete="off" />
+              <button type="button" class="invite-btn" id="ec-invite-btn">Invite</button>
+            </div>
+            <div id="ec-invite-error" class="invite-error" style="display: none;"></div>
+            <div id="ec-members-list" class="members-list"></div>
           </div>
         </div>
         <div class="modal-footer" style="justify-content: space-between;">
@@ -6807,6 +6932,8 @@
     _userClubsCacheUser = null;
     _allClubsCache = null;
     _allClubsCacheUser = null;
+    _myClubMembershipsCache = null;
+    _myClubMembershipsUser = null;
     _postsCache = null;
     _commentsCache = null;
     _dbCommunitiesCache = null;
@@ -8011,8 +8138,8 @@
     return clubs;
   }
 
-  // Get all clubs visible to this user: their own + every public club + seeded.
-  // RLS does the filtering on the server side — we just trust what we get back.
+  // Get all clubs visible to this user: their own + every public club + seeded
+  // + any private clubs they're a member of (RLS handles filtering).
   async function getAllClubs() {
     const user = await getUser();
     if (!user || !user.id || !sb) {
@@ -8024,7 +8151,7 @@
       return _allClubsCache;
     }
 
-    // No filter — RLS returns: own clubs (any privacy) + public clubs from anyone.
+    // No filter — RLS returns: own clubs (any privacy) + public clubs + member-of clubs.
     const { data, error } = await sb
       .from('clubs')
       .select('id, owner_id, privacy, data, created_at')
@@ -8040,6 +8167,174 @@
     _allClubsCache = merged;
     _allClubsCacheUser = user.id;
     return merged;
+  }
+
+  // === CLUB MEMBERSHIP ===
+  // Stored in the `club_members` table (composite PK on club_id+user_id).
+  // RLS:
+  //   SELECT — anyone can see who's in any club they can see
+  //   INSERT — only the club owner can add members
+  //   DELETE — the user themselves OR the owner can remove
+  let _myClubMembershipsCache = null;
+  let _myClubMembershipsUser = null;
+
+  // Get the set of club IDs the current user is a member of (private clubs they were invited to).
+  async function getMyClubMemberships() {
+    const user = await getUser();
+    if (!user || !user.id || !sb) return new Set();
+
+    if (_myClubMembershipsCache !== null && _myClubMembershipsUser === user.id) {
+      return _myClubMembershipsCache;
+    }
+
+    const { data, error } = await sb
+      .from('club_members')
+      .select('club_id')
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('[Vronsky/clubs] memberships fetch failed:', error);
+      return new Set();
+    }
+
+    const ids = new Set((data || []).map(r => r.club_id));
+    _myClubMembershipsCache = ids;
+    _myClubMembershipsUser = user.id;
+    return ids;
+  }
+
+  // "My clubs" = clubs I own + clubs I'm a member of (for the Your Clubs section).
+  async function getMyClubs() {
+    const user = await getUser();
+    if (!user || !user.id || !sb) return [];
+
+    const ownClubs = await getClubs(); // owned by me
+    const memberIds = await getMyClubMemberships();
+    if (memberIds.size === 0) return ownClubs;
+
+    // Need to also fetch clubs I'm a member of (but don't own)
+    const ownIds = new Set(ownClubs.map(c => c.id));
+    const memberOnlyIds = [...memberIds].filter(id => !ownIds.has(id));
+    if (memberOnlyIds.length === 0) return ownClubs;
+
+    const { data, error } = await sb
+      .from('clubs')
+      .select('id, owner_id, privacy, data, created_at')
+      .in('id', memberOnlyIds);
+
+    if (error) {
+      console.error('[Vronsky/clubs] member-clubs fetch failed:', error);
+      return ownClubs;
+    }
+
+    const memberClubs = (data || []).map(clubRowToObject);
+    return [...ownClubs, ...memberClubs];
+  }
+
+  // Get the list of members for a single club. Returns array of { userId, joinedAt }.
+  // To get usernames, we then merge with the profiles list.
+  async function getClubMembers(clubId) {
+    if (!sb) return [];
+    const { data, error } = await sb
+      .from('club_members')
+      .select('user_id, joined_at')
+      .eq('club_id', clubId);
+    if (error) {
+      console.error('[Vronsky/clubs] members fetch failed:', error);
+      return [];
+    }
+    return (data || []).map(r => ({ userId: r.user_id, joinedAt: r.joined_at }));
+  }
+
+  // Get count of members for a club (used for the "N members" badge).
+  async function getClubMemberCount(clubId) {
+    if (!sb) return 0;
+    const { count, error } = await sb
+      .from('club_members')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('club_id', clubId);
+    if (error) {
+      console.error('[Vronsky/clubs] member count failed:', error);
+      return 0;
+    }
+    return count || 0;
+  }
+
+  // Invite a user to a club by username. Looks up the user's UUID from profiles
+  // and inserts a club_members row. RLS enforces that only owners can invite.
+  async function inviteClubMember(clubId, username) {
+    const user = await getUser();
+    if (!user || !user.id || !sb) {
+      throw new Error('You must be signed in.');
+    }
+    const cleanName = username.replace(/^@/, '').trim().toLowerCase();
+    if (!cleanName) throw new Error('Enter a username.');
+
+    // Find the user's UUID
+    const { data: profileMatches, error: profErr } = await sb
+      .from('profiles')
+      .select('id, username')
+      .ilike('username', cleanName)
+      .limit(1);
+
+    if (profErr) {
+      console.error('[Vronsky/clubs] profile lookup failed:', profErr);
+      throw new Error('Could not look up that user.');
+    }
+    if (!profileMatches || profileMatches.length === 0) {
+      throw new Error(`No user named @${cleanName}.`);
+    }
+    const inviteeId = profileMatches[0].id;
+
+    // Don't let the owner invite themselves
+    if (inviteeId === user.id) {
+      throw new Error("You're the owner — you don't need an invite.");
+    }
+
+    const { error: insErr } = await sb
+      .from('club_members')
+      .insert({ club_id: clubId, user_id: inviteeId, invited_by: user.id });
+
+    if (insErr) {
+      // Duplicate-key violation = already a member
+      if (insErr.code === '23505') {
+        throw new Error(`@${profileMatches[0].username} is already a member.`);
+      }
+      console.error('[Vronsky/clubs] invite failed:', insErr);
+      throw insErr;
+    }
+
+    // Invalidate caches so the change is visible
+    _myClubMembershipsCache = null;
+    _myClubMembershipsUser = null;
+  }
+
+  // Remove a user from a club. Either the user themselves (leaving) or the
+  // owner (kicking). RLS enforces this.
+  async function removeClubMember(clubId, userId) {
+    if (!sb) return;
+    const { error } = await sb
+      .from('club_members')
+      .delete()
+      .eq('club_id', clubId)
+      .eq('user_id', userId);
+    if (error) {
+      console.error('[Vronsky/clubs] member remove failed:', error);
+      throw error;
+    }
+    _myClubMembershipsCache = null;
+    _myClubMembershipsUser = null;
+  }
+
+  // Is the current user a member of this club? (covers own + invited)
+  async function isClubMember(club) {
+    if (!club) return false;
+    const me = await getUser();
+    if (!me || !me.id) return false;
+    // Owner counts as member
+    if (club.ownerId === me.id) return true;
+    const memberships = await getMyClubMemberships();
+    return memberships.has(club.id);
   }
 
   // Write the user's full clubs array. Diffs against existing to figure out
@@ -8168,7 +8463,7 @@
   }
 
   async function renderUserClubs() {
-    const clubs = await getClubs();
+    const clubs = await getMyClubs();
     const container = document.getElementById('user-clubs-list');
     if (!container) return;
 
@@ -8485,6 +8780,11 @@
       return;
     }
     const owner = await isClubOwner(club);
+    const isMember = await isClubMember(club);
+
+    // Real member count: owner + invited members
+    const invitedCount = club.id ? await getClubMemberCount(club.id) : 0;
+    const totalMembers = invitedCount + 1; // owner counts too
 
     // Privacy badge
     const isPrivate = club.privacy === 'private';
@@ -8603,7 +8903,11 @@
           </button>
         </div>
       </div>
-    ` : '';
+    ` : (isMember ? `
+      <div class="edit-row">
+        <button class="leave-club-btn" id="club-leave-btn">Leave club</button>
+      </div>
+    ` : '');
 
     // Pick book button (owner only)
     const pickBookBtn = owner ? `
@@ -8627,7 +8931,7 @@
             <div class="meta-row">
               <span class="privacy-text">${isPrivate ? 'Private club' : 'Public club'}</span>
               <span>·</span>
-              <span>${club.members} member${club.members === 1 ? '' : 's'}</span>
+              <span>${totalMembers} member${totalMembers === 1 ? '' : 's'}</span>
             </div>
           </div>
         </div>
@@ -8732,6 +9036,28 @@
         });
       });
     }
+
+    // Leave club (for non-owner members)
+    if (!owner && isMember) {
+      const leaveBtn = container.querySelector('#club-leave-btn');
+      if (leaveBtn) {
+        leaveBtn.addEventListener('click', async () => {
+          if (!confirm('Leave this club? You\'ll need a new invite to rejoin.')) return;
+          const me = await getUser();
+          if (!me || !me.id) return;
+          try {
+            await removeClubMember(club.id, me.id);
+            // After leaving, navigate back to clubs home — they shouldn't see private club anymore
+            navigateClubs('home');
+            await renderUserClubs();
+            await renderBrowseClubs();
+          } catch (err) {
+            console.error('[Vronsky/clubs] leave failed:', err);
+            alert('Could not leave: ' + (err.message || 'Unknown error'));
+          }
+        });
+      }
+    }
   }
 
   // Pretty schedule date: 2026-05-04 → "May 4"
@@ -8804,6 +9130,11 @@
     ecPrivacyPicker.querySelectorAll('.privacy-opt').forEach(opt => {
       opt.classList.toggle('active', opt.dataset.privacy === ecActivePrivacy);
     });
+    // Reset invite UI
+    document.getElementById('ec-invite-input').value = '';
+    document.getElementById('ec-invite-error').style.display = 'none';
+    // Show members section if private; render members
+    await refreshEditClubMembersSection();
     editClubModal.classList.add('show');
     setTimeout(() => document.getElementById('ec-name').focus(), 200);
   }
@@ -8812,17 +9143,129 @@
     ecEditingClubId = null;
   }
 
+  // Show/hide and populate the members section based on current privacy + clubId
+  async function refreshEditClubMembersSection() {
+    const row = document.getElementById('ec-members-row');
+    if (!row) return;
+    if (ecActivePrivacy !== 'private' || !ecEditingClubId) {
+      row.style.display = 'none';
+      return;
+    }
+    row.style.display = 'block';
+    await renderEditClubMembers();
+  }
+
+  async function renderEditClubMembers() {
+    const list = document.getElementById('ec-members-list');
+    if (!list || !ecEditingClubId) return;
+    const members = await getClubMembers(ecEditingClubId);
+
+    // Find owner — pull from current club data
+    const ownClubs = await getClubs();
+    const club = ownClubs.find(c => c.id === ecEditingClubId);
+    const ownerId = club ? club.ownerId : null;
+
+    // Get all real users so we can show usernames
+    const realUsers = await fetchAllRealUsers();
+    const usersById = new Map(realUsers.map(u => [u.id, u]));
+
+    // Always show the owner first
+    const ownerUser = ownerId ? usersById.get(ownerId) : null;
+    const ownerHandle = ownerUser ? ownerUser.username : 'owner';
+
+    let html = `
+      <div class="member-row">
+        <span class="handle">@${escapeHtml(ownerHandle)}</span>
+        <span class="role-tag">Owner</span>
+      </div>
+    `;
+
+    if (members.length === 0) {
+      html += '<div class="members-empty">No invited members yet.</div>';
+    } else {
+      html += members.map(m => {
+        const u = usersById.get(m.userId);
+        const handle = u ? u.username : m.userId.slice(0, 8);
+        return `
+          <div class="member-row">
+            <span class="handle">@${escapeHtml(handle)}</span>
+            <button class="remove-btn" data-remove-member="${escapeHtml(m.userId)}" title="Remove member">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+    list.innerHTML = html;
+
+    // Wire remove buttons
+    list.querySelectorAll('[data-remove-member]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const userId = btn.dataset.removeMember;
+        if (!confirm('Remove this member from the club?')) return;
+        try {
+          await removeClubMember(ecEditingClubId, userId);
+          await renderEditClubMembers();
+          // Refresh detail view in the background to update members count
+          await renderClubDetail(ecEditingClubId);
+        } catch (err) {
+          console.error('[Vronsky/clubs] remove member failed:', err);
+          alert('Could not remove: ' + (err.message || 'Unknown error'));
+        }
+      });
+    });
+  }
+
   document.getElementById('ec-close-btn').addEventListener('click', closeEditClubModal);
   document.getElementById('ec-cancel-btn').addEventListener('click', closeEditClubModal);
   editClubModal.addEventListener('click', (e) => { if (e.target === editClubModal) closeEditClubModal(); });
 
   ecPrivacyPicker.querySelectorAll('.privacy-opt').forEach(opt => {
-    opt.addEventListener('click', () => {
+    opt.addEventListener('click', async () => {
       ecPrivacyPicker.querySelectorAll('.privacy-opt').forEach(o => o.classList.remove('active'));
       opt.classList.add('active');
       ecActivePrivacy = opt.dataset.privacy;
+      // Show/hide members section accordingly
+      await refreshEditClubMembersSection();
     });
   });
+
+  // Wire invite button
+  const ecInviteBtn = document.getElementById('ec-invite-btn');
+  const ecInviteInput = document.getElementById('ec-invite-input');
+  const ecInviteError = document.getElementById('ec-invite-error');
+  if (ecInviteBtn) {
+    ecInviteBtn.addEventListener('click', async () => {
+      if (!ecEditingClubId) return;
+      const username = ecInviteInput.value.trim();
+      if (!username) return;
+      ecInviteError.style.display = 'none';
+      const original = ecInviteBtn.textContent;
+      ecInviteBtn.disabled = true;
+      ecInviteBtn.textContent = 'Inviting…';
+      try {
+        await inviteClubMember(ecEditingClubId, username);
+        ecInviteInput.value = '';
+        await renderEditClubMembers();
+        // Refresh detail view to update members count
+        await renderClubDetail(ecEditingClubId);
+      } catch (err) {
+        ecInviteError.textContent = err.message || 'Invite failed.';
+        ecInviteError.style.display = 'block';
+      } finally {
+        ecInviteBtn.disabled = false;
+        ecInviteBtn.textContent = original;
+      }
+    });
+  }
+  if (ecInviteInput) {
+    ecInviteInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        ecInviteBtn.click();
+      }
+    });
+  }
 
   editClubForm.addEventListener('submit', async (e) => {
     e.preventDefault();
