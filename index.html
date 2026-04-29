@@ -6067,6 +6067,7 @@
         // Signed in — load profile and dismiss auth screen
         await loadCurrentUser();
         if (currentUser) {
+          await migrateBooksToSupabase();
           renderUser(currentUser);
           authScreen.classList.add('hidden');
         }
@@ -6103,6 +6104,7 @@
 
       await loadCurrentUser();
       if (currentUser) {
+        await migrateBooksToSupabase();
         renderUser(currentUser);
         authScreen.classList.add('hidden');
       }
@@ -6124,6 +6126,7 @@
   (async () => {
     const user = await loadCurrentUser();
     if (user) {
+      await migrateBooksToSupabase();
       authScreen.classList.add('hidden');
       renderUser(user);
     }
@@ -6149,6 +6152,8 @@
   document.getElementById('signout-btn').addEventListener('click', async () => {
     await sb.auth.signOut();
     currentUser = null;
+    _booksCache = null;
+    _booksCacheUser = null;
     location.reload();
   });
 
@@ -6157,7 +6162,21 @@
   // Stored as a single JSON array under vronsky_books.
   // Each book: { id, title, author, year, coverId, coverClass, status, rating?, finishedAt?, review?, addedAt }
 
+  // === BOOKS STORAGE ===
+  //
+  // Books are stored in Supabase under the `books` table. Schema:
+  //   id (uuid primary key)
+  //   user_id (uuid, references auth.users)
+  //   data (jsonb) — the full book object
+  //   created_at (timestamp)
+  //
+  // RLS policies ensure users can only read/write their own books.
+  //
+  // localStorage is kept as a fallback for offline use / migration source.
+  // On first sign-in, any localStorage books get migrated up to Supabase.
+
   const BOOKS_KEY = 'vronsky_books';
+  const MIGRATED_FLAG_KEY = 'vronsky_books_migrated';
   const COVER_CLASSES = [
     'cv-1','cv-2','cv-3','cv-4','cv-5','cv-6','cv-7','cv-8','cv-9',
     'cv-10','cv-11','cv-12','cv-13','cv-14','cv-15','cv-16','cv-17','cv-18'
@@ -6165,6 +6184,7 @@
 
   // Pick a stable cover color from the title — same title always gets the same one.
   function pickCoverClass(title) {
+    if (!title) return 'cv-1';
     let hash = 0;
     for (let i = 0; i < title.length; i++) {
       hash = ((hash << 5) - hash) + title.charCodeAt(i);
@@ -6173,13 +6193,61 @@
     return COVER_CLASSES[Math.abs(hash) % COVER_CLASSES.length];
   }
 
-  // Get all books, with one-time migration from the old vronsky_read_books key.
+  // In-memory cache so we don't refetch on every render call within a render cycle.
+  // Cleared when the user signs in/out.
+  let _booksCache = null;
+  let _booksCacheUser = null;
+
+  // Read the user's books from Supabase (or localStorage if not signed in).
   async function getBooks() {
+    const user = await getUser();
+
+    // Not signed in — fall back to localStorage
+    if (!user || !user.id || !sb) {
+      return await getBooksFromLocalStorage();
+    }
+
+    // Use cache if it's for the same user
+    if (_booksCache !== null && _booksCacheUser === user.id) {
+      return _booksCache;
+    }
+
+    try {
+      const { data, error } = await sb
+        .from('books')
+        .select('id, data, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn('Supabase books fetch failed, falling back to localStorage:', error.message);
+        return await getBooksFromLocalStorage();
+      }
+
+      // Each row's `data` field contains the full book object. We use the row's
+      // id as the canonical id (overwriting any stale `id` in `data`).
+      const books = (data || []).map(row => ({
+        ...(row.data || {}),
+        id: row.id,
+        addedAt: row.created_at || (row.data && row.data.addedAt) || null
+      }));
+
+      _booksCache = books;
+      _booksCacheUser = user.id;
+      return books;
+    } catch (err) {
+      console.warn('Supabase books fetch error, falling back to localStorage:', err);
+      return await getBooksFromLocalStorage();
+    }
+  }
+
+  // localStorage fallback (kept for offline/migration purposes)
+  async function getBooksFromLocalStorage() {
     const raw = await Store.get(BOOKS_KEY);
     if (raw) {
       try { return JSON.parse(raw) || []; } catch { return []; }
     }
-    // First-time read: migrate any old "read books" data
+    // Migrate from any old key if present
     const oldRaw = await Store.get('vronsky_read_books');
     if (oldRaw) {
       try {
@@ -6191,8 +6259,131 @@
     }
     return [];
   }
+
+  // Write the full books array. We use a "diff and sync" approach:
+  //   - Books in `books` but not in Supabase → insert
+  //   - Books in Supabase but not in `books` → delete
+  //   - Books in both → update (data field)
+  // Always mirrors to localStorage as a backup.
   async function saveBooks(books) {
+    // Always update localStorage so we have a fallback
     await Store.set(BOOKS_KEY, JSON.stringify(books));
+
+    const user = await getUser();
+    if (!user || !user.id || !sb) {
+      // Not signed in — localStorage only
+      _booksCache = books;
+      return;
+    }
+
+    try {
+      // Get current Supabase state for this user
+      const { data: existing, error: fetchErr } = await sb
+        .from('books')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (fetchErr) {
+        console.warn('Could not fetch existing books for sync:', fetchErr.message);
+        _booksCache = books;
+        return;
+      }
+
+      const existingIds = new Set((existing || []).map(r => r.id));
+      const targetIds = new Set(books.map(b => b.id));
+
+      // Books to delete (in DB, not in target)
+      const toDelete = [...existingIds].filter(id => !targetIds.has(id));
+      // Books to upsert (everything in target — handles both new and updated)
+      const toUpsert = books.map(b => {
+        // Strip id and addedAt from the data payload; they live on the row itself
+        const { id, addedAt, ...bookData } = b;
+        return {
+          id: b.id,
+          user_id: user.id,
+          data: bookData
+        };
+      });
+
+      // Delete removed books
+      if (toDelete.length > 0) {
+        const { error: delErr } = await sb
+          .from('books')
+          .delete()
+          .in('id', toDelete);
+        if (delErr) console.warn('Delete failed:', delErr.message);
+      }
+
+      // Upsert all current books
+      if (toUpsert.length > 0) {
+        const { error: upErr } = await sb
+          .from('books')
+          .upsert(toUpsert, { onConflict: 'id' });
+        if (upErr) console.warn('Upsert failed:', upErr.message);
+      }
+
+      // Update cache
+      _booksCache = books;
+      _booksCacheUser = user.id;
+    } catch (err) {
+      console.warn('Supabase sync error:', err);
+    }
+  }
+
+  // Migrate localStorage books to Supabase on first sign-in.
+  // Runs at most once per user (tracked by a flag in localStorage).
+  async function migrateBooksToSupabase() {
+    const user = await getUser();
+    if (!user || !user.id || !sb) return;
+
+    const flagKey = MIGRATED_FLAG_KEY + '_' + user.id;
+    const alreadyMigrated = await Store.get(flagKey);
+    if (alreadyMigrated === 'true') return;
+
+    // Read whatever's in localStorage
+    const localBooks = await getBooksFromLocalStorage();
+    if (!localBooks || localBooks.length === 0) {
+      await Store.set(flagKey, 'true');
+      return;
+    }
+
+    // Check Supabase — if user already has books there, don't overwrite
+    try {
+      const { data: existing, error } = await sb
+        .from('books')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
+      if (!error && existing && existing.length > 0) {
+        // User already has Supabase books — skip migration to avoid clobbering
+        console.log('User already has books in Supabase, skipping migration');
+        await Store.set(flagKey, 'true');
+        return;
+      }
+
+      // Upload all local books
+      const rows = localBooks.map(b => {
+        const { id, addedAt, ...bookData } = b;
+        return {
+          id: b.id,
+          user_id: user.id,
+          data: bookData
+        };
+      });
+
+      const { error: insErr } = await sb.from('books').insert(rows);
+      if (insErr) {
+        console.warn('Migration insert failed:', insErr.message);
+        return;
+      }
+
+      console.log(`Migrated ${rows.length} books to Supabase for ${user.username}`);
+      await Store.set(flagKey, 'true');
+      // Invalidate cache so next read fetches from Supabase
+      _booksCache = null;
+    } catch (err) {
+      console.warn('Migration error:', err);
+    }
   }
   // Backward-compat shim used by the profile screen
   async function getReadBooks() {
