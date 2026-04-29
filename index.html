@@ -1486,6 +1486,220 @@
   .source-pill.spotify .src-dot { background: #1ed760; }
   .source-pill.apple .src-dot { background: #ff3b30; }
   .source-pill.libby .src-dot { background: #007aff; }
+  .source-pill.goodreads .src-dot { background: #553b1f; }
+  /* Make the goodreads pill look interactive — it actually does something */
+  .source-pill.goodreads {
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .source-pill.goodreads:hover {
+    border-color: #553b1f;
+    background: #fef9f3;
+  }
+
+  /* === GOODREADS IMPORT MODAL === */
+  .gr-instructions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .gr-step {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 13px;
+    color: var(--text-2);
+  }
+  .gr-step-num {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent-deep);
+    display: grid;
+    place-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-variation-settings: "wght" 600;
+  }
+  .gr-step-text { line-height: 1.5; }
+  .gr-step-text a { color: var(--accent); text-decoration: underline; }
+
+  .gr-dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 32px 20px;
+    text-align: center;
+    background: var(--surface);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .gr-dropzone:hover, .gr-dropzone.dragging {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .gr-drop-icon {
+    width: 36px;
+    height: 36px;
+    color: var(--text-3);
+  }
+  .gr-dropzone:hover .gr-drop-icon, .gr-dropzone.dragging .gr-drop-icon {
+    color: var(--accent);
+  }
+  .gr-drop-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .gr-drop-text strong {
+    font-size: 14px;
+    color: var(--text);
+    font-variation-settings: "opsz" 16, "wght" 600;
+  }
+  .gr-drop-text span {
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  .gr-error {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: #fdf0ec;
+    color: #b6493a;
+    border-radius: 6px;
+    font-size: 12px;
+  }
+
+  .gr-preview-summary {
+    padding: 14px 16px;
+    background: var(--surface-soft);
+    border-radius: 10px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .gr-preview-summary strong {
+    color: var(--accent-deep);
+    font-variation-settings: "wght" 600;
+  }
+  .gr-shelf-breakdown {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .gr-shelf-tag {
+    padding: 4px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 999px;
+    font-size: 11px;
+    color: var(--text-2);
+  }
+  .gr-shelf-tag strong {
+    color: var(--text);
+    margin-right: 4px;
+    font-variation-settings: "wght" 600;
+  }
+  .gr-preview-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    padding: 4px;
+  }
+  .gr-preview-row {
+    padding: 6px 10px;
+    font-size: 12px;
+    color: var(--text-2);
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .gr-preview-row:nth-child(odd) { background: var(--surface-soft); }
+  .gr-preview-row .pr-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .gr-preview-row .pr-shelf {
+    flex-shrink: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-3);
+  }
+  .gr-preview-row.skipped { opacity: 0.5; }
+  .gr-preview-row.skipped .pr-shelf::before { content: "skip · "; }
+
+  .gr-importing {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 32px 20px;
+    text-align: center;
+  }
+  .gr-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--surface-soft);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: grSpin 0.8s linear infinite;
+  }
+  @keyframes grSpin { to { transform: rotate(360deg); } }
+  .gr-importing-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .gr-importing-text strong {
+    font-size: 14px;
+    color: var(--text);
+    font-variation-settings: "opsz" 16, "wght" 600;
+  }
+  .gr-importing-text span {
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  .gr-done {
+    text-align: center;
+    padding: 24px 16px;
+  }
+  .gr-checkmark {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    display: grid;
+    place-items: center;
+    font-size: 24px;
+    margin: 0 auto 16px;
+  }
+  .gr-done h4 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    color: var(--text);
+    font-variation-settings: "opsz" 22, "wght" 600;
+  }
+  .gr-done p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-2);
+  }
   .sources-strip .sync-meta {
     margin-left: auto;
     font-family: 'JetBrains Mono', monospace;
@@ -5918,6 +6132,85 @@
     <div class="item danger" id="signout-btn">Sign out</div>
   </div>
 
+  <!-- Goodreads import modal -->
+  <div class="modal-overlay" id="goodreads-modal">
+    <div class="modal" role="dialog" aria-labelledby="gr-title">
+      <div class="modal-head">
+        <h3 id="gr-title">Import from Goodreads</h3>
+        <button class="modal-close" id="gr-close-btn" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Step 1: instructions + drop zone -->
+        <div id="gr-step-upload">
+          <div class="gr-instructions">
+            <div class="gr-step">
+              <span class="gr-step-num">1</span>
+              <div class="gr-step-text">
+                Open <a href="https://www.goodreads.com/review/import" target="_blank" rel="noopener">Goodreads → My Books → Import & Export</a> and click <strong>Export Library</strong>.
+              </div>
+            </div>
+            <div class="gr-step">
+              <span class="gr-step-num">2</span>
+              <div class="gr-step-text">
+                Wait a moment, then download the CSV file.
+              </div>
+            </div>
+            <div class="gr-step">
+              <span class="gr-step-num">3</span>
+              <div class="gr-step-text">
+                Drop the file below.
+              </div>
+            </div>
+          </div>
+
+          <div class="gr-dropzone" id="gr-dropzone">
+            <input type="file" id="gr-file-input" accept=".csv,text/csv" hidden />
+            <svg class="gr-drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+            <div class="gr-drop-text">
+              <strong>Drop your Goodreads CSV here</strong>
+              <span>or click to choose a file</span>
+            </div>
+          </div>
+          <div class="gr-error" id="gr-error" style="display: none;"></div>
+        </div>
+
+        <!-- Step 2: preview -->
+        <div id="gr-step-preview" style="display: none;">
+          <div class="gr-preview-summary" id="gr-preview-summary"></div>
+          <div class="gr-shelf-breakdown" id="gr-shelf-breakdown"></div>
+          <div class="gr-preview-list" id="gr-preview-list"></div>
+        </div>
+
+        <!-- Step 3: importing -->
+        <div id="gr-step-importing" style="display: none;">
+          <div class="gr-importing">
+            <div class="gr-spinner"></div>
+            <div class="gr-importing-text">
+              <strong>Importing your library…</strong>
+              <span id="gr-importing-progress">Starting</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: done -->
+        <div id="gr-step-done" style="display: none;">
+          <div class="gr-done">
+            <div class="gr-checkmark">✓</div>
+            <h4 id="gr-done-title">All done</h4>
+            <p id="gr-done-message">Your books have been added to your library.</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" id="gr-footer">
+        <button type="button" class="modal-btn" id="gr-cancel-btn">Cancel</button>
+        <button type="button" class="modal-btn primary" id="gr-import-btn" style="display: none;">Import</button>
+        <button type="button" class="modal-btn primary" id="gr-done-btn" style="display: none;">Done</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Settings modal -->
   <div class="modal-overlay" id="settings-modal">
     <div class="modal" role="dialog" aria-labelledby="settings-title">
@@ -6380,7 +6673,7 @@
           </div>
           <div class="feed-search-wrap">
             <svg class="feed-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
-            <input id="feed-search" type="text" placeholder="Search people, communities…" autocomplete="off" />
+            <input id="feed-search" type="text" placeholder="Search" autocomplete="off" />
             <button class="feed-search-clear" id="feed-search-clear" style="display:none;" title="Clear">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
@@ -6579,6 +6872,9 @@
 
       <!-- CONNECTED SOURCES -->
       <div class="sources-strip">
+        <div class="source-pill goodreads" id="goodreads-pill" title="Import your Goodreads library">
+          <span class="src-dot"></span> Goodreads
+        </div>
         <div class="source-pill kindle">
           <span class="src-dot"></span> Kindle
         </div>
@@ -8856,6 +9152,399 @@
       closeBrowseCommunitiesModal();
     }
   });
+
+  // ===========================================================================
+  // GOODREADS CSV IMPORT
+  // ===========================================================================
+  // Goodreads shut down their public API in Dec 2020, so a real-time sync
+  // isn't possible. But Goodreads still lets users export their library as a
+  // CSV. This flow: drag-drop the CSV → parse → preview → write to books.
+  // ===========================================================================
+
+  // Minimal RFC 4180 CSV parser — handles quoted fields, embedded commas,
+  // doubled quotes for escaping, and CRLF/LF line endings. Returns array of
+  // arrays. Goodreads CSVs occasionally have multi-line review fields, hence
+  // the in-quote linebreak handling.
+  function parseCsv(text) {
+    const rows = [];
+    let row = [];
+    let field = '';
+    let inQuotes = false;
+    let i = 0;
+    // Strip BOM if present
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+
+    while (i < text.length) {
+      const c = text[i];
+      if (inQuotes) {
+        if (c === '"') {
+          if (text[i + 1] === '"') {
+            // Escaped quote
+            field += '"';
+            i += 2;
+            continue;
+          }
+          inQuotes = false;
+          i++;
+          continue;
+        }
+        field += c;
+        i++;
+      } else {
+        if (c === '"') { inQuotes = true; i++; continue; }
+        if (c === ',') { row.push(field); field = ''; i++; continue; }
+        if (c === '\r') { i++; continue; }
+        if (c === '\n') {
+          row.push(field);
+          rows.push(row);
+          row = [];
+          field = '';
+          i++;
+          continue;
+        }
+        field += c;
+        i++;
+      }
+    }
+    // Last field/row
+    if (field !== '' || row.length > 0) {
+      row.push(field);
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  // Clean a Goodreads ISBN field: it's wrapped in `="..."` like ="9780743273565"
+  function cleanGoodreadsIsbn(raw) {
+    if (!raw) return '';
+    return String(raw).replace(/^="?|"?$/g, '').trim();
+  }
+
+  // Parse a Goodreads "yyyy/mm/dd" date string into ISO format
+  function parseGoodreadsDate(s) {
+    if (!s) return null;
+    const m = String(s).match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})/);
+    if (!m) return null;
+    const [, y, mo, d] = m;
+    return `${y}-${mo.padStart(2, '0')}-${d.padStart(2, '0')}T00:00:00Z`;
+  }
+
+  // Map a Goodreads "Exclusive Shelf" to a Vronsky status.
+  // - "read"             → finished
+  // - "currently-reading"→ reading
+  // - "to-read"          → library
+  // - anything else      → library (default)
+  function mapGoodreadsShelf(shelf) {
+    const s = String(shelf || '').toLowerCase().trim();
+    if (s === 'read') return 'finished';
+    if (s === 'currently-reading') return 'reading';
+    return 'library'; // covers to-read + custom shelves
+  }
+
+  // Convert a parsed Goodreads CSV row → a Vronsky book object.
+  // Returns null if the row has no title (e.g. blank trailing rows).
+  function goodreadsRowToBook(row, headers) {
+    function get(name) {
+      const idx = headers.indexOf(name);
+      if (idx < 0) return '';
+      return (row[idx] || '').trim();
+    }
+
+    const title = get('Title');
+    if (!title) return null;
+
+    const author = get('Author');
+    const isbn13 = cleanGoodreadsIsbn(get('ISBN13'));
+    const isbn10 = cleanGoodreadsIsbn(get('ISBN'));
+    const isbn = isbn13 || isbn10 || null;
+    const ratingRaw = parseInt(get('My Rating'), 10);
+    const rating = (ratingRaw >= 1 && ratingRaw <= 5) ? ratingRaw : null;
+    const review = get('My Review') || '';
+    const shelf = get('Exclusive Shelf');
+    const status = mapGoodreadsShelf(shelf);
+    const dateRead = parseGoodreadsDate(get('Date Read'));
+    const dateAdded = parseGoodreadsDate(get('Date Added'));
+    const yearRaw = parseInt(get('Year Published') || get('Original Publication Year'), 10);
+    const year = (yearRaw && yearRaw > 0) ? yearRaw : null;
+
+    // Build a Vronsky-shaped book. The id is generated like other manually-added
+    // books; coverIsbn lets the cover image lookup find an Open Library cover.
+    return {
+      id: 'gr_' + (Math.random().toString(36).slice(2, 10)) + '_' + Date.now(),
+      title,
+      author: author || 'Unknown',
+      year,
+      coverIsbn: isbn,
+      coverId: null,
+      status,
+      rating,
+      review,
+      finishedAt: dateRead,
+      addedAt: dateAdded || new Date().toISOString(),
+      source: 'goodreads'
+    };
+  }
+
+  // Compute a duplicate-detection key for a book: ISBN if available,
+  // otherwise lowercased title|author.
+  function bookDedupeKey(book) {
+    if (book.coverIsbn) return 'isbn:' + book.coverIsbn;
+    return 'ta:' + (book.title || '').toLowerCase().trim() + '|' + (book.author || '').toLowerCase().trim();
+  }
+
+  // === Goodreads modal wiring ===
+  const grModal = document.getElementById('goodreads-modal');
+  const grPill = document.getElementById('goodreads-pill');
+  const grCloseBtn = document.getElementById('gr-close-btn');
+  const grCancelBtn = document.getElementById('gr-cancel-btn');
+  const grImportBtn = document.getElementById('gr-import-btn');
+  const grDoneBtn = document.getElementById('gr-done-btn');
+  const grDropzone = document.getElementById('gr-dropzone');
+  const grFileInput = document.getElementById('gr-file-input');
+  const grError = document.getElementById('gr-error');
+
+  let grPendingBooks = [];   // books we'd insert (after dedup against current library)
+  let grSkippedCount = 0;    // dupes we'd skip
+
+  function openGoodreadsModal() {
+    if (!grModal) return;
+    grPendingBooks = [];
+    grSkippedCount = 0;
+    grShowStep('upload');
+    grError.style.display = 'none';
+    grError.textContent = '';
+    if (grFileInput) grFileInput.value = '';
+    grModal.classList.add('show');
+  }
+
+  function closeGoodreadsModal() {
+    if (grModal) grModal.classList.remove('show');
+  }
+
+  function grShowStep(name) {
+    ['upload', 'preview', 'importing', 'done'].forEach(n => {
+      const el = document.getElementById('gr-step-' + n);
+      if (el) el.style.display = (n === name) ? 'block' : 'none';
+    });
+    // Footer buttons
+    if (grCancelBtn) grCancelBtn.style.display = (name === 'done' || name === 'importing') ? 'none' : 'inline-flex';
+    if (grImportBtn) grImportBtn.style.display = (name === 'preview') ? 'inline-flex' : 'none';
+    if (grDoneBtn) grDoneBtn.style.display = (name === 'done') ? 'inline-flex' : 'none';
+  }
+
+  function grShowError(msg) {
+    if (!grError) return;
+    grError.textContent = msg;
+    grError.style.display = 'block';
+  }
+
+  // Read a File as text (Promise wrapper)
+  function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('Could not read file.'));
+      reader.readAsText(file);
+    });
+  }
+
+  // Process a dropped or chosen file. Validates, parses, dedups, shows preview.
+  async function handleGoodreadsFile(file) {
+    grError.style.display = 'none';
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { // 5 MB sanity cap
+      grShowError('That file is unusually large. Goodreads CSVs are typically under 1MB.');
+      return;
+    }
+    let text;
+    try {
+      text = await readFileAsText(file);
+    } catch (err) {
+      grShowError('Could not read the file.');
+      return;
+    }
+
+    let rows;
+    try {
+      rows = parseCsv(text);
+    } catch (err) {
+      grShowError('Could not parse the CSV. Is this a Goodreads export?');
+      return;
+    }
+
+    if (rows.length < 2) {
+      grShowError("That CSV looks empty.");
+      return;
+    }
+
+    const headers = rows[0].map(h => h.trim());
+    if (!headers.includes('Title') || !headers.includes('Exclusive Shelf')) {
+      grShowError("This doesn't look like a Goodreads export. Make sure you're using the file you downloaded from goodreads.com/review/import.");
+      return;
+    }
+
+    // Convert each data row → book object
+    const allBooks = rows.slice(1)
+      .map(r => goodreadsRowToBook(r, headers))
+      .filter(b => b !== null);
+
+    if (allBooks.length === 0) {
+      grShowError("Couldn't find any books in that CSV.");
+      return;
+    }
+
+    // Dedup against current library
+    const currentLibrary = await getBooks();
+    const existingKeys = new Set(currentLibrary.map(bookDedupeKey));
+
+    const toImport = [];
+    let skipped = 0;
+    allBooks.forEach(b => {
+      if (existingKeys.has(bookDedupeKey(b))) {
+        skipped++;
+      } else {
+        toImport.push(b);
+      }
+    });
+
+    grPendingBooks = toImport;
+    grSkippedCount = skipped;
+
+    renderGoodreadsPreview(toImport, skipped);
+    grShowStep('preview');
+  }
+
+  function renderGoodreadsPreview(toImport, skipped) {
+    const summary = document.getElementById('gr-preview-summary');
+    const breakdown = document.getElementById('gr-shelf-breakdown');
+    const list = document.getElementById('gr-preview-list');
+
+    const total = toImport.length + skipped;
+    const finished = toImport.filter(b => b.status === 'finished').length;
+    const reading = toImport.filter(b => b.status === 'reading').length;
+    const library = toImport.filter(b => b.status === 'library').length;
+
+    if (summary) {
+      let html = `Found <strong>${total}</strong> book${total === 1 ? '' : 's'} in your CSV.`;
+      if (skipped > 0) {
+        html += ` <strong>${skipped}</strong> already in your library — those will be skipped.`;
+      }
+      if (toImport.length > 0) {
+        html += `<br/>Ready to import <strong>${toImport.length}</strong>.`;
+      } else {
+        html += `<br/>Nothing new to import.`;
+      }
+      summary.innerHTML = html;
+    }
+
+    if (breakdown) {
+      const tags = [];
+      if (finished) tags.push(`<span class="gr-shelf-tag"><strong>${finished}</strong> finished</span>`);
+      if (reading) tags.push(`<span class="gr-shelf-tag"><strong>${reading}</strong> reading</span>`);
+      if (library) tags.push(`<span class="gr-shelf-tag"><strong>${library}</strong> to-read</span>`);
+      breakdown.innerHTML = tags.join('');
+    }
+
+    if (list) {
+      // Show first 50 (preview only)
+      const sample = toImport.slice(0, 50);
+      list.innerHTML = sample.map(b => `
+        <div class="gr-preview-row">
+          <span class="pr-title">${escapeHtml(b.title)} — ${escapeHtml(b.author)}</span>
+          <span class="pr-shelf">${escapeHtml(b.status)}</span>
+        </div>
+      `).join('');
+      if (toImport.length > 50) {
+        list.innerHTML += `<div class="gr-preview-row" style="justify-content: center; color: var(--text-3);">+ ${toImport.length - 50} more</div>`;
+      }
+    }
+
+    // Disable Import button if nothing to import
+    if (grImportBtn) {
+      grImportBtn.disabled = toImport.length === 0;
+      grImportBtn.textContent = toImport.length === 0
+        ? 'Nothing to import'
+        : `Import ${toImport.length} book${toImport.length === 1 ? '' : 's'}`;
+    }
+  }
+
+  async function runGoodreadsImport() {
+    if (grPendingBooks.length === 0) return;
+    grShowStep('importing');
+    const progress = document.getElementById('gr-importing-progress');
+
+    try {
+      const currentLibrary = await getBooks();
+      const merged = [...grPendingBooks, ...currentLibrary]; // new books at top
+      if (progress) progress.textContent = `Saving ${grPendingBooks.length} books`;
+      await saveBooks(merged);
+
+      if (progress) progress.textContent = 'Refreshing your library';
+      // Refresh dependent views
+      if (typeof renderDesk === 'function') await renderDesk();
+      if (typeof renderTrail === 'function') await renderTrail();
+      if (typeof renderFeed === 'function') await renderFeed(); // in case any reviews were imported
+
+      // Done
+      const doneTitle = document.getElementById('gr-done-title');
+      const doneMsg = document.getElementById('gr-done-message');
+      if (doneTitle) doneTitle.textContent = 'Imported!';
+      if (doneMsg) {
+        const skipText = grSkippedCount > 0 ? ` (${grSkippedCount} already in your library were skipped)` : '';
+        doneMsg.textContent = `Added ${grPendingBooks.length} book${grPendingBooks.length === 1 ? '' : 's'} to your library${skipText}.`;
+      }
+      grShowStep('done');
+    } catch (err) {
+      console.error('[Vronsky/goodreads] import failed:', err);
+      grShowError('Import failed: ' + (err.message || 'Unknown error'));
+      grShowStep('upload'); // back to start
+    }
+  }
+
+  // Wire pill click + modal buttons
+  if (grPill) grPill.addEventListener('click', openGoodreadsModal);
+  if (grCloseBtn) grCloseBtn.addEventListener('click', closeGoodreadsModal);
+  if (grCancelBtn) grCancelBtn.addEventListener('click', closeGoodreadsModal);
+  if (grDoneBtn) grDoneBtn.addEventListener('click', closeGoodreadsModal);
+  if (grImportBtn) grImportBtn.addEventListener('click', runGoodreadsImport);
+  if (grModal) {
+    grModal.addEventListener('click', (e) => {
+      if (e.target === grModal) closeGoodreadsModal();
+    });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && grModal && grModal.classList.contains('show')) {
+      closeGoodreadsModal();
+    }
+  });
+
+  // Drag-and-drop wiring on the dropzone
+  if (grDropzone && grFileInput) {
+    grDropzone.addEventListener('click', () => grFileInput.click());
+    grFileInput.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) handleGoodreadsFile(file);
+    });
+    ['dragenter', 'dragover'].forEach(ev => {
+      grDropzone.addEventListener(ev, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        grDropzone.classList.add('dragging');
+      });
+    });
+    ['dragleave', 'drop'].forEach(ev => {
+      grDropzone.addEventListener(ev, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        grDropzone.classList.remove('dragging');
+      });
+    });
+    grDropzone.addEventListener('drop', (e) => {
+      const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (file) handleGoodreadsFile(file);
+    });
+  }
+
   if (newCommunityModal) {
     newCommunityModal.addEventListener('click', (e) => {
       if (e.target === newCommunityModal) closeNewCommunityModal();
@@ -11052,11 +11741,34 @@
     const ROW_HEIGHT = 10; // matches grid-auto-rows: 10px
     const cs = getComputedStyle(wallEl);
     const GAP = parseFloat(cs.rowGap) || 10;
-    // Get column width from grid-template-columns (already computed to px values)
-    const cols = cs.gridTemplateColumns.split(' ').map(parseFloat).filter(n => !isNaN(n));
-    const colWidth = cols.length > 0 ? cols[0] : 200; // fallback
+
+    // Read column width from grid-template-columns. When the wall hasn't been
+    // laid out yet (e.g., very first paint), this can return literal CSS like
+    // 'repeat(3, 1fr)' instead of computed pixel values. In that case, derive
+    // the column width from the container's own width and the column count.
+    const cols = cs.gridTemplateColumns.split(' ').map(parseFloat).filter(n => !isNaN(n) && n > 0);
+    let colWidth = cols.length > 0 ? cols[0] : 0;
+
+    if (!colWidth) {
+      // Fallback: use the container's clientWidth divided by the expected
+      // number of columns at this viewport width. This matches the CSS rules.
+      const containerW = wallEl.clientWidth || (window.innerWidth - 48);
+      const w = window.innerWidth;
+      const padding = w >= 900 ? 0 : (w <= 600 ? 36 : 48);
+      const gap = w >= 900 ? 14 : (w <= 600 ? 8 : 10);
+      let colCount;
+      if (w >= 1200) colCount = 5;
+      else if (w >= 900) colCount = 4;
+      else if (w <= 600) colCount = 2;
+      else colCount = 3;
+      colWidth = (containerW - padding - gap * (colCount - 1)) / colCount;
+      if (!colWidth || colWidth < 50) colWidth = 160; // last-resort fallback
+    }
+
     const cardHeight = colWidth * aspectRatio;
-    return Math.ceil((cardHeight + GAP) / (ROW_HEIGHT + GAP));
+    const span = Math.ceil((cardHeight + GAP) / (ROW_HEIGHT + GAP));
+    // Always return a usable span — never 0, never NaN
+    return Math.max(span, 18);
   }
 
   // Re-measure after render in case our pre-computed span was off
