@@ -3981,6 +3981,64 @@
   }
   .b-save-btn.saved:hover { background: var(--surface-soft); }
 
+  /* === SETTINGS === */
+  .settings-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 14px 0;
+  }
+  .settings-row-info { flex: 1; min-width: 0; }
+  .settings-row-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .settings-row-desc {
+    font-size: 12px;
+    color: var(--text-3);
+    line-height: 1.5;
+  }
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background-color: var(--border-strong);
+    border-radius: 24px;
+    transition: background-color 0.2s;
+  }
+  .toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle-switch input:checked + .toggle-slider {
+    background-color: var(--accent);
+  }
+  .toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+  }
+
   /* === USER PROFILE (viewing other users) === */
   .user-profile-card {
     padding: 0 24px 24px;
@@ -4116,6 +4174,60 @@
     font-size: 12px;
     color: var(--text-2);
     line-height: 1.5;
+  }
+
+  /* Library row on profile */
+  .up-books-row {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .up-books-row::-webkit-scrollbar { height: 6px; }
+  .up-books-row::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .up-book {
+    flex-shrink: 0;
+    width: 70px;
+    cursor: default;
+  }
+  .up-book-cover {
+    width: 70px;
+    aspect-ratio: 2 / 3;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--surface-soft);
+    border-radius: 3px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+    padding: 6px;
+    overflow: hidden;
+  }
+  .up-book-cover .ct {
+    font-size: 9px;
+    line-height: 1.2;
+    font-weight: 600;
+  }
+  .up-private-notice {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 16px 18px;
+    background: var(--surface-soft);
+    border-radius: 8px;
+    color: var(--text-2);
+    font-size: 13px;
+  }
+  .up-private-notice svg {
+    width: 18px;
+    height: 18px;
+    color: var(--text-3);
+    flex-shrink: 0;
   }
 
   /* === FEED SEARCH BAR === */
@@ -5126,8 +5238,35 @@
       <div class="email" data-user-email>you@example.com</div>
     </div>
     <div class="item">View profile <span class="arrow">→</span></div>
-    <div class="item">Settings <span class="arrow">→</span></div>
+    <div class="item" id="settings-btn">Settings <span class="arrow">→</span></div>
     <div class="item danger" id="signout-btn">Sign out</div>
+  </div>
+
+  <!-- Settings modal -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal" role="dialog" aria-labelledby="settings-title">
+      <div class="modal-head">
+        <h3 id="settings-title">Settings</h3>
+        <button class="modal-close" id="settings-close-btn" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Public profile</div>
+            <div class="settings-row-desc">When on, anyone can see your profile and your library. When off, only you can.</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="settings-public-toggle" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="modal-btn primary" id="settings-done-btn">Done</button>
+      </div>
+    </div>
   </div>
 
   <!-- Add-a-book modal -->
@@ -5935,7 +6074,7 @@
     // Fetch the matching profile row
     const { data: profile, error } = await sb
       .from('profiles')
-      .select('id, username, display_name, email, created_at')
+      .select('id, username, display_name, email, created_at, is_public')
       .eq('id', session.user.id)
       .single();
 
@@ -5950,7 +6089,8 @@
       name: profile.display_name || profile.username,
       username: profile.username,
       email: profile.email,
-      createdAt: profile.created_at
+      createdAt: profile.created_at,
+      isPublic: !!profile.is_public
     };
     return currentUser;
   }
@@ -6184,6 +6324,55 @@
     location.reload();
   });
 
+  // === SETTINGS MODAL ===
+  const settingsModal = document.getElementById('settings-modal');
+  const settingsBtn = document.getElementById('settings-btn');
+  const settingsCloseBtn = document.getElementById('settings-close-btn');
+  const settingsDoneBtn = document.getElementById('settings-done-btn');
+  const settingsPublicToggle = document.getElementById('settings-public-toggle');
+
+  function openSettingsModal() {
+    if (!currentUser) return;
+    // Set toggle to current state
+    settingsPublicToggle.checked = !!currentUser.isPublic;
+    settingsModal.classList.add('show');
+    document.getElementById('user-menu')?.classList.remove('show');
+  }
+  function closeSettingsModal() {
+    settingsModal.classList.remove('show');
+  }
+
+  if (settingsBtn) settingsBtn.addEventListener('click', openSettingsModal);
+  if (settingsCloseBtn) settingsCloseBtn.addEventListener('click', closeSettingsModal);
+  if (settingsDoneBtn) settingsDoneBtn.addEventListener('click', closeSettingsModal);
+  if (settingsModal) {
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) closeSettingsModal();
+    });
+  }
+
+  // Toggle the public flag — writes through to profiles table immediately
+  if (settingsPublicToggle) {
+    settingsPublicToggle.addEventListener('change', async (e) => {
+      const newValue = e.target.checked;
+      if (!currentUser || !currentUser.id || !sb) return;
+      const { error } = await sb
+        .from('profiles')
+        .update({ is_public: newValue })
+        .eq('id', currentUser.id);
+      if (error) {
+        console.error('[Vronsky/settings] update is_public failed:', error);
+        alert('Could not save: ' + (error.message || 'Unknown error'));
+        // Revert toggle
+        e.target.checked = !newValue;
+        return;
+      }
+      currentUser.isPublic = newValue;
+      // Invalidate the real-users cache so user search reflects this
+      _allRealUsersCache = null;
+    });
+  }
+
   // Diagnose button — runs a deep check on the books pipeline and shows the result.
   // Useful when "sync says success but new browser shows nothing" type problems hit.
   async function diagnoseBooks() {
@@ -6333,6 +6522,29 @@
     _booksCache = books;
     _booksCacheUser = user.id;
     return books;
+  }
+
+  // Fetch books for any user. Returns [] if the user is private (RLS will block).
+  // No caching here — used on profile views which are infrequent.
+  async function getBooksForUser(userId) {
+    if (!userId || !sb) return [];
+
+    const { data, error } = await sb
+      .from('books')
+      .select('id, data, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('[Vronsky/books] getBooksForUser failed:', error);
+      return [];
+    }
+
+    return (data || []).map(row => ({
+      ...(row.data || {}),
+      id: row.id,
+      addedAt: row.created_at || (row.data && row.data.addedAt) || null
+    }));
   }
 
   // Write the full books array to Supabase. Diffs against current state to
@@ -7932,24 +8144,54 @@
     { username: 'vesna_t', name: 'Vesna Toma', bio: 'Recovering grad student. Books that made me drop out: too many to list.', booksRead: 134, joined: '2022' }
   ];
 
-  // Get all known users (real + seeded). The current user comes from auth.
-  async function getAllUsers() {
-    const me = await getUser();
-    const all = [...SEED_USERS];
-    if (me && me.username && !all.find(u => u.username === me.username)) {
-      all.unshift({
-        username: me.username,
-        name: me.name || me.username,
-        bio: me.bio || '',
-        booksRead: 0, // could be computed from finished books — kept simple for now
-        joined: (me.createdAt || '').slice(0, 4) || '2026',
-        isMe: true
-      });
+  // Cache for real users fetched from profiles table
+  let _allRealUsersCache = null;
+
+  // Fetch all real users from profiles table.
+  async function fetchAllRealUsers() {
+    if (_allRealUsersCache !== null) return _allRealUsersCache;
+    if (!sb) return [];
+
+    const { data, error } = await sb
+      .from('profiles')
+      .select('id, username, display_name, created_at, is_public');
+
+    if (error) {
+      console.error('[Vronsky/users] profiles fetch failed:', error);
+      return [];
     }
-    return all;
+
+    const users = (data || []).map(p => ({
+      id: p.id,
+      username: p.username,
+      name: p.display_name || p.username,
+      bio: '', // not stored on profiles yet
+      booksRead: 0, // could be computed; expensive to do for all users
+      joined: (p.created_at || '').slice(0, 4) || '2026',
+      isPublic: !!p.is_public,
+      isReal: true
+    }));
+
+    _allRealUsersCache = users;
+    return users;
   }
 
-  // Lookup a single user by username — checks seed users + current user
+  // Get all known users (real from DB + seeded fictional). Real users come first.
+  async function getAllUsers() {
+    const me = await getUser();
+    const realUsers = await fetchAllRealUsers();
+
+    // Mark the current user
+    const realWithMe = realUsers.map(u => ({
+      ...u,
+      isMe: !!(me && me.id && u.id === me.id)
+    }));
+
+    // Combine real + seeded; real users come first
+    return [...realWithMe, ...SEED_USERS];
+  }
+
+  // Lookup a single user by username — checks both real and seeded users
   async function findUserByUsername(username) {
     if (!username) return null;
     const clean = username.replace(/^@/, '').toLowerCase();
@@ -9212,8 +9454,81 @@
     const allComments = [...SEED_COMMENTS, ...userComments];
     const handle = '@' + user.username.toLowerCase();
     const theirPosts = allPosts.filter(p => (p.author || '').toLowerCase() === handle).slice(0, 20);
-    const theirReviews = theirPosts.filter(p => p.type === 'review');
     const theirCommentsCount = allComments.filter(c => (c.author || '').toLowerCase() === handle).length;
+
+    // === LIBRARY SECTION ===
+    // Show their books if:
+    //   - it's the current user (you can always see your own), OR
+    //   - they're a real user with isPublic = true
+    // Seeded fictional users have no library at all.
+    let librarySectionHtml = '';
+    let booksReadCount = user.booksRead || 0;
+
+    if (isMe || (user.isReal && user.isPublic)) {
+      const theirBooks = isMe
+        ? await getBooks()
+        : await getBooksForUser(user.id);
+
+      const finished = theirBooks.filter(b => b.status === 'finished');
+      const reading = theirBooks.filter(b => b.status === 'reading');
+      const wantToRead = theirBooks.filter(b => b.status === 'library');
+      booksReadCount = finished.length;
+
+      const sections = [];
+      if (reading.length > 0) {
+        sections.push({ label: 'Currently reading', books: reading });
+      }
+      if (finished.length > 0) {
+        sections.push({ label: 'Finished', books: finished.slice(0, 12) });
+      }
+      if (wantToRead.length > 0) {
+        sections.push({ label: 'Want to read', books: wantToRead.slice(0, 12) });
+      }
+
+      if (sections.length === 0) {
+        librarySectionHtml = `
+          <div class="up-section">
+            <div class="up-section-label">Library</div>
+            <div class="rec-empty" style="padding: 16px 0;">
+              <p style="color: var(--text-3); font-size: 13px;">No books yet.</p>
+            </div>
+          </div>
+        `;
+      } else {
+        const renderMiniBook = (b) => {
+          const coverKey = b.coverId;
+          const coverHtml = coverKey
+            ? `<div class="up-book-cover" style="background-image: url(${coverImageUrl(coverKey, 'M')})"></div>`
+            : `<div class="up-book-cover ${b.coverClass || pickCoverClass(b.title)}">
+                  <div class="ct">${escapeHtml((b.title || '').slice(0, 20))}</div>
+               </div>`;
+          return `
+            <div class="up-book" title="${escapeHtml(b.title)} — ${escapeHtml(b.author || '')}">
+              ${coverHtml}
+            </div>
+          `;
+        };
+
+        librarySectionHtml = sections.map(s => `
+          <div class="up-section">
+            <div class="up-section-label">${escapeHtml(s.label)} · ${s.books.length}</div>
+            <div class="up-books-row">${s.books.map(renderMiniBook).join('')}</div>
+          </div>
+        `).join('');
+      }
+    } else if (user.isReal) {
+      // Real user but private — show notice
+      librarySectionHtml = `
+        <div class="up-section">
+          <div class="up-section-label">Library</div>
+          <div class="up-private-notice">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            <div>This account's library is private.</div>
+          </div>
+        </div>
+      `;
+    }
+    // For seeded fictional users (not isReal, not isPublic), no library section at all.
 
     const initial = (user.name || user.username || '?').charAt(0).toUpperCase();
 
@@ -9240,7 +9555,7 @@
         </div>
         <div class="up-stats">
           <div class="up-stat">
-            <span class="num">${user.booksRead || 0}</span>
+            <span class="num">${booksReadCount}</span>
             <span class="lbl">books read</span>
           </div>
           <div class="up-stat">
@@ -9257,6 +9572,7 @@
           </div>
         </div>
       </div>
+      ${librarySectionHtml}
       <div class="up-section">
         <div class="up-section-label">Recent posts</div>
         <div class="up-posts">${postsHtml}</div>
