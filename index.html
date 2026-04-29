@@ -3144,6 +3144,146 @@
   .thread-feed-card .from .from-icon.author { background: #4a78c4; }
   .thread-feed-card .from .from-icon.topic { background: #2e7c70; }
 
+  /* === REVIEW CARD on feed === */
+  .review-card {
+    display: flex;
+    gap: 14px;
+    margin: 0 20px 10px;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .review-card:hover { border-color: var(--border); transform: translateY(-1px); }
+  .review-card-cover {
+    flex-shrink: 0;
+    width: 64px;
+    aspect-ratio: 2 / 3;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--surface-soft);
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+    padding: 6px;
+    overflow: hidden;
+  }
+  .review-card-cover .ct {
+    font-size: 9px;
+    line-height: 1.2;
+    font-weight: 600;
+  }
+  .review-card-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .review-card-head {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 11px;
+    color: var(--text-3);
+    margin-bottom: 2px;
+  }
+  .review-card-head .who {
+    font-variation-settings: "wght" 600;
+    color: var(--accent-deep);
+  }
+  .review-card-head .rev-tag {
+    font-style: italic;
+  }
+  .review-card-title {
+    font-size: 14px;
+    font-variation-settings: "opsz" 18, "wght" 600;
+    color: var(--text);
+    line-height: 1.25;
+  }
+  .review-card-author {
+    font-size: 11px;
+    color: var(--text-2);
+    font-style: italic;
+    margin-top: -2px;
+  }
+  .review-card-rating {
+    margin-top: 4px;
+  }
+  .review-card-body {
+    font-size: 12px;
+    color: var(--text-2);
+    line-height: 1.5;
+    margin-top: 4px;
+  }
+  .review-card-foot {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-3);
+  }
+
+  /* Post detail header for book reviews */
+  .post-book-header {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .post-book-cover {
+    flex-shrink: 0;
+    width: 60px;
+    aspect-ratio: 2 / 3;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--surface-soft);
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+    padding: 6px;
+    overflow: hidden;
+  }
+  .post-book-cover .ct {
+    font-size: 9px;
+    line-height: 1.2;
+    font-weight: 600;
+  }
+  .post-book-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .post-book-label {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-bottom: 4px;
+  }
+  .post-book-title {
+    font-size: 18px;
+    font-variation-settings: "opsz" 22, "wght" 600;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .post-book-author {
+    font-size: 13px;
+    color: var(--text-2);
+    font-style: italic;
+    margin-top: 2px;
+  }
+
   /* === VOTING === */
   .vote-pill {
     display: inline-flex;
@@ -5822,6 +5962,14 @@
           <div id="home-threads-list"></div>
         </div>
 
+        <!-- Recent reviews from public users (rendered by JS) -->
+        <div class="home-threads-section" id="home-reviews-section" style="display:none;">
+          <div class="label-row">
+            <span class="label">Recent reviews</span>
+          </div>
+          <div id="home-reviews-list"></div>
+        </div>
+
         <!-- Empty state when "Following" is selected but user follows nothing -->
         <div class="following-empty" id="following-empty" style="display:none;">
           <div class="em-mark">— Nothing here yet —</div>
@@ -6371,8 +6519,10 @@
           if (typeof loadUserVotes === 'function') await loadUserVotes();
           if (typeof renderDesk === 'function') await renderDesk();
           if (typeof renderTrail === 'function') await renderTrail();
+          if (typeof backfillReviewPosts === 'function') await backfillReviewPosts();
           if (typeof renderCommunityList === 'function') await renderCommunityList();
           if (typeof renderHomeFollowedPosts === 'function') await renderHomeFollowedPosts();
+          if (typeof renderRecentReviews === 'function') await renderRecentReviews();
           if (typeof renderUserClubs === 'function') await renderUserClubs();
           if (typeof renderBrowseClubs === 'function') await renderBrowseClubs();
         }
@@ -6414,8 +6564,10 @@
         if (typeof loadUserVotes === 'function') await loadUserVotes();
         if (typeof renderDesk === 'function') await renderDesk();
         if (typeof renderTrail === 'function') await renderTrail();
+        if (typeof backfillReviewPosts === 'function') await backfillReviewPosts();
         if (typeof renderCommunityList === 'function') await renderCommunityList();
         if (typeof renderHomeFollowedPosts === 'function') await renderHomeFollowedPosts();
+        if (typeof renderRecentReviews === 'function') await renderRecentReviews();
         if (typeof renderUserClubs === 'function') await renderUserClubs();
         if (typeof renderBrowseClubs === 'function') await renderBrowseClubs();
       }
@@ -6443,8 +6595,10 @@
       if (typeof loadUserVotes === 'function') await loadUserVotes();
       if (typeof renderDesk === 'function') await renderDesk();
       if (typeof renderTrail === 'function') await renderTrail();
+      if (typeof backfillReviewPosts === 'function') await backfillReviewPosts();
       if (typeof renderCommunityList === 'function') await renderCommunityList();
       if (typeof renderHomeFollowedPosts === 'function') await renderHomeFollowedPosts();
+      if (typeof renderRecentReviews === 'function') await renderRecentReviews();
       if (typeof renderUserClubs === 'function') await renderUserClubs();
       if (typeof renderBrowseClubs === 'function') await renderBrowseClubs();
     }
@@ -6769,6 +6923,159 @@
     // Update cache
     _booksCache = books;
     _booksCacheUser = user.id;
+
+    // Sync any review-posts to the feed. Done after the book sync so a freshly-
+    // saved book is in place before its review-post references it.
+    try {
+      await syncReviewPostsForBooks(books, toDelete);
+    } catch (err) {
+      console.error('[Vronsky/reviews] sync failed:', err);
+      // Non-fatal — the book itself saved fine
+    }
+  }
+
+  // Build a deterministic post ID for a book review. Same book → same post ID,
+  // so writes are idempotent.
+  function reviewPostId(bookId) {
+    return 'review_' + bookId;
+  }
+
+  // For each book that has a review + rating, upsert a corresponding feed post.
+  // For each book that no longer has a review (or was deleted), delete its post.
+  async function syncReviewPostsForBooks(books, deletedBookIds) {
+    const user = await getUser();
+    if (!user || !user.id || !sb) return;
+
+    // Posts to upsert: any book with both review text and a rating
+    const reviewedBooks = books.filter(b => (b.review || '').trim() && b.rating);
+
+    const postsToUpsert = reviewedBooks.map(b => ({
+      id: reviewPostId(b.id),
+      author_id: user.id,
+      community_id: null, // null = book review (not a community post)
+      data: {
+        kind: 'book_review',
+        bookId: b.id,
+        bookTitle: b.title,
+        bookAuthor: b.author || '',
+        bookCoverId: b.coverId || null,
+        author: '@' + user.username,
+        type: 'review',
+        title: b.title,
+        body: b.review,
+        rating: b.rating,
+        ts: 'just now',
+        commentCount: 0,
+        score: 1
+      }
+    }));
+
+    // Posts to delete: any post for a book that's no longer reviewed, OR was deleted entirely
+    // First, find all currently-reviewed book IDs, then look up which post IDs exist
+    // in the database for this user that DON'T match.
+    const reviewedIds = new Set(reviewedBooks.map(b => reviewPostId(b.id)));
+    const allBookPostIds = books.map(b => reviewPostId(b.id));
+    const deletedPostIds = (deletedBookIds || []).map(id => reviewPostId(id));
+
+    // Look up existing review-posts in the database for this user
+    const { data: existingPosts, error: existingErr } = await sb
+      .from('posts')
+      .select('id')
+      .eq('author_id', user.id)
+      .is('community_id', null);
+
+    if (existingErr) {
+      console.error('[Vronsky/reviews] could not fetch existing review posts:', existingErr);
+      return;
+    }
+
+    const existingPostIds = new Set((existingPosts || []).map(r => r.id));
+
+    // Posts to delete:
+    //   - Any post for a deleted book
+    //   - Any post for a book whose review was removed
+    const toDeletePostIds = [
+      ...deletedPostIds,
+      ...allBookPostIds.filter(pid => existingPostIds.has(pid) && !reviewedIds.has(pid))
+    ];
+
+    if (toDeletePostIds.length > 0) {
+      const { error: delErr } = await sb
+        .from('posts')
+        .delete()
+        .in('id', toDeletePostIds);
+      if (delErr) console.error('[Vronsky/reviews] delete failed:', delErr);
+    }
+
+    if (postsToUpsert.length > 0) {
+      const { error: upErr } = await sb
+        .from('posts')
+        .upsert(postsToUpsert, { onConflict: 'id' });
+      if (upErr) console.error('[Vronsky/reviews] upsert failed:', upErr);
+    }
+
+    // Invalidate posts cache so the next feed render picks up changes
+    _postsCache = null;
+  }
+
+  // One-time backfill: ensures every reviewed book in the user's library
+  // has a corresponding post on the feed. Safe to call repeatedly — it
+  // only inserts what's missing.
+  async function backfillReviewPosts() {
+    const user = await getUser();
+    if (!user || !user.id || !sb) return;
+
+    const books = await getBooks();
+    if (!books || books.length === 0) return;
+    const reviewedBooks = books.filter(b => (b.review || '').trim() && b.rating);
+    if (reviewedBooks.length === 0) return;
+
+    // Find which review-posts already exist
+    const expectedIds = reviewedBooks.map(b => reviewPostId(b.id));
+    const { data: existing, error: existErr } = await sb
+      .from('posts')
+      .select('id')
+      .in('id', expectedIds);
+
+    if (existErr) {
+      console.error('[Vronsky/reviews] backfill check failed:', existErr);
+      return;
+    }
+
+    const existingIds = new Set((existing || []).map(r => r.id));
+    const missing = reviewedBooks.filter(b => !existingIds.has(reviewPostId(b.id)));
+
+    if (missing.length === 0) return;
+
+    console.log(`[Vronsky/reviews] backfilling ${missing.length} review posts`);
+
+    const rows = missing.map(b => ({
+      id: reviewPostId(b.id),
+      author_id: user.id,
+      community_id: null,
+      data: {
+        kind: 'book_review',
+        bookId: b.id,
+        bookTitle: b.title,
+        bookAuthor: b.author || '',
+        bookCoverId: b.coverId || null,
+        author: '@' + user.username,
+        type: 'review',
+        title: b.title,
+        body: b.review,
+        rating: b.rating,
+        ts: 'just now',
+        commentCount: 0,
+        score: 1
+      }
+    }));
+
+    const { error: insErr } = await sb.from('posts').insert(rows);
+    if (insErr) {
+      console.error('[Vronsky/reviews] backfill insert failed:', insErr);
+      return;
+    }
+    _postsCache = null;
   }
   // Backward-compat shim used by the profile screen
   async function getReadBooks() {
@@ -9185,6 +9492,108 @@
     wireVotePills(list);
   }
 
+  // Render recent book reviews from any public user. Reviews appear as feed
+  // posts (community_id IS NULL) and use a slightly different visual treatment
+  // featuring the book cover.
+  async function renderRecentReviews(count) {
+    if (count === undefined) count = 6;
+    const section = document.getElementById('home-reviews-section');
+    const list = document.getElementById('home-reviews-list');
+    if (!section || !list) return;
+    if (!sb) {
+      section.style.display = 'none';
+      return;
+    }
+
+    // Fetch all review posts (community_id IS NULL), newest first
+    const { data, error } = await sb
+      .from('posts')
+      .select('id, author_id, data, created_at')
+      .is('community_id', null)
+      .order('created_at', { ascending: false })
+      .limit(count);
+
+    if (error) {
+      console.error('[Vronsky/reviews] feed fetch failed:', error);
+      section.style.display = 'none';
+      return;
+    }
+
+    const reviews = (data || []).map(row => ({
+      ...(row.data || {}),
+      id: row.id,
+      authorId: row.author_id,
+      createdAt: row.created_at
+    }));
+
+    if (reviews.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+
+    section.style.display = 'block';
+    list.innerHTML = reviews.map(r => {
+      const coverHtml = r.bookCoverId
+        ? `<div class="review-card-cover" style="background-image: url(${coverImageUrl(r.bookCoverId, 'M')})"></div>`
+        : `<div class="review-card-cover ${pickCoverClass(r.bookTitle || '')}">
+              <div class="ct">${escapeHtml((r.bookTitle || '').slice(0, 20))}</div>
+           </div>`;
+
+      const ratingHtml = r.rating ? `<div class="review-card-rating">${renderStarsLarge(r.rating)}</div>` : '';
+      const bodyText = r.body || '';
+      const truncated = bodyText.length > 200 ? bodyText.slice(0, 200) + '…' : bodyText;
+
+      return `
+        <div class="review-card" data-go-post="${r.id}">
+          ${coverHtml}
+          <div class="review-card-info">
+            <div class="review-card-head">
+              <span class="who">${escapeHtml(r.author)}</span>
+              <span class="rev-tag">reviewed</span>
+              <span class="time">${escapeHtml(formatRelativeTs(r.createdAt))}</span>
+            </div>
+            <div class="review-card-title">${escapeHtml(r.bookTitle || r.title || '')}</div>
+            ${r.bookAuthor ? `<div class="review-card-author">${escapeHtml(r.bookAuthor)}</div>` : ''}
+            ${ratingHtml}
+            ${truncated ? `<div class="review-card-body">${escapeHtml(truncated)}</div>` : ''}
+            <div class="review-card-foot">
+              ${renderVotePillHtml(r.id, r.score || 0)}
+              <span>${r.commentCount || 0} comment${r.commentCount === 1 ? '' : 's'}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Tap → open the post detail
+    list.querySelectorAll('[data-go-post]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        // Don't navigate if clicking the vote pill
+        if (e.target.closest('.vote-pill')) return;
+        const postId = el.dataset.goPost;
+        document.querySelector('.tab[data-target="discover"]').click();
+        navigateDiscover('post', postId);
+      });
+    });
+    wireVotePills(list);
+  }
+
+  // Format a Supabase ISO timestamp as a relative string ("3h", "2d", "Mar 4")
+  function formatRelativeTs(isoStr) {
+    if (!isoStr) return '';
+    const d = new Date(isoStr);
+    if (isNaN(d)) return '';
+    const diffMs = Date.now() - d.getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + 'm';
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + 'h';
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return days + 'd';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
   // "See all →" link — switch to Discover
   document.querySelectorAll('[data-go-discover]').forEach(el => {
     el.addEventListener('click', () => {
@@ -9790,21 +10199,49 @@
          </div>`
       : '';
 
+    // For review-posts, show the book cover + "reviewed Title" instead of community.
+    // For community posts, show "posted in v/community" (existing behavior).
+    const isReview = post.kind === 'book_review' || (!post.communityId && post.bookTitle);
+
+    let whereBlock = '';
+    let bookHeaderBlock = '';
+    if (isReview) {
+      const coverHtml = post.bookCoverId
+        ? `<div class="post-book-cover" style="background-image: url(${coverImageUrl(post.bookCoverId, 'M')})"></div>`
+        : `<div class="post-book-cover ${pickCoverClass(post.bookTitle || '')}">
+              <div class="ct">${escapeHtml((post.bookTitle || '').slice(0, 18))}</div>
+           </div>`;
+      bookHeaderBlock = `
+        <div class="post-book-header">
+          ${coverHtml}
+          <div class="post-book-info">
+            <div class="post-book-label">${escapeHtml(post.author)} reviewed</div>
+            <div class="post-book-title">${escapeHtml(post.bookTitle || post.title || '')}</div>
+            ${post.bookAuthor ? `<div class="post-book-author">${escapeHtml(post.bookAuthor)}</div>` : ''}
+          </div>
+        </div>
+      `;
+      whereBlock = ''; // no community for reviews
+    } else if (community) {
+      whereBlock = `<div class="where" data-go-community="${community.id}">
+          posted in <strong style="color:var(--text);">${escapeHtml(community.slug)}</strong> →
+        </div>`;
+    }
+
     container.innerHTML = `
       <div class="post-detail">
+        ${bookHeaderBlock}
         <div class="post-head">
           <span class="who">${escapeHtml(post.author)}</span>
-          <span class="type ${post.type}">${escapeHtml(post.type)}</span>
+          ${!isReview ? `<span class="type ${post.type}">${escapeHtml(post.type)}</span>` : ''}
           <span class="time">${escapeHtml(post.ts || 'just now')}</span>
           ${ownerControls}
         </div>
-        <div class="post-title-large">${escapeHtml(post.title)}</div>
+        ${!isReview ? `<div class="post-title-large">${escapeHtml(post.title)}</div>` : ''}
         ${post.rating ? `<div class="post-rating-large">${renderStarsLarge(post.rating)}</div>` : ''}
         ${post.body ? `<div class="body-text">${escapeHtml(post.body)}</div>` : ''}
         <div style="margin-top: 14px;">${renderVotePillHtml(post.id, post.score || 0)}</div>
-        <div class="where" data-go-community="${community.id}">
-          posted in <strong style="color:var(--text);">${escapeHtml(community.slug)}</strong> →
-        </div>
+        ${whereBlock}
       </div>
 
       <div class="comments-section">
