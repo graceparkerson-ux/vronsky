@@ -200,6 +200,62 @@
     border: 2px solid var(--surface);
   }
 
+  /* === Clubs search row (toggled open by the search icon) === */
+  .clubs-search-row {
+    padding: 0 24px;
+    margin-bottom: 18px;
+  }
+  .clubs-search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: border-color 0.18s, box-shadow 0.18s;
+    width: 100%;
+  }
+  .clubs-search-wrap:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .clubs-search-icon {
+    position: absolute;
+    left: 10px;
+    width: 14px;
+    height: 14px;
+    color: var(--text-3);
+    pointer-events: none;
+  }
+  .clubs-search-wrap input {
+    flex: 1;
+    padding: 9px 36px 9px 32px;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text);
+    width: 100%;
+    outline: none;
+  }
+  .clubs-search-wrap input::placeholder { color: var(--text-3); }
+  .clubs-search-clear {
+    position: absolute;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    color: var(--text-3);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .clubs-search-clear:hover { background: var(--surface-soft); color: var(--text); }
+  .clubs-search-clear svg { width: 12px; height: 12px; }
+
   /* prominent "create new" pill button (used in Clubs header) */
   .new-btn {
     display: inline-flex;
@@ -1090,14 +1146,20 @@
     flex: 0 0 auto;
     box-shadow: 0 4px 10px rgba(0,0,0,0.15);
   }
-  /* When the cover is rendered as an <img> (custom URL or book cover), make it
-     fill the .cv slot the same way the colored fallback does. */
-  .club-card .body .cv-img {
-    width: 50px;
-    height: 74px;
+  /* When the cover slot also contains an <img> overlay, make it a positioning context.
+     The colored placeholder content sits underneath; the image floats on top.
+     If the image fails (404/CORS/etc), it removes itself, leaving the placeholder visible. */
+  .club-card .body .cv-with-img {
+    position: relative;
+    overflow: hidden;
+  }
+  .club-card .body .cv-img-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
     display: block;
-    background: var(--surface-soft);
   }
   .club-card .body .cv .ct { font-size: 8px; }
   .club-card .body .cv .ca { font-size: 7px; }
@@ -6429,12 +6491,23 @@
 
         <div class="page-head no-title">
           <div class="actions">
-            <div class="head-btn" title="search clubs">
+            <button class="head-btn" id="clubs-search-toggle" title="Search clubs" aria-label="Search clubs">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
-            </div>
+            </button>
             <button class="new-btn" id="new-club-btn" title="Create a new club">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
               <span>New</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Search row (hidden by default, toggled by the search icon) -->
+        <div class="clubs-search-row" id="clubs-search-row" style="display: none;">
+          <div class="clubs-search-wrap">
+            <svg class="clubs-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+            <input id="clubs-search-input" type="text" placeholder="Search clubs by name, book, or description…" autocomplete="off" />
+            <button class="clubs-search-clear" id="clubs-search-clear" title="Clear">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
           </div>
         </div>
@@ -8504,29 +8577,39 @@
     const titlePart = b ? b.title : '';
     const authorPart = b && b.author ? b.author : '';
 
-    // Cover priority: club's own coverUrl, then current book cover, then placeholder.
-    // We render <img> rather than CSS background-image — this gives us:
-    //   - Native onerror handling for broken/blocked URLs
-    //   - Proper image loading lifecycle (lazy loading)
+    // Cover priority:
+    //   1. Club's own coverUrl (custom upload)
+    //   2. Current book's Open Library cover
+    //   3. Colored placeholder with title text
+    // We render <img> for real images so they get standard load handling,
+    // and fall back to a colored .cv div with title text if there's no source.
     let coverHtml;
-    const placeholderHtml = b
-      ? `<div class="cv ${pickClubCoverClass(b.title)}">
-            <div class="ct">${escapeHtml(titlePart.slice(0, 28))}</div>
-            ${authorPart ? `<div class="ca">— ${escapeHtml(authorPart.slice(0, 24))}</div>` : ''}
-         </div>`
-      : `<div class="cv" style="background: var(--surface-soft); border: 1px dashed var(--border-strong); display: grid; place-items: center; color: var(--text-3);">
-            <div style="font-size: 9px; text-align: center; padding: 6px;">No book yet</div>
-         </div>`;
+    const coverClass = b ? pickClubCoverClass(b.title) : 'cv-1';
+    const placeholderInner = b
+      ? `<div class="ct">${escapeHtml(titlePart.slice(0, 28))}</div>${authorPart ? `<div class="ca">— ${escapeHtml(authorPart.slice(0, 24))}</div>` : ''}`
+      : `<div style="font-size: 9px; text-align: center; padding: 6px;">No book yet</div>`;
 
     if (club.coverUrl) {
-      // Custom URL: <img> with onerror fallback to placeholder
-      const safeUrl = String(club.coverUrl).replace(/"/g, '%22');
-      coverHtml = `<img class="cv cv-img" src="${escapeHtml(safeUrl)}" loading="lazy" alt="" onerror="this.outerHTML=this.dataset.fb" data-fb="${escapeHtml(placeholderHtml)}" />`;
+      // Use the colored block as a backdrop; the <img> overlays it.
+      // If the image fails to load, the backdrop is what's visible.
+      coverHtml = `
+        <div class="cv ${coverClass} cv-with-img">
+          ${placeholderInner}
+          <img class="cv-img-overlay" src="${escapeHtml(String(club.coverUrl))}" alt="" loading="lazy" onerror="this.remove()" />
+        </div>
+      `;
     } else if (b && b.coverId) {
       const url = coverImageUrl(b.coverId, 'M');
-      coverHtml = `<img class="cv cv-img" src="${escapeHtml(url)}" loading="lazy" alt="" onerror="this.outerHTML=this.dataset.fb" data-fb="${escapeHtml(placeholderHtml)}" />`;
+      coverHtml = `
+        <div class="cv ${coverClass} cv-with-img">
+          ${placeholderInner}
+          <img class="cv-img-overlay" src="${escapeHtml(url)}" alt="" loading="lazy" onerror="this.remove()" />
+        </div>
+      `;
+    } else if (b) {
+      coverHtml = `<div class="cv ${coverClass}">${placeholderInner}</div>`;
     } else {
-      coverHtml = placeholderHtml;
+      coverHtml = `<div class="cv" style="background: var(--surface-soft); border: 1px dashed var(--border-strong); display: grid; place-items: center; color: var(--text-3);">${placeholderInner}</div>`;
     }
 
     const privacyHtml = club.privacy === 'private'
@@ -8557,8 +8640,28 @@
     `;
   }
 
+  // Current clubs-page search query (lowercase). Empty string = no filter.
+  let _clubsSearchQuery = '';
+
+  // Filter a list of clubs by the current search query.
+  // Matches against name, description, current book title/author.
+  function filterClubsBySearch(clubs) {
+    const q = _clubsSearchQuery;
+    if (!q) return clubs;
+    return clubs.filter(c => {
+      const haystack = [
+        c.name || '',
+        c.description || '',
+        c.currentBook && c.currentBook.title || '',
+        c.currentBook && c.currentBook.author || ''
+      ].join(' ').toLowerCase();
+      return haystack.includes(q);
+    });
+  }
+
   async function renderUserClubs() {
-    const clubs = await getMyClubs();
+    const allMyClubs = await getMyClubs();
+    const clubs = filterClubsBySearch(allMyClubs);
     const container = document.getElementById('user-clubs-list');
     if (!container) return;
 
@@ -8569,7 +8672,9 @@
     // Update the count
     const countEl = document.getElementById('your-clubs-count');
     if (countEl) {
-      countEl.textContent = `${clubs.length} active`;
+      countEl.textContent = _clubsSearchQuery
+        ? `${clubs.length} of ${allMyClubs.length}`
+        : `${clubs.length} active`;
     }
     // Show/hide the empty state
     const emptyEl = document.getElementById('your-clubs-empty');
@@ -9599,9 +9704,10 @@
   // === Browse public clubs (everyone's public clubs + seeded) ===
   async function renderBrowseClubs() {
     // getAllClubs returns: my clubs (any privacy) + everyone else's public clubs + SEED_CLUBS
-    // Filter to public for browse
+    // Filter to public for browse, then apply search query
     const all = await getAllClubs();
-    const publicClubs = all.filter(c => c.privacy === 'public');
+    const allPublic = all.filter(c => c.privacy === 'public');
+    const publicClubs = filterClubsBySearch(allPublic);
     const list = document.getElementById('browse-clubs-list');
     const empty = document.getElementById('browse-clubs-empty');
     const count = document.getElementById('browse-clubs-count');
@@ -9618,7 +9724,11 @@
         el.addEventListener('click', () => navigateClubs('detail', el.dataset.clubId));
       });
     }
-    if (count) count.textContent = `${publicClubs.length} active`;
+    if (count) {
+      count.textContent = _clubsSearchQuery
+        ? `${publicClubs.length} of ${allPublic.length}`
+        : `${publicClubs.length} active`;
+    }
   }
 
   // Click handler for user clubs (in #user-clubs-list) — open detail page
@@ -9627,6 +9737,55 @@
     const card = e.target.closest('[data-club-id]');
     if (card) navigateClubs('detail', card.dataset.clubId);
   });
+
+  // === Clubs page search ===
+  const clubsSearchToggle = document.getElementById('clubs-search-toggle');
+  const clubsSearchRow = document.getElementById('clubs-search-row');
+  const clubsSearchInput = document.getElementById('clubs-search-input');
+  const clubsSearchClear = document.getElementById('clubs-search-clear');
+
+  if (clubsSearchToggle && clubsSearchRow && clubsSearchInput) {
+    clubsSearchToggle.addEventListener('click', () => {
+      const isHidden = clubsSearchRow.style.display === 'none';
+      if (isHidden) {
+        clubsSearchRow.style.display = 'block';
+        // Focus the input after it becomes visible
+        setTimeout(() => clubsSearchInput.focus(), 50);
+      } else {
+        // Already open — toggle closed and clear search
+        clubsSearchRow.style.display = 'none';
+        clubsSearchInput.value = '';
+        if (_clubsSearchQuery) {
+          _clubsSearchQuery = '';
+          renderUserClubs();
+          renderBrowseClubs();
+        }
+      }
+    });
+
+    let clubsSearchToken = 0;
+    clubsSearchInput.addEventListener('input', () => {
+      const q = clubsSearchInput.value.trim().toLowerCase();
+      _clubsSearchQuery = q;
+      // Debounce slightly to avoid excessive re-renders on fast typing
+      const token = ++clubsSearchToken;
+      setTimeout(() => {
+        if (token !== clubsSearchToken) return;
+        renderUserClubs();
+        renderBrowseClubs();
+      }, 100);
+    });
+
+    if (clubsSearchClear) {
+      clubsSearchClear.addEventListener('click', () => {
+        clubsSearchInput.value = '';
+        _clubsSearchQuery = '';
+        renderUserClubs();
+        renderBrowseClubs();
+        clubsSearchInput.focus();
+      });
+    }
+  }
 
   // Browse clubs render happens in auth-restore IIFE — needs Supabase.
 
