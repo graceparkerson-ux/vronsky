@@ -4408,6 +4408,163 @@
     padding: 0;
   }
 
+  /* === NEW FEED LAYOUT === */
+  /* On wide screens: two columns (feed + sidebar). On mobile: single column. */
+  .feed-layout {
+    display: block;
+  }
+  .feed-main {
+    /* Single column on mobile — communities go elsewhere */
+  }
+  .feed-sidebar {
+    display: none; /* hidden on mobile */
+  }
+  /* Mobile-only "browse communities" link/chip near filters */
+  .feed-mobile-communities-link {
+    display: flex;
+    gap: 8px;
+    padding: 0 24px;
+    margin-bottom: 14px;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .mobile-comm-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px 6px 10px;
+    background: var(--surface);
+    color: var(--text-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 12px;
+    font-variation-settings: "opsz" 14, "wght" 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .mobile-comm-btn:hover {
+    border-color: var(--accent-soft);
+    color: var(--accent);
+  }
+  .mobile-comm-btn svg { width: 13px; height: 13px; }
+
+  /* Empty / loading states for the unified feed */
+  .feed-empty {
+    text-align: center;
+    padding: 40px 24px;
+    color: var(--text-3);
+  }
+  .feed-empty .em-mark {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    color: var(--text-3);
+  }
+  .feed-empty h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-variation-settings: "opsz" 20, "wght" 500;
+    color: var(--text);
+  }
+  .feed-empty p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-3);
+  }
+
+  /* Wide-screen breakpoint: communities sidebar appears */
+  @media (min-width: 900px) {
+    .feed-layout {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 28px;
+      padding: 0 24px;
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+    .feed-main {
+      min-width: 0;
+    }
+    /* On wide screens, post cards inside the feed-main shouldn't have their own
+       horizontal padding (the layout already provides it) */
+    .feed-main .review-card,
+    .feed-main .thread-feed-card {
+      margin-left: 0;
+      margin-right: 0;
+    }
+    .feed-sidebar {
+      display: block;
+    }
+    .feed-mobile-communities-link {
+      display: none; /* hide mobile link on wide screens */
+    }
+    /* Reposition the search/filter row to align with the layout */
+    .screen[data-screen="home"] .feed-filter-row {
+      max-width: 1080px;
+      margin: 0 auto 18px;
+    }
+  }
+
+  /* Sidebar styling */
+  .feed-sidebar {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+  }
+  .sidebar-section {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 14px;
+    padding: 18px 16px;
+  }
+  .sidebar-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .sidebar-label {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    font-variation-settings: "opsz" 14, "wght" 600;
+  }
+  .feed-sidebar #threads-list .thread-card {
+    margin: 0 0 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .feed-sidebar #threads-list .thread-card:hover {
+    background: var(--surface-soft);
+    border-color: var(--border-soft);
+  }
+  .feed-sidebar #threads-list .thread-card .icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    font-size: 10px;
+  }
+  .feed-sidebar #threads-list .thread-card .info .name {
+    font-size: 13px;
+  }
+  .feed-sidebar #threads-list .thread-card .info .slug {
+    font-size: 10px;
+  }
+  .feed-sidebar #threads-list .thread-card .info .stats {
+    font-size: 10px;
+  }
+  .feed-sidebar #threads-list .thread-card .arrow {
+    display: none; /* keep sidebar tight */
+  }
+
   .feed-search-wrap {
     position: relative;
     display: flex;
@@ -5617,6 +5774,21 @@
     </div>
   </div>
 
+  <!-- Browse Communities modal (mobile-only entry point; same data as sidebar) -->
+  <div class="modal-overlay" id="browse-communities-modal">
+    <div class="modal" role="dialog" aria-labelledby="bc-title">
+      <div class="modal-head">
+        <h3 id="bc-title">Browse communities</h3>
+        <button class="modal-close" id="bc-close-btn" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="bc-list"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- New Community modal -->
   <div class="modal-overlay" id="new-community-modal">
     <div class="modal" role="dialog" aria-labelledby="new-community-title">
@@ -5942,42 +6114,46 @@
           </div>
         </div>
 
-        <!-- COMMUNITIES section: visible to all, lets you find threads to follow -->
-        <div class="threads-preview" id="feed-communities-section">
-          <div class="label-row">
-            <span class="label">Communities</span>
-            <button class="new-btn-sm" id="new-community-btn" title="Create a community">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-              New
-            </button>
+        <!-- Compact "browse communities" link: shown on mobile, hidden on desktop -->
+        <div class="feed-mobile-communities-link" id="feed-mobile-communities-link">
+          <button class="mobile-comm-btn" id="mobile-browse-communities-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
+            Browse communities
+          </button>
+          <button class="new-btn-sm" id="mobile-new-community-btn" title="Create a community">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            New
+          </button>
+        </div>
+
+        <!-- 2-column layout on wide screens; single column on mobile -->
+        <div class="feed-layout">
+          <!-- LEFT: the unified feed stream -->
+          <div class="feed-main">
+            <!-- Loading / empty states -->
+            <div class="feed-empty" id="feed-empty" style="display:none;">
+              <div class="em-mark">— Quiet here —</div>
+              <h3>No posts yet</h3>
+              <p id="feed-empty-text">Follow some communities or write a review to get started.</p>
+            </div>
+
+            <!-- The unified post stream rendered by JS -->
+            <div id="feed-stream"></div>
           </div>
-          <div id="threads-list"></div>
-        </div>
 
-        <!-- From threads you follow (rendered by JS, hidden if no follows) -->
-        <div class="home-threads-section" id="home-threads-section" style="display:none;">
-          <div class="label-row">
-            <span class="label">From your threads</span>
-          </div>
-          <div id="home-threads-list"></div>
-        </div>
-
-        <!-- Recent reviews from public users (rendered by JS) -->
-        <div class="home-threads-section" id="home-reviews-section" style="display:none;">
-          <div class="label-row">
-            <span class="label">Recent reviews</span>
-          </div>
-          <div id="home-reviews-list"></div>
-        </div>
-
-        <!-- Empty state when "Following" is selected but user follows nothing -->
-        <div class="following-empty" id="following-empty" style="display:none;">
-          <div class="em-mark">— Nothing here yet —</div>
-          <h3>You're not following any threads</h3>
-          <p>Follow communities above to see their posts here.</p>
-        </div>
-
-        <div class="feed-list" data-active="all">
+          <!-- RIGHT: communities sidebar (desktop only) -->
+          <aside class="feed-sidebar" id="feed-sidebar">
+            <div class="sidebar-section">
+              <div class="sidebar-head">
+                <span class="sidebar-label">Communities</span>
+                <button class="new-btn-sm" id="new-community-btn" title="Create a community">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                  New
+                </button>
+              </div>
+              <div id="threads-list"></div>
+            </div>
+          </aside>
         </div>
 
       </div> <!-- /dv-home -->
@@ -6521,8 +6697,7 @@
           if (typeof renderTrail === 'function') await renderTrail();
           if (typeof backfillReviewPosts === 'function') await backfillReviewPosts();
           if (typeof renderCommunityList === 'function') await renderCommunityList();
-          if (typeof renderHomeFollowedPosts === 'function') await renderHomeFollowedPosts();
-          if (typeof renderRecentReviews === 'function') await renderRecentReviews();
+          if (typeof renderFeed === 'function') await renderFeed();
           if (typeof renderUserClubs === 'function') await renderUserClubs();
           if (typeof renderBrowseClubs === 'function') await renderBrowseClubs();
         }
@@ -6566,8 +6741,7 @@
         if (typeof renderTrail === 'function') await renderTrail();
         if (typeof backfillReviewPosts === 'function') await backfillReviewPosts();
         if (typeof renderCommunityList === 'function') await renderCommunityList();
-        if (typeof renderHomeFollowedPosts === 'function') await renderHomeFollowedPosts();
-        if (typeof renderRecentReviews === 'function') await renderRecentReviews();
+        if (typeof renderFeed === 'function') await renderFeed();
         if (typeof renderUserClubs === 'function') await renderUserClubs();
         if (typeof renderBrowseClubs === 'function') await renderBrowseClubs();
       }
@@ -6597,8 +6771,7 @@
       if (typeof renderTrail === 'function') await renderTrail();
       if (typeof backfillReviewPosts === 'function') await backfillReviewPosts();
       if (typeof renderCommunityList === 'function') await renderCommunityList();
-      if (typeof renderHomeFollowedPosts === 'function') await renderHomeFollowedPosts();
-      if (typeof renderRecentReviews === 'function') await renderRecentReviews();
+      if (typeof renderFeed === 'function') await renderFeed();
       if (typeof renderUserClubs === 'function') await renderUserClubs();
       if (typeof renderBrowseClubs === 'function') await renderBrowseClubs();
     }
@@ -8136,8 +8309,58 @@
   function closeNewCommunityModal() { newCommunityModal.classList.remove('show'); }
 
   if (newCommunityBtn) newCommunityBtn.addEventListener('click', openNewCommunityModal);
+  // The mobile-only New button mirrors the desktop one
+  const mobileNewCommunityBtn = document.getElementById('mobile-new-community-btn');
+  if (mobileNewCommunityBtn) mobileNewCommunityBtn.addEventListener('click', openNewCommunityModal);
   if (ncomCloseBtn) ncomCloseBtn.addEventListener('click', closeNewCommunityModal);
   if (ncomCancelBtn) ncomCancelBtn.addEventListener('click', closeNewCommunityModal);
+
+  // === Browse communities modal (mobile only) ===
+  const browseCommunitiesModal = document.getElementById('browse-communities-modal');
+  const browseCommunitiesBtn = document.getElementById('mobile-browse-communities-btn');
+  const bcCloseBtn = document.getElementById('bc-close-btn');
+  const bcList = document.getElementById('bc-list');
+
+  async function openBrowseCommunitiesModal() {
+    if (!browseCommunitiesModal || !bcList) return;
+    const all = await getAllCommunities();
+    bcList.innerHTML = all.map(c => `
+      <div class="thread-card" data-community="${escapeHtml(c.id)}">
+        <div class="icon ${c.type}">${escapeHtml(communityIconText(c.name))}</div>
+        <div class="info">
+          <div class="name">${escapeHtml(c.name)}</div>
+          <div class="slug">${escapeHtml(c.slug)}</div>
+          <div class="stats">
+            <span class="v">${fmtCount(c.members || 1)}</span> member${(c.members || 1) === 1 ? '' : 's'}
+          </div>
+        </div>
+        <span class="arrow">→</span>
+      </div>
+    `).join('');
+    bcList.querySelectorAll('[data-community]').forEach(el => {
+      el.addEventListener('click', () => {
+        closeBrowseCommunitiesModal();
+        navigateDiscover('community', el.dataset.community);
+      });
+    });
+    browseCommunitiesModal.classList.add('show');
+  }
+  function closeBrowseCommunitiesModal() {
+    if (browseCommunitiesModal) browseCommunitiesModal.classList.remove('show');
+  }
+
+  if (browseCommunitiesBtn) browseCommunitiesBtn.addEventListener('click', openBrowseCommunitiesModal);
+  if (bcCloseBtn) bcCloseBtn.addEventListener('click', closeBrowseCommunitiesModal);
+  if (browseCommunitiesModal) {
+    browseCommunitiesModal.addEventListener('click', (e) => {
+      if (e.target === browseCommunitiesModal) closeBrowseCommunitiesModal();
+    });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && browseCommunitiesModal && browseCommunitiesModal.classList.contains('show')) {
+      closeBrowseCommunitiesModal();
+    }
+  });
   if (newCommunityModal) {
     newCommunityModal.addEventListener('click', (e) => {
       if (e.target === newCommunityModal) closeNewCommunityModal();
@@ -9594,6 +9817,146 @@
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
+  // === UNIFIED FEED ===
+  // Renders all posts (community posts + book reviews) in one chronological stream.
+  // The active filter (`all` vs `following`) is read from .feed-filter-row .chip.active
+  let _feedFilter = 'all';
+
+  async function renderFeed() {
+    const stream = document.getElementById('feed-stream');
+    const empty = document.getElementById('feed-empty');
+    if (!stream) return;
+
+    const allCommunities = await getAllCommunities();
+    const userPosts = await getUserPosts(); // all real posts from everyone (incl. reviews)
+    const followedCommunities = await getFollowedThreads();
+    const followedUsers = await getFollowedUsers();
+    const followedUserHandles = new Set(followedUsers.map(u => '@' + u.toLowerCase()));
+
+    // Real posts have real createdAt; seeded posts have a hardcoded ts. We sort
+    // real posts by their ISO timestamp (newest first); seeded posts come after.
+    const realPosts = [...userPosts].sort((a, b) => {
+      const aT = a.createdAt || '';
+      const bT = b.createdAt || '';
+      return bT.localeCompare(aT);
+    });
+
+    // Apply filter
+    let filtered;
+    if (_feedFilter === 'following') {
+      const followedSet = new Set(followedCommunities);
+      filtered = realPosts.filter(p => {
+        // Review-posts (no communityId): include if author is followed
+        if (!p.communityId) {
+          return p.author && followedUserHandles.has(p.author.toLowerCase());
+        }
+        // Community posts: include if community is followed
+        return followedSet.has(p.communityId);
+      });
+      // Don't include seeded posts in Following — those are meant to be filler
+    } else {
+      // All: real posts + seeded (seeded last as filler)
+      filtered = [...realPosts, ...SEED_POSTS];
+    }
+
+    // Empty state
+    if (filtered.length === 0) {
+      stream.innerHTML = '';
+      if (empty) {
+        empty.style.display = 'block';
+        const t = document.getElementById('feed-empty-text');
+        if (t) {
+          t.textContent = _feedFilter === 'following'
+            ? 'Follow some communities or users to see their posts here.'
+            : 'Follow some communities or write a review to get started.';
+        }
+      }
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+
+    // Build card HTML — pick the right card type for each post
+    stream.innerHTML = filtered.map(p => {
+      const isReview = p.kind === 'book_review' || (!p.communityId && p.bookTitle);
+      if (isReview) {
+        return buildReviewCardHtml(p);
+      }
+      const community = allCommunities.find(c => c.id === p.communityId);
+      return buildCommunityPostCardHtml(p, community);
+    }).join('');
+
+    // Wire all post-tap handlers
+    stream.querySelectorAll('[data-go-post]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        if (e.target.closest('.vote-pill')) return;
+        if (e.target.closest('button')) return;
+        const postId = el.dataset.goPost;
+        navigateDiscover('post', postId);
+      });
+    });
+    wireVotePills(stream);
+  }
+
+  function buildReviewCardHtml(r) {
+    const coverHtml = r.bookCoverId
+      ? `<div class="review-card-cover" style="background-image: url(${coverImageUrl(r.bookCoverId, 'M')})"></div>`
+      : `<div class="review-card-cover ${pickCoverClass(r.bookTitle || '')}">
+            <div class="ct">${escapeHtml((r.bookTitle || '').slice(0, 20))}</div>
+         </div>`;
+    const ratingHtml = r.rating ? `<div class="review-card-rating">${renderStarsLarge(r.rating)}</div>` : '';
+    const bodyText = r.body || '';
+    const truncated = bodyText.length > 200 ? bodyText.slice(0, 200) + '…' : bodyText;
+    const timeStr = r.createdAt ? formatRelativeTs(r.createdAt) : (r.ts || 'just now');
+
+    return `
+      <div class="review-card" data-go-post="${escapeHtml(r.id)}">
+        ${coverHtml}
+        <div class="review-card-info">
+          <div class="review-card-head">
+            <span class="who">${escapeHtml(r.author)}</span>
+            <span class="rev-tag">reviewed</span>
+            <span class="time">${escapeHtml(timeStr)}</span>
+          </div>
+          <div class="review-card-title">${escapeHtml(r.bookTitle || r.title || '')}</div>
+          ${r.bookAuthor ? `<div class="review-card-author">${escapeHtml(r.bookAuthor)}</div>` : ''}
+          ${ratingHtml}
+          ${truncated ? `<div class="review-card-body">${escapeHtml(truncated)}</div>` : ''}
+          <div class="review-card-foot">
+            ${renderVotePillHtml(r.id, r.score || 0)}
+            <span>${r.commentCount || 0} comment${r.commentCount === 1 ? '' : 's'}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function buildCommunityPostCardHtml(p, community) {
+    const timeStr = p.createdAt ? formatRelativeTs(p.createdAt) : (p.ts || 'just now');
+    const fromBlock = community
+      ? `<div class="from">
+            <span class="from-icon ${community.type}">${escapeHtml(communityIconText(community.name))}</span>
+            ${escapeHtml(community.slug)}
+          </div>`
+      : '';
+    return `
+      <div class="thread-feed-card" data-go-post="${escapeHtml(p.id)}">
+        ${fromBlock}
+        <div class="post-head">
+          <span class="who">${escapeHtml(p.author)}</span>
+          <span class="type ${p.type}">${escapeHtml(p.type)}</span>
+          <span class="time">${escapeHtml(timeStr)}</span>
+        </div>
+        <div class="post-title">${escapeHtml(p.title)}</div>
+        ${p.rating ? `<div class="post-rating">${renderStarsLarge(p.rating)}</div>` : ''}
+        ${p.body ? `<div class="post-body">${escapeHtml(p.body)}</div>` : ''}
+        <div class="post-foot">
+          ${renderVotePillHtml(p.id, p.score || 0)}
+          <span>${p.commentCount || 0} comment${p.commentCount === 1 ? '' : 's'}</span>
+        </div>
+      </div>
+    `;
+  }
+
   // "See all →" link — switch to Discover
   document.querySelectorAll('[data-go-discover]').forEach(el => {
     el.addEventListener('click', () => {
@@ -10155,7 +10518,7 @@
       const id = e.currentTarget.dataset.followToggle;
       await toggleFollow(id);
       await renderCommunity(id); // re-render to update button state
-      await renderHomeFollowedPosts(); // update home if visible
+      if (typeof renderFeed === 'function') await renderFeed(); // update home if visible
     });
     wireVotePills(container);
   }
@@ -10678,8 +11041,8 @@
       closeNewPostModal();
       // re-render the community we just posted in
       await renderCommunity(npActiveCommunity);
-      // also refresh Home, in case this thread is followed
-      await renderHomeFollowedPosts();
+      // also refresh Home with the new post
+      if (typeof renderFeed === 'function') await renderFeed();
     } catch (err) {
       console.error('[Vronsky/posts] Create post failed:', err);
       alert('Could not post: ' + (err.message || 'Unknown error') + '\n\nCheck the browser console for details.');
@@ -10695,36 +11058,16 @@
   renderCommunityList();
   // Votes are loaded in the auth-restore IIFE
 
-  // Update Home chip behavior: All vs Following
-  // (override the generic chip handler we set up earlier)
-  document.querySelectorAll('.feed-list ~ * .chip[data-filter], #home-threads-section ~ * .chip[data-filter], section[data-screen="home"] .filter-bar .chip[data-filter]').forEach(c => {
-    // ensure no duplicate handlers — re-bind specifically for home filter
-  });
-  // Cleaner approach: handle it where the chip lives
+  // Filter chips: All vs Following — both call into the unified renderFeed
   document.querySelectorAll('section[data-screen="home"] .filter-bar .chip').forEach(chip => {
     chip.addEventListener('click', async () => {
-      const filter = chip.dataset.filter;
-      const followedIds = await getFollowedThreads();
-      const emptyEl = document.getElementById('following-empty');
-      const threadsSection = document.getElementById('home-threads-section');
-
-      if (filter === 'following') {
-        // Hide the friend feed entirely
-        // (already done via .feed-list[data-active="following"] CSS rule)
-        if (followedIds.length === 0) {
-          // no follows → show empty state, hide thread section
-          if (emptyEl) emptyEl.style.display = 'block';
-          if (threadsSection) threadsSection.style.display = 'none';
-        } else {
-          if (emptyEl) emptyEl.style.display = 'none';
-          // re-render with more posts (up to 20)
-          await renderHomeFollowedPosts(20);
-        }
-      } else {
-        // All: hide empty state, restore standard render (top 4)
-        if (emptyEl) emptyEl.style.display = 'none';
-        await renderHomeFollowedPosts(4);
-      }
+      // Update active visual
+      const allChips = chip.parentElement.querySelectorAll('.chip');
+      allChips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      // Update filter and re-render
+      _feedFilter = chip.dataset.filter || 'all';
+      await renderFeed();
     });
   });
 
@@ -11026,11 +11369,15 @@
   }
 
   tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
+    tab.addEventListener('click', async () => {
       const target = tab.dataset.target;
       activateTab(target);
       // Remember the current tab so a refresh keeps you here
       try { localStorage.setItem(ACTIVE_TAB_KEY, target); } catch (e) {}
+      // Refresh feed when switching to home — picks up any new reviews/posts
+      if (target === 'home' && typeof renderFeed === 'function') {
+        renderFeed();
+      }
     });
   });
 
