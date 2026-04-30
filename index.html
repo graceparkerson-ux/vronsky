@@ -2684,7 +2684,10 @@
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 18px;
-    overflow-y: auto;
+    /* Use flex column so head + footer stay put; only the body scrolls */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     transform: translateY(12px) scale(0.98);
     transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
     box-shadow: 0 30px 80px -20px rgba(20, 16, 12, 0.4);
@@ -2697,6 +2700,7 @@
     transform: translateY(0) scale(1);
   }
   .modal-head {
+    flex: 0 0 auto;
     padding: 18px 20px 14px;
     border-bottom: 1px solid var(--border-soft);
     display: flex;
@@ -2728,6 +2732,8 @@
   .modal-close svg { width: 12px; height: 12px; }
 
   .modal-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
     padding: 18px 20px;
     display: flex;
     flex-direction: column;
@@ -2785,6 +2791,7 @@
   .star-rating:hover .star { transform: scale(1.05); }
 
   .modal-footer {
+    flex: 0 0 auto;
     padding: 14px 20px 18px;
     border-top: 1px solid var(--border-soft);
     display: grid;
@@ -4437,6 +4444,92 @@
     cursor: default;
   }
   .b-save-btn.saved:hover { background: var(--surface-soft); }
+
+  /* === QUOTE CARDS ===
+     Sized like book covers (2:3 aspect ratio), but instead of a cover image
+     they show a quote in serif type on a tinted background. They sit inside
+     the same masonry grid alongside .wall-card elements. */
+  .wall-quote-card {
+    width: 100%;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.18s;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  }
+  .wall-quote-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(0,0,0,0.12);
+  }
+  .wall-quote-card-inner {
+    position: relative;
+    width: 100%;
+    /* padding-bottom for aspect ratio is set inline */
+  }
+  .wall-quote-card-content {
+    position: absolute;
+    inset: 0;
+    padding: 20px 18px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .wall-quote-card .qmark {
+    font-family: 'Charter', 'Iowan Old Style', Georgia, serif;
+    font-size: 42px;
+    line-height: 0.6;
+    opacity: 0.4;
+    margin-bottom: -8px;
+  }
+  .wall-quote-card .qtext {
+    flex: 1;
+    font-family: 'Charter', 'Iowan Old Style', Georgia, serif;
+    font-size: 14px;
+    line-height: 1.45;
+    font-style: italic;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 8;
+    line-clamp: 8;
+    -webkit-box-orient: vertical;
+  }
+  .wall-quote-card .qattr {
+    margin-top: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1.5;
+    opacity: 0.75;
+  }
+  .wall-quote-card .qattr .qbook {
+    display: block;
+    font-style: italic;
+    text-transform: none;
+    font-family: 'Charter', 'Iowan Old Style', Georgia, serif;
+    font-size: 11px;
+    letter-spacing: 0;
+    margin-top: 2px;
+    opacity: 0.85;
+  }
+
+  /* Six muted palettes, picked deterministically by quote id.
+     All keep good contrast with body text. */
+  .wall-quote-card.qp-1 { background: #f3ebe2; color: #3a2e26; }
+  .wall-quote-card.qp-2 { background: #ede7e3; color: #3a2a2a; }
+  .wall-quote-card.qp-3 { background: #e8e6df; color: #2c2e26; }
+  .wall-quote-card.qp-4 { background: #ece4dd; color: #3a2622; }
+  .wall-quote-card.qp-5 { background: #ebe3df; color: #2e2a26; }
+  .wall-quote-card.qp-6 { background: #e3dcd6; color: #2c2620; }
+
+  /* On smaller cards the type needs to shrink */
+  @media (max-width: 600px) {
+    .wall-quote-card-content { padding: 16px 14px 12px; }
+    .wall-quote-card .qtext { font-size: 12.5px; -webkit-line-clamp: 7; line-clamp: 7; }
+    .wall-quote-card .qmark { font-size: 32px; }
+  }
 
   /* === SETTINGS === */
   .settings-row {
@@ -6233,7 +6326,7 @@
         <div class="settings-row">
           <div class="settings-row-info">
             <div class="settings-row-label">Public profile</div>
-            <div class="settings-row-desc">When on, anyone can see your profile and your library. When off, only you can.</div>
+            <div class="settings-row-desc">Profiles are public by default — anyone can see your library and reviews. Turn this off to keep them visible only to you.</div>
           </div>
           <label class="toggle-switch">
             <input type="checkbox" id="settings-public-toggle" />
@@ -7092,6 +7185,19 @@
   }
 
   // ============================================
+  // MODAL RELOCATION
+  // ============================================
+  // Every modal-overlay element starts inside .app (which is max-width 440px and
+  // position: relative on desktop). To make modals truly center on the desktop
+  // viewport, we re-parent all overlays to <body> on page load. This guarantees
+  // no ancestor positioning context can constrain them.
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    if (overlay.parentNode !== document.body) {
+      document.body.appendChild(overlay);
+    }
+  });
+
+  // ============================================
   // STORAGE WRAPPER
   // ============================================
   // localStorage fallback for non-auth data (books, posts, etc.)
@@ -7277,6 +7383,13 @@
       // Some Supabase configs require email confirmation before login;
       // others sign you in immediately. Handle both.
       if (data.session) {
+        // Belt-and-suspenders: ensure new profiles default to public.
+        // The DB column default is also `true`, but we set it explicitly here
+        // so older triggers or schema variants don't accidentally make profiles
+        // private at creation time.
+        if (data.user && data.user.id) {
+          await sb.from('profiles').update({ is_public: true }).eq('id', data.user.id);
+        }
         // Signed in — load profile and dismiss auth screen
         await loadCurrentUser();
         if (currentUser) {
@@ -11603,6 +11716,90 @@
   // server-side pre-computed list that mixes static curation with real
   // personalization.
   //
+  // === SEED_QUOTES ===
+  // ~50 hand-curated public-domain quotes that appear interleaved through the
+  // Discover wall. Each one is sized like a book cover (2:3) and uses one of
+  // a small palette of muted background tints, picked deterministically from
+  // the quote id so the same quote always looks the same.
+  // All authors here died long enough ago that their works are public domain.
+  const SEED_QUOTES = [
+    // Tolstoy
+    { id: 'q-tol-1', text: 'All happy families are alike; each unhappy family is unhappy in its own way.', book: 'Anna Karenina', author: 'Leo Tolstoy', year: 1877 },
+    { id: 'q-tol-2', text: 'If you look for perfection, you\'ll never be content.', book: 'Anna Karenina', author: 'Leo Tolstoy', year: 1877 },
+    { id: 'q-tol-3', text: 'The two most powerful warriors are patience and time.', book: 'War and Peace', author: 'Leo Tolstoy', year: 1869 },
+    // Dostoevsky
+    { id: 'q-dost-1', text: 'Above all, don\'t lie to yourself. The man who lies to himself and listens to his own lie comes to a point that he cannot distinguish the truth within him, or around him.', book: 'The Brothers Karamazov', author: 'Fyodor Dostoevsky', year: 1880 },
+    { id: 'q-dost-2', text: 'The mystery of human existence lies not in just staying alive, but in finding something to live for.', book: 'The Brothers Karamazov', author: 'Fyodor Dostoevsky', year: 1880 },
+    { id: 'q-dost-3', text: 'Pain and suffering are always inevitable for a large intelligence and a deep heart.', book: 'Crime and Punishment', author: 'Fyodor Dostoevsky', year: 1866 },
+    // Austen
+    { id: 'q-aus-1', text: 'It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.', book: 'Pride and Prejudice', author: 'Jane Austen', year: 1813 },
+    { id: 'q-aus-2', text: 'I declare after all there is no enjoyment like reading! How much sooner one tires of any thing than of a book!', book: 'Pride and Prejudice', author: 'Jane Austen', year: 1813 },
+    { id: 'q-aus-3', text: 'There is no charm equal to tenderness of heart.', book: 'Emma', author: 'Jane Austen', year: 1815 },
+    // Brontë
+    { id: 'q-bro-1', text: 'I am no bird; and no net ensnares me: I am a free human being with an independent will.', book: 'Jane Eyre', author: 'Charlotte Brontë', year: 1847 },
+    { id: 'q-bro-2', text: 'Whatever our souls are made of, his and mine are the same.', book: 'Wuthering Heights', author: 'Emily Brontë', year: 1847 },
+    // Wilde
+    { id: 'q-wilde-1', text: 'We are all in the gutter, but some of us are looking at the stars.', book: 'Lady Windermere\'s Fan', author: 'Oscar Wilde', year: 1892 },
+    { id: 'q-wilde-2', text: 'To live is the rarest thing in the world. Most people exist, that is all.', book: 'The Soul of Man Under Socialism', author: 'Oscar Wilde', year: 1891 },
+    { id: 'q-wilde-3', text: 'I can resist anything except temptation.', book: 'Lady Windermere\'s Fan', author: 'Oscar Wilde', year: 1892 },
+    // Dickens
+    { id: 'q-dick-1', text: 'It was the best of times, it was the worst of times.', book: 'A Tale of Two Cities', author: 'Charles Dickens', year: 1859 },
+    { id: 'q-dick-2', text: 'Have a heart that never hardens, and a temper that never tires, and a touch that never hurts.', book: 'Hard Times', author: 'Charles Dickens', year: 1854 },
+    // Twain
+    { id: 'q-twain-1', text: 'The two most important days in your life are the day you are born and the day you find out why.', book: 'Letters', author: 'Mark Twain', year: 1900 },
+    { id: 'q-twain-2', text: 'Whenever you find yourself on the side of the majority, it is time to pause and reflect.', book: 'Notebook', author: 'Mark Twain', year: 1904 },
+    // Thoreau & Emerson
+    { id: 'q-thor-1', text: 'I went to the woods because I wished to live deliberately, to front only the essential facts of life.', book: 'Walden', author: 'Henry David Thoreau', year: 1854 },
+    { id: 'q-thor-2', text: 'Not till we are lost, in other words not till we have lost the world, do we begin to find ourselves.', book: 'Walden', author: 'Henry David Thoreau', year: 1854 },
+    { id: 'q-emer-1', text: 'To be yourself in a world that is constantly trying to make you something else is the greatest accomplishment.', book: 'Self-Reliance', author: 'Ralph Waldo Emerson', year: 1841 },
+    // Whitman
+    { id: 'q-whit-1', text: 'I exist as I am, that is enough.', book: 'Leaves of Grass', author: 'Walt Whitman', year: 1855 },
+    { id: 'q-whit-2', text: 'Do I contradict myself? Very well then I contradict myself, (I am large, I contain multitudes.)', book: 'Leaves of Grass', author: 'Walt Whitman', year: 1855 },
+    // Dickinson
+    { id: 'q-dick-em-1', text: '"Hope" is the thing with feathers — that perches in the soul.', book: 'Poems', author: 'Emily Dickinson', year: 1891 },
+    { id: 'q-dick-em-2', text: 'I dwell in possibility.', book: 'Poems', author: 'Emily Dickinson', year: 1891 },
+    // Woolf
+    { id: 'q-woolf-1', text: 'A woman must have money and a room of her own if she is to write fiction.', book: 'A Room of One\'s Own', author: 'Virginia Woolf', year: 1929 },
+    { id: 'q-woolf-2', text: 'For most of history, Anonymous was a woman.', book: 'A Room of One\'s Own', author: 'Virginia Woolf', year: 1929 },
+    // Kafka
+    { id: 'q-kafka-1', text: 'A book must be the axe for the frozen sea within us.', book: 'Letters', author: 'Franz Kafka', year: 1904 },
+    { id: 'q-kafka-2', text: 'Paths are made by walking.', book: 'Aphorisms', author: 'Franz Kafka', year: 1917 },
+    // Joyce
+    { id: 'q-joyce-1', text: 'Mistakes are the portals of discovery.', book: 'Ulysses', author: 'James Joyce', year: 1922 },
+    // Proust
+    { id: 'q-proust-1', text: 'The real voyage of discovery consists not in seeking new landscapes, but in having new eyes.', book: 'In Search of Lost Time', author: 'Marcel Proust', year: 1923 },
+    // Hesse
+    { id: 'q-hesse-1', text: 'You are only afraid if you are not in harmony with yourself.', book: 'Demian', author: 'Hermann Hesse', year: 1919 },
+    // Eliot (George)
+    { id: 'q-eliot-1', text: 'It is never too late to be what you might have been.', book: 'Letters', author: 'George Eliot', year: 1857 },
+    { id: 'q-eliot-2', text: 'What do we live for, if it is not to make life less difficult for each other?', book: 'Middlemarch', author: 'George Eliot', year: 1872 },
+    // Stevenson, Conrad, Hardy
+    { id: 'q-stev-1', text: 'Don\'t judge each day by the harvest you reap but by the seeds that you plant.', book: 'Essays', author: 'Robert Louis Stevenson', year: 1881 },
+    { id: 'q-conrad-1', text: 'The mind of man is capable of anything — because everything is in it, all the past as well as all the future.', book: 'Heart of Darkness', author: 'Joseph Conrad', year: 1899 },
+    { id: 'q-hardy-1', text: 'A lover without indiscretion is no lover at all.', book: 'The Hand of Ethelberta', author: 'Thomas Hardy', year: 1876 },
+    // James, Wharton
+    { id: 'q-james-1', text: 'Three things in human life are important: the first is to be kind; the second is to be kind; and the third is to be kind.', book: 'Letters', author: 'Henry James', year: 1893 },
+    { id: 'q-whart-1', text: 'There are two ways of spreading light: to be the candle or the mirror that reflects it.', book: 'Vesalius in Zante', author: 'Edith Wharton', year: 1902 },
+    // Carroll
+    { id: 'q-carroll-1', text: 'It\'s no use going back to yesterday, because I was a different person then.', book: 'Alice in Wonderland', author: 'Lewis Carroll', year: 1865 },
+    { id: 'q-carroll-2', text: 'Imagination is the only weapon in the war against reality.', book: 'Alice in Wonderland', author: 'Lewis Carroll', year: 1865 },
+    // Stoker, Shelley
+    { id: 'q-shel-1', text: 'Nothing contributes so much to tranquilize the mind as a steady purpose.', book: 'Frankenstein', author: 'Mary Shelley', year: 1818 },
+    { id: 'q-shel-2', text: 'Beware; for I am fearless, and therefore powerful.', book: 'Frankenstein', author: 'Mary Shelley', year: 1818 },
+    // Poe
+    { id: 'q-poe-1', text: 'All that we see or seem is but a dream within a dream.', book: 'A Dream Within a Dream', author: 'Edgar Allan Poe', year: 1849 },
+    // Yeats, Frost
+    { id: 'q-yeats-1', text: 'Education is not the filling of a pail, but the lighting of a fire.', book: 'Letters', author: 'W. B. Yeats', year: 1915 },
+    { id: 'q-frost-1', text: 'Two roads diverged in a wood, and I — I took the one less traveled by, and that has made all the difference.', book: 'The Road Not Taken', author: 'Robert Frost', year: 1916 },
+    // Stein, Fitzgerald (older works)
+    { id: 'q-stein-1', text: 'A real failure does not need an excuse. It is an end in itself.', book: 'The Making of Americans', author: 'Gertrude Stein', year: 1925 },
+    { id: 'q-fitz-1', text: 'I hope she\'ll be a fool — that\'s the best thing a girl can be in this world, a beautiful little fool.', book: 'The Great Gatsby', author: 'F. Scott Fitzgerald', year: 1925 },
+    { id: 'q-fitz-2', text: 'So we beat on, boats against the current, borne back ceaselessly into the past.', book: 'The Great Gatsby', author: 'F. Scott Fitzgerald', year: 1925 },
+    // Aurelius (translated)
+    { id: 'q-aur-1', text: 'You have power over your mind — not outside events. Realize this, and you will find strength.', book: 'Meditations', author: 'Marcus Aurelius', year: 180 },
+    { id: 'q-aur-2', text: 'The happiness of your life depends upon the quality of your thoughts.', book: 'Meditations', author: 'Marcus Aurelius', year: 180 }
+  ];
+
   // Each entry: { workKey, title, author, year, coverId, category }
   // workKey is used for fetching the summary on flip.
 
@@ -11862,6 +12059,64 @@
     `;
   }
 
+  // Pick one of 6 palettes deterministically from the quote id (so the same
+  // quote always looks the same). Hash is just sum of char codes mod 6.
+  function quotePaletteFor(id) {
+    let h = 0;
+    for (let i = 0; i < id.length; i++) h = (h + id.charCodeAt(i)) & 0xff;
+    return 'qp-' + ((h % 6) + 1);
+  }
+
+  // Render a single quote card. Same 2:3 aspect ratio as a book cover, so it
+  // slots into the masonry without disrupting the rhythm.
+  function buildWallQuoteCardHtml(q, idx, span) {
+    const aspectRatios = [1.5, 1.55, 1.45, 1.6, 1.5];
+    const ar = aspectRatios[idx % aspectRatios.length];
+    const palette = quotePaletteFor(q.id);
+    const spanStyle = span ? `grid-row: span ${span};` : '';
+    return `
+      <div class="wall-quote-card ${palette}" data-quote-id="${escapeHtml(q.id)}" style="${spanStyle}">
+        <div class="wall-quote-card-inner" style="padding-bottom: ${ar * 100}%;">
+          <div class="wall-quote-card-content">
+            <div class="qmark">"</div>
+            <div class="qtext">${escapeHtml(q.text)}</div>
+            <div class="qattr">
+              ${escapeHtml(q.author)}
+              <span class="qbook">${escapeHtml(q.book)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Mix book entries and quote entries into a single ordered list. We use a
+  // fixed cadence (every Nth slot is a quote) rather than random insertion,
+  // so quotes don't clump or land in the same column every render.
+  // The position of the first quote is offset by a hash of the day so the
+  // layout shifts day-to-day without feeling jittery within a session.
+  function interleaveBooksAndQuotes(books, quotes) {
+    if (!quotes || quotes.length === 0) return books.map(b => ({ kind: 'book', data: b }));
+    const cadence = 6; // a quote every ~6 items
+    const offset = (new Date().getDate() % cadence); // shift by day-of-month
+    const out = [];
+    let bi = 0;
+    let qi = 0;
+    let i = 0;
+    while (bi < books.length) {
+      // Insert a quote every `cadence` slots, with `offset` priming
+      if (qi < quotes.length && i > 0 && ((i + offset) % cadence === 0)) {
+        out.push({ kind: 'quote', data: quotes[qi % quotes.length] });
+        qi++;
+      } else {
+        out.push({ kind: 'book', data: books[bi] });
+        bi++;
+      }
+      i++;
+    }
+    return out;
+  }
+
   // Wire flip and save behavior on a single card (used after appending)
   function wireWallCard(card, displayBooks, wallEl) {
     card.addEventListener('click', async (e) => {
@@ -11950,14 +12205,24 @@
     const ownedTitles = new Set(currentLibrary.map(b => (b.title || '').toLowerCase()));
     const ownedKeys = new Set(currentLibrary.map(b => b.workKey).filter(Boolean));
 
+    // Interleave quote cards into the book list. Cadence is fixed (every ~6
+    // items), but the starting offset rotates by day so the wall feels fresh.
+    // Quote cards live in the same masonry grid as book cards.
+    const shuffledQuotes = [...SEED_QUOTES].sort(() => Math.random() - 0.5);
+    const items = interleaveBooksAndQuotes(display, shuffledQuotes);
+
     // Pre-compute spans based on the wall's actual column width
     // so cards land in their correct grid rows on first paint
     const aspectRatios = [1.5, 1.55, 1.45, 1.6, 1.5];
 
-    wallEl.innerHTML = display.map((b, i) => {
-      const isSaved = ownedKeys.has(b.workKey) || ownedTitles.has((b.title || '').toLowerCase());
+    wallEl.innerHTML = items.map((item, i) => {
       const ar = aspectRatios[i % aspectRatios.length];
       const span = computeCardSpan(wallEl, ar);
+      if (item.kind === 'quote') {
+        return buildWallQuoteCardHtml(item.data, i, span);
+      }
+      const b = item.data;
+      const isSaved = ownedKeys.has(b.workKey) || ownedTitles.has((b.title || '').toLowerCase());
       return buildWallCardHtml(b, i, isSaved, span);
     }).join('');
     wallEl.querySelectorAll('.wall-card').forEach(card => wireWallCard(card, display, wallEl));
